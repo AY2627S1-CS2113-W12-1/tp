@@ -1,6 +1,7 @@
 package seedu.duke;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -32,5 +33,43 @@ class DukeTest {
 
         assertEquals("Iced latte", removed.getCake().getName());
         assertEquals(1, orders.size());
+    }
+
+    @Test
+    public void getOrder_validIndex_returnsTheChosenOrder() {
+        Menu menu = new Menu();
+        menu.add(new Cake("Iced latte", "coffee", 5.00));
+        menu.add(new Cake("Chocolate cake", "chocolate", 25.00));
+
+        Customer alex = new Customer("Alex", "91234567");
+        OrderList orders = new OrderList();
+        orders.add(new Order(alex, menu.get(1), 1));
+        orders.add(new Order(alex, menu.get(2), 2));
+
+        Order found = orders.get(2);
+
+        assertEquals("Chocolate cake", found.getCake().getName());
+        assertEquals(2, found.getQuantity());
+    }
+
+    @Test
+    public void getOrder_invalidIndex_throwsException() {
+        OrderList orders = new OrderList();
+
+        assertThrows(IllegalArgumentException.class, () -> orders.get(1));
+        assertThrows(IllegalArgumentException.class, () -> orders.get(0));
+    }
+
+    @Test
+    public void toDetailedString_containsAllOrderDetails() {
+        Order order = new Order(new Customer("Alex", "91234567"),
+                new Cake("Chocolate cake", "chocolate", 25.00), 2);
+
+        String details = order.toDetailedString();
+
+        assertTrue(details.contains("Alex"));
+        assertTrue(details.contains("Chocolate cake"));
+        assertTrue(details.contains("$50.00"));
+        assertTrue(details.contains("QUEUED"));
     }
 }

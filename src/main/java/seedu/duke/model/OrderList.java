@@ -33,6 +33,19 @@ public class OrderList {
         return orders.size();
     }
 
+    /**
+     * Gets the order at the given index. Index starts from 1.
+     *
+     * @throws IllegalArgumentException if the index is out of range.
+     */
+    public Order get(int index) {
+        if (index < 1 || index > orders.size()) {
+            throw new IllegalArgumentException(
+                    "Order number must be between 1 and " + orders.size());
+        }
+        return orders.get(index - 1);
+    }
+
     @Override
     public String toString() {
         StringBuilder listing = new StringBuilder();

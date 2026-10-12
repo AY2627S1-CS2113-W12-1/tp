@@ -36,6 +36,18 @@ public class Order {
         this.status = status;
     }
 
+    /**
+     * Returns the full details of this order.
+     */
+    public String toDetailedString() {
+        String nl = System.lineSeparator();
+        return "Customer: " + customer + nl
+                + "Cake: " + cake + nl
+                + "Quantity: " + quantity + nl
+                + "Total: $" + String.format("%.2f", cake.getPrice() * quantity) + nl
+                + "Status: " + status;
+    }
+
     @Override
     public String toString() {
         return customer.getName() + ": " + quantity + " x " + cake.getName() + " [" + status + "]";
