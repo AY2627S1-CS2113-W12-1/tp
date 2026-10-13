@@ -44,4 +44,13 @@ public class OrderList {
         }
         return listing.toString();
     }
+
+    /**
+     * Returns a copy of all orders in the list, in the order they were added.
+     *
+     * @return A new list containing every order.
+     */
+    public ArrayList<Order> getAll() {
+        return new ArrayList<>(orders);
+    }
 }
