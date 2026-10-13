@@ -72,7 +72,7 @@ public class UpdateOrderCommand {
         orders.update(updatedOrder);
 
         // Display the updated order.
-// The order's toString() already includes its Order ID.
+        // The order's toString() already includes its Order ID.
         return "Updated order " + updatedOrder;
     }
 }

@@ -18,7 +18,7 @@ public final class Parser {
     private static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
     private static final String USAGE = "Use: add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
     // Shows the correct format when an update command is invalid.
-// Square brackets indicate optional fields.
+    // Square brackets indicate optional fields.
     private static final String UPDATE_USAGE =
             "Use: update ORDER_ID [n/NAME] [p/PHONE] [d/DATE] "
                     + "[s/SIZE] [f/FLAVOUR] [fi/FILLING]";
