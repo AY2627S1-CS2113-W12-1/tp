@@ -2,14 +2,22 @@ package seedu.duke.command;
 
 import seedu.duke.model.OrderList;
 
+/**
+ * Shows the full details of one order, found by its order ID.
+ */
 public class ViewOrderCommand {
-    private final int index;
+    private final String orderId;
 
-    public ViewOrderCommand(int index) {
-        this.index = index;
+    public ViewOrderCommand(String orderId) {
+        this.orderId = orderId;
     }
 
+    /**
+     * Returns the full details of the order with this ID.
+     *
+     * @throws IllegalArgumentException if no order has that ID.
+     */
     public String execute(OrderList orders) {
-        return orders.get(index).toDetailedString();
+        return orders.getById(orderId).toDetailedString();
     }
 }

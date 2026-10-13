@@ -77,11 +77,19 @@ public class Order {
      */
     public String toDetailedString() {
         String nl = System.lineSeparator();
-        return "Customer: " + customer + nl
-                + "Cake: " + cake + nl
-                + "Quantity: " + quantity + nl
-                + "Total: $" + String.format("%.2f", cake.getPrice() * quantity) + nl
-                + "Status: " + status;
+        StringBuilder details = new StringBuilder();
+        details.append("Order ID: ").append(orderId).append(nl)
+                .append("Customer: ").append(customer).append(nl);
+        if (dueDate != null) {
+            details.append("Due date: ").append(dueDate.format(DATE_FORMATTER)).append(nl);
+        }
+        if (cake != null) {
+            details.append("Size: ").append(cake.getSize()).append(" inches").append(nl)
+                    .append("Flavour: ").append(cake.getFlavour()).append(nl)
+                    .append("Filling: ").append(cake.getFilling()).append(nl);
+        }
+        details.append("Status: ").append(status);
+        return details.toString();
     }
 
     @Override

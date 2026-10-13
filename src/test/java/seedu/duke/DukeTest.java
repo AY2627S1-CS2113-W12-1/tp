@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.duke.model.Cake;
@@ -62,14 +64,39 @@ class DukeTest {
 
     @Test
     public void toDetailedString_containsAllOrderDetails() {
-        Order order = new Order(new Customer("Alex", "91234567"),
-                new Cake("Chocolate cake", "chocolate", 25.00), 2);
+        OrderList orders = new OrderList();
+        Order order = new Order(orders.generateOrderId(), new Customer("Alex", "91234567"),
+                new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20));
+        orders.add(order);
 
         String details = order.toDetailedString();
 
+        assertTrue(details.contains("O001"));
         assertTrue(details.contains("Alex"));
-        assertTrue(details.contains("Chocolate cake"));
-        assertTrue(details.contains("$50.00"));
+        assertTrue(details.contains("20-10-2026"));
+        assertTrue(details.contains("Chocolate"));
+        assertTrue(details.contains("Strawberry"));
         assertTrue(details.contains("QUEUED"));
+    }
+
+    @Test
+    public void getById_validId_returnsTheChosenOrder() {
+        OrderList orders = new OrderList();
+        Customer alex = new Customer("Alex", "91234567");
+        orders.add(new Order(orders.generateOrderId(), alex,
+                new Cake(6, "Vanilla", "Cream"), LocalDate.of(2026, 10, 20)));
+        orders.add(new Order(orders.generateOrderId(), alex,
+                new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 21)));
+
+        Order found = orders.getById("O002");
+
+        assertEquals("Chocolate", found.getCake().getFlavour());
+    }
+
+    @Test
+    public void getById_unknownId_throwsException() {
+        OrderList orders = new OrderList();
+
+        assertThrows(IllegalArgumentException.class, () -> orders.getById("O999"));
     }
 }

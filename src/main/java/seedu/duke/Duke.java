@@ -3,6 +3,7 @@ package seedu.duke;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import seedu.duke.command.ViewOrderCommand;
 
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
@@ -32,6 +33,11 @@ public class Duke {
             }
 
             try {
+                if (input.toLowerCase().startsWith("view")) {
+                    String orderId = Parser.parseView(input);
+                    System.out.println(new ViewOrderCommand(orderId).execute(orders));
+                    continue;
+                }
                 Parser.AddOrderDetails details = Parser.parseAdd(input);
                 Order order = new Order(orders.generateOrderId(),
                         new Customer(details.getCustomerName(), details.getPhone()),
