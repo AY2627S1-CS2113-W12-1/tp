@@ -1,5 +1,6 @@
 package seedu.duke.parser;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -97,5 +98,116 @@ public class ParserTest {
         assertThrows(IllegalArgumentException.class, () -> Parser.parseAdd(""));
         assertThrows(IllegalArgumentException.class, () -> Parser.parseAdd("list"));
         assertThrows(IllegalArgumentException.class, () -> Parser.parseAdd(VALID_INPUT.replace("add ", "add extra ")));
+    }
+    /**
+     * Tests that an update command can contain multiple fields.
+     */
+    @Test
+    public void parseUpdate_multipleFields_returnsCorrectDetails() {
+        Parser.UpdateOrderDetails details =
+                Parser.parseUpdate("update O001 n/Bob Tan s/10 f/Vanilla");
+
+        // Check that the Order ID and supplied fields were parsed correctly.
+        assertEquals("O001", details.getOrderId());
+        assertEquals("Bob Tan", details.getName());
+        assertEquals(10, details.getSize());
+        assertEquals("Vanilla", details.getFlavour());
+
+        // Fields not supplied should remain null.
+        assertNull(details.getPhone());
+        assertNull(details.getDueDate());
+        assertNull(details.getFilling());
+    }
+
+    /**
+     * Tests that updating only one field is allowed.
+     */
+    @Test
+    public void parseUpdate_singleField_returnsCorrectDetails() {
+        Parser.UpdateOrderDetails details =
+                Parser.parseUpdate("update O002 d/25-10-2026");
+
+        assertEquals("O002", details.getOrderId());
+        assertEquals(LocalDate.of(2026, 10, 25), details.getDueDate());
+        assertNull(details.getName());
+        assertNull(details.getSize());
+    }
+
+    /**
+     * Tests that invalid dates are rejected.
+     */
+    @Test
+    public void parseUpdate_invalidDate_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 d/31-02-2026"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 d/2026-10-25"));
+    }
+
+    /**
+     * Tests that unsupported cake sizes are rejected.
+     */
+    @Test
+    public void parseUpdate_invalidSize_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 s/7"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 s/large"));
+    }
+
+    /**
+     * Tests that the user must provide at least one field.
+     */
+    @Test
+    public void parseUpdate_missingFields_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001"));
+    }
+
+    /**
+     * Tests that empty field values are rejected.
+     */
+    @Test
+    public void parseUpdate_emptyField_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 n/"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 s/"));
+    }
+
+    /**
+     * Tests that the same field cannot be supplied twice.
+     */
+    @Test
+    public void parseUpdate_duplicateField_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 n/Bob n/Alice"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 s/8 s/10"));
+    }
+
+    /**
+     * Tests that unknown field prefixes are rejected.
+     */
+    @Test
+    public void parseUpdate_unknownField_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O001 x/Extra"));
+    }
+
+    /**
+     * Tests that invalid Order IDs are rejected.
+     */
+    @Test
+    public void parseUpdate_invalidOrderId_throwsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update 001 n/Bob"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> Parser.parseUpdate("update O1 n/Bob"));
     }
 }

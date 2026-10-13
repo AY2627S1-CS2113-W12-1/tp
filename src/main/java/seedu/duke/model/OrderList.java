@@ -61,4 +61,34 @@ public class OrderList {
         }
         return listing.toString();
     }
+    /**
+     * Finds an order using its unique Order ID.
+     *
+     * @param orderId The ID of the order to find.
+     * @return The matching order.
+     * @throws IllegalArgumentException If the order does not exist.
+     */
+    public Order getById(String orderId) {
+        for (Order order : orders) {
+            if (orderId.equals(order.getOrderId())) {
+                return order;
+            }
+        }
+        throw new IllegalArgumentException("Order not found: " + orderId);
+    }
+    /**
+     * Replaces an existing order with an updated order.
+     *
+     * @param updatedOrder The order containing the updated details.
+     * @throws IllegalArgumentException If the order ID does not exist.
+     */
+    public void update(Order updatedOrder) {
+        for (int i = 0; i < orders.size(); i++) {
+            if (updatedOrder.getOrderId().equals(orders.get(i).getOrderId())) {
+                orders.set(i, updatedOrder);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Order not found: " + updatedOrder.getOrderId());
+    }
 }
