@@ -1,39 +1,55 @@
 package seedu.duke;
 
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
-import seedu.duke.model.Menu;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
+import seedu.duke.parser.Parser;
 
+/**
+ * Runs the CakeQueue command-line application.
+ */
 public class Duke {
+    private static final Logger LOGGER = Logger.getLogger(Duke.class.getName());
+
     /**
-     * Main entry-point for the java.duke.Duke application.
+     * Runs CakeQueue until the user enters the bye command.
+     */
+    public void run() {
+        Scanner scanner = new Scanner(System.in);
+        OrderList orders = new OrderList();
+        System.out.println("Hello! I'm CakeQueue.");
+
+        while (scanner.hasNextLine()) {
+            String input = scanner.nextLine().trim();
+            if (input.equalsIgnoreCase("bye")) {
+                System.out.println("Bye. Hope to see you again soon!");
+                return;
+            }
+
+            try {
+                Parser.AddOrderDetails details = Parser.parseAdd(input);
+                Order order = new Order(orders.generateOrderId(),
+                        new Customer(details.getCustomerName(), details.getPhone()),
+                        new Cake(details.getSize(), details.getFlavour(), details.getFilling()),
+                        details.getDueDate());
+                orders.add(order);
+                LOGGER.log(Level.INFO, "Added order {0}.", order.getOrderId());
+                System.out.println("Added order " + order);
+            } catch (IllegalArgumentException exception) {
+                System.out.println("Error: " + exception.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Launches CakeQueue.
      */
     public static void main(String[] args) {
-        String banner = " ____        _        \n"
-                + "|  _ \\ _   _| | _____ \n"
-                + "| | | | | | | |/ / _ \\\n"
-                + "| |_| | |_| |   <  __/\n"
-                + "|____/ \\__,_|_|\\_\\___|\n";
-        System.out.println(banner);
-        System.out.println("What is your name?");
-
-        Scanner in = new Scanner(System.in);
-        System.out.println("Hello " + in.nextLine());
-
-        Menu menu = new Menu();
-        menu.add(new Cake("Chocolate", "chocolate", 25.00));
-        menu.add(new Cake("Strawberry", "strawberry", 28.00));
-
-        OrderList orders = new OrderList();
-        orders.add(new Order(new Customer("Alex", "91234567"), menu.get(1), 1));
-
-        System.out.println("Menu:");
-        System.out.println(menu);
-        System.out.println("Orders:");
-        System.out.println(orders);
+        new Duke().run();
     }
 }
