@@ -30,10 +30,30 @@ public class OrderList {
     }
 
     /**
-     * Returns the order at the given index. Index starts from 1.
+     * Gets the order at the given index. Index starts from 1.
+     *
+     * @throws IllegalArgumentException if the index is out of range.
      */
     public Order get(int index) {
+        if (index < 1 || index > orders.size()) {
+            throw new IllegalArgumentException(
+                    "Order number must be between 1 and " + orders.size());
+        }
         return orders.get(index - 1);
+    }
+
+    /**
+     * Finds the order with the given ID, e.g. O001.
+     *
+     * @throws IllegalArgumentException if no order has that ID.
+     */
+    public Order getById(String orderId) {
+        for (Order order : orders) {
+            if (orderId.equalsIgnoreCase(order.getOrderId())) {
+                return order;
+            }
+        }
+        throw new IllegalArgumentException("No order found with ID " + orderId);
     }
 
     /**
@@ -48,19 +68,6 @@ public class OrderList {
      */
     public int size() {
         return orders.size();
-    }
-
-    /**
-     * Gets the order at the given index. Index starts from 1.
-     *
-     * @throws IllegalArgumentException if the index is out of range.
-     */
-    public Order get(int index) {
-        if (index < 1 || index > orders.size()) {
-            throw new IllegalArgumentException(
-                    "Order number must be between 1 and " + orders.size());
-        }
-        return orders.get(index - 1);
     }
 
     @Override
