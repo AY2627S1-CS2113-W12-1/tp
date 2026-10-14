@@ -73,6 +73,26 @@ public class Order {
     }
 
     /**
+     * Creates an updated copy of this order.
+     * Unchanged fields retain their original values.
+     *
+     * @param newCustomer Updated customer, or null to keep the existing customer.
+     * @param newCake Updated cake, or null to keep the existing cake.
+     * @param newDueDate Updated due date, or null to keep the existing date.
+     * @return The updated order.
+     */
+    public Order updatedCopy(Customer newCustomer, Cake newCake, LocalDate newDueDate) {
+        Customer updatedCustomer = newCustomer != null ? newCustomer : customer;
+        Cake updatedCake = newCake != null ? newCake : cake;
+        LocalDate updatedDueDate = newDueDate != null ? newDueDate : dueDate;
+
+        Order updatedOrder = new Order(orderId, updatedCustomer, updatedCake, updatedDueDate);
+        updatedOrder.setStatus(status);
+
+        return updatedOrder;
+    }
+
+    /**
      * Returns the full details of this order.
      */
     public String toDetailedString() {

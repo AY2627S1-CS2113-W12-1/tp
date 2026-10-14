@@ -43,9 +43,11 @@ public class OrderList {
     }
 
     /**
-     * Finds the order with the given ID, e.g. O001.
+     * Finds an order using its unique Order ID (not case-sensitive).
      *
-     * @throws IllegalArgumentException if no order has that ID.
+     * @param orderId The ID of the order to find.
+     * @return The matching order.
+     * @throws IllegalArgumentException If the order does not exist.
      */
     public Order getById(String orderId) {
         for (Order order : orders) {
@@ -53,7 +55,23 @@ public class OrderList {
                 return order;
             }
         }
-        throw new IllegalArgumentException("No order found with ID " + orderId);
+        throw new IllegalArgumentException("Order not found: " + orderId);
+    }
+
+    /**
+     * Replaces an existing order with an updated order.
+     *
+     * @param updatedOrder The order containing the updated details.
+     * @throws IllegalArgumentException If the order ID does not exist.
+     */
+    public void update(Order updatedOrder) {
+        for (int i = 0; i < orders.size(); i++) {
+            if (updatedOrder.getOrderId().equals(orders.get(i).getOrderId())) {
+                orders.set(i, updatedOrder);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Order not found: " + updatedOrder.getOrderId());
     }
 
     /**
