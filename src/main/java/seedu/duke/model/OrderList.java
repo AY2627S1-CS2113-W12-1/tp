@@ -7,16 +7,33 @@ import java.util.ArrayList;
  */
 public class OrderList {
     private final ArrayList<Order> orders;
+    private int nextOrderNumber;
 
     public OrderList() {
         orders = new ArrayList<>();
+        nextOrderNumber = 1;
+    }
+
+    /**
+     * Returns the next order ID in the format O001.
+     */
+    public String generateOrderId() {
+        return String.format("O%03d", nextOrderNumber++);
     }
 
     /**
      * Adds an order to the list.
      */
     public void add(Order order) {
+        assert order != null : "Order must not be null";
         orders.add(order);
+    }
+
+    /**
+     * Returns the order at the given index. Index starts from 1.
+     */
+    public Order get(int index) {
+        return orders.get(index - 1);
     }
 
     /**

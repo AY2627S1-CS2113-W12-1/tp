@@ -2,7 +2,7 @@
 
 ## Introduction
 
-{Give a product intro}
+CakeQueue helps bakers record and track cake orders.
 
 ## Quick Start
 
@@ -11,23 +11,30 @@
 1. Ensure that you have Java 25 or above installed.
 1. Down the latest version of `Duke` from [here](http://link.to/duke).
 
-## Features 
+## Features
 
-{Give detailed description of each feature}
+### Adding an order: `add`
 
-### Adding a todo: `todo`
-Adds a new item to the list of todo items.
+Adds an order with customer contact details, a due date, and cake details.
 
-Format: `todo n/TODO_NAME d/DEADLINE`
+Format: `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING`
 
-* The `DEADLINE` can be in a natural language format.
-* The `TODO_NAME` cannot contain punctuation.  
+* `DATE` must use the `DD-MM-YYYY` format.
+* All six fields are required, must be non-empty, and must appear exactly once.
+* Parameters can be entered in any order. Unknown prefixes are rejected.
+* `SIZE` must be `6`, `8`, or `10` inches.
+* `PHONE` is recorded as entered and must be non-empty.
+* CakeQueue assigns sequential Order IDs such as `O001` and starts each order as `QUEUED`.
+* Orders are stored only while the application is running.
+* Customer IDs and matching returning customers are planned for a later version.
 
-Example of usage: 
+Example: `add n/Alice Tan p/91234567 d/20-10-2026 s/8 f/Chocolate fi/Strawberry`
 
-`todo n/Write the rest of the User Guide d/next week`
+### Exiting CakeQueue: `bye`
 
-`todo n/Refactor the User Guide to remove passive voice d/13/04/2020`
+Exits the application.
+
+Format: `bye`
 
 ## FAQ
 
@@ -37,6 +44,5 @@ Example of usage:
 
 ## Command Summary
 
-{Give a 'cheat sheet' of commands here}
-
-* Add todo `todo n/TODO_NAME d/DEADLINE`
+* Add order: `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING`
+* Exit: `bye`
