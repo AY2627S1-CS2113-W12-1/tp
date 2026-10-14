@@ -1,7 +1,7 @@
 package seedu.duke.parser;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests parsing and validation of all six Add Order fields.
+ * Tests parsing and validation of Add Order, View Order, and Edit Order input.
  */
 public class ParserTest {
     private static final String VALID_INPUT = "add n/Alice Tan p/91234567 d/20-10-2026 "
@@ -209,5 +209,38 @@ public class ParserTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> Parser.parseUpdate("update O1 n/Bob"));
+    }
+
+    @Test
+    public void parseUpdate_editAliasAndLowercaseId_returnsCanonicalId() {
+        Parser.UpdateOrderDetails details = Parser.parseUpdate("EDIT\to001\ts/10 d/22-10-2026");
+
+        assertEquals("O001", details.getOrderId());
+        assertEquals(10, details.getSize());
+        assertEquals(LocalDate.of(2026, 10, 22), details.getDueDate());
+        assertNull(details.getName());
+    }
+
+    @Test
+    public void parseUpdate_invalidEdit_preservesValidation() {
+        for (String input : new String[] {"edit O001", "edit O001 s/7", "edit O001 n/",
+            "edit O001 d/31-02-2026", "edit O001 n/Bob n/Alice", "edit O001 x/Extra"}) {
+            assertThrows(IllegalArgumentException.class, () -> Parser.parseUpdate(input));
+        }
+    }
+
+    @Test
+    public void parseView_lowercaseId_returnsCanonicalId() {
+        assertEquals("O001", Parser.parseView("VIEW\to001"));
+    }
+
+    @Test
+    public void parseView_invalidInput_throwsUsefulError() {
+        for (String input : new String[] {"", "view", "view O1", "view 1", "view O001 extra", "viewpoint O001"}) {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> Parser.parseView(input));
+            assertEquals("Use: view ORDER_ID", exception.getMessage());
+        }
+        assertThrows(IllegalArgumentException.class, () -> Parser.parseView(null));
     }
 }
