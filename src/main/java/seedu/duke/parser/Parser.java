@@ -6,21 +6,21 @@ import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses the six required fields of the Add Order command.
+ * Parses and validates Add Order, View Order, and Edit Order input.
  */
 public final class Parser {
     private static final List<String> PREFIXES = List.of("n/", "p/", "d/", "s/", "f/", "fi/");
     private static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
     private static final String USAGE = "Use: add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
-    // Shows the correct format when an update command is invalid.
-    // Square brackets indicate optional fields.
+    // The existing update command is also accepted as an alias for edit.
     private static final String UPDATE_USAGE =
-            "Use: update ORDER_ID [n/NAME] [p/PHONE] [d/DATE] "
+            "Use: edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] "
                     + "[s/SIZE] [f/FLAVOUR] [fi/FILLING]";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
             .ofPattern("dd-MM-uuuu")
@@ -37,11 +37,15 @@ public final class Parser {
      * @throws IllegalArgumentException If the command is invalid.
      */
     public static String parseView(String input) {
-        String[] parts = input.trim().split("\\s+");
-        if (parts.length != 2 || !parts[0].equalsIgnoreCase("view")) {
+        if (input == null || input.isBlank()) {
             throw new IllegalArgumentException("Use: view ORDER_ID");
         }
-        return parts[1];
+        String[] parts = input.trim().split("\\s+");
+        if (parts.length != 2 || !parts[0].equalsIgnoreCase("view")
+                || !parts[1].matches("[Oo][0-9]{3,}")) {
+            throw new IllegalArgumentException("Use: view ORDER_ID");
+        }
+        return parts[1].toUpperCase(Locale.ROOT);
     }
 
     /**
@@ -161,7 +165,7 @@ public final class Parser {
         }
     }
     /**
-     * Parses an update command and validates the provided fields.
+     * Parses an edit command or its update alias and validates the provided fields.
      * Only fields supplied by the user will be updated.
      *
      * @param input The full command entered by the user.
@@ -176,15 +180,16 @@ public final class Parser {
         }
 
         // Split into 3 parts:
-        // parts[0] = "update"
+        // parts[0] = "edit" or "update"
         // parts[1] = "O001"
         // parts[2] = "n/Bob d/25-10-2026"
         String[] parts = input.trim().split("\\s+", 3);
 
-        // Check that the command is "update", the Order ID is valid,
+        // Check that the command is "edit" or "update", the Order ID is valid,
         // and at least one field argument is present.
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("update")
-                || !parts[1].matches("O[0-9]{3,}")) {
+        if (parts.length != 3
+                || (!parts[0].equalsIgnoreCase("edit") && !parts[0].equalsIgnoreCase("update"))
+                || !parts[1].matches("[Oo][0-9]{3,}")) {
             throw new IllegalArgumentException(UPDATE_USAGE);
         }
 
@@ -226,7 +231,7 @@ public final class Parser {
         // Store the validated values in an UpdateOrderDetails object.
         // Fields that were not supplied remain null.
         return new UpdateOrderDetails(
-                parts[1],
+                parts[1].toUpperCase(Locale.ROOT),
                 fields.get("n/"),
                 fields.get("p/"),
                 dueDate,
