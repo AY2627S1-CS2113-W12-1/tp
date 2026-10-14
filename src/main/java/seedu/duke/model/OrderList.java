@@ -30,10 +30,48 @@ public class OrderList {
     }
 
     /**
-     * Returns the order at the given index. Index starts from 1.
+     * Gets the order at the given index. Index starts from 1.
+     *
+     * @throws IllegalArgumentException if the index is out of range.
      */
     public Order get(int index) {
+        if (index < 1 || index > orders.size()) {
+            throw new IllegalArgumentException(
+                    "Order number must be between 1 and " + orders.size());
+        }
         return orders.get(index - 1);
+    }
+
+    /**
+     * Finds an order using its unique Order ID (not case-sensitive).
+     *
+     * @param orderId The ID of the order to find.
+     * @return The matching order.
+     * @throws IllegalArgumentException If the order does not exist.
+     */
+    public Order getById(String orderId) {
+        for (Order order : orders) {
+            if (orderId.equalsIgnoreCase(order.getOrderId())) {
+                return order;
+            }
+        }
+        throw new IllegalArgumentException("Order not found: " + orderId);
+    }
+
+    /**
+     * Replaces an existing order with an updated order.
+     *
+     * @param updatedOrder The order containing the updated details.
+     * @throws IllegalArgumentException If the order ID does not exist.
+     */
+    public void update(Order updatedOrder) {
+        for (int i = 0; i < orders.size(); i++) {
+            if (updatedOrder.getOrderId().equals(orders.get(i).getOrderId())) {
+                orders.set(i, updatedOrder);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Order not found: " + updatedOrder.getOrderId());
     }
 
     /**
@@ -60,35 +98,5 @@ public class OrderList {
                     .append(System.lineSeparator());
         }
         return listing.toString();
-    }
-    /**
-     * Finds an order using its unique Order ID.
-     *
-     * @param orderId The ID of the order to find.
-     * @return The matching order.
-     * @throws IllegalArgumentException If the order does not exist.
-     */
-    public Order getById(String orderId) {
-        for (Order order : orders) {
-            if (orderId.equals(order.getOrderId())) {
-                return order;
-            }
-        }
-        throw new IllegalArgumentException("Order not found: " + orderId);
-    }
-    /**
-     * Replaces an existing order with an updated order.
-     *
-     * @param updatedOrder The order containing the updated details.
-     * @throws IllegalArgumentException If the order ID does not exist.
-     */
-    public void update(Order updatedOrder) {
-        for (int i = 0; i < orders.size(); i++) {
-            if (updatedOrder.getOrderId().equals(orders.get(i).getOrderId())) {
-                orders.set(i, updatedOrder);
-                return;
-            }
-        }
-        throw new IllegalArgumentException("Order not found: " + updatedOrder.getOrderId());
     }
 }

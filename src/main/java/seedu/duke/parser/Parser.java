@@ -30,6 +30,21 @@ public final class Parser {
     }
 
     /**
+     * Parses a view command and returns the order ID.
+     *
+     * @param input Command entered by the user.
+     * @return The order ID to view.
+     * @throws IllegalArgumentException If the command is invalid.
+     */
+    public static String parseView(String input) {
+        String[] parts = input.trim().split("\\s+");
+        if (parts.length != 2 || !parts[0].equalsIgnoreCase("view")) {
+            throw new IllegalArgumentException("Use: view ORDER_ID");
+        }
+        return parts[1];
+    }
+
+    /**
      * Parses and validates a command containing all six order fields in any order.
      *
      * @param input Command entered by the user.
