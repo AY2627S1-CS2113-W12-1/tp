@@ -3,15 +3,17 @@ package seedu.duke.model;
 import java.util.ArrayList;
 
 /**
- * Represents the list of orders.
+ * Represents the shared list of enquiries and confirmed orders.
  */
 public class OrderList {
     private final ArrayList<Order> orders;
     private int nextOrderNumber;
+    private int nextEnquiryNumber;
 
     public OrderList() {
         orders = new ArrayList<>();
         nextOrderNumber = 1;
+        nextEnquiryNumber = 1;
     }
 
     /**
@@ -22,7 +24,14 @@ public class OrderList {
     }
 
     /**
-     * Adds an order to the list.
+     * Returns the next enquiry ID in the format E001.
+     */
+    public String generateEnquiryId() {
+        return String.format("E%03d", nextEnquiryNumber++);
+    }
+
+    /**
+     * Adds an order or enquiry to the list.
      */
     public void add(Order order) {
         assert order != null : "Order must not be null";
@@ -43,11 +52,11 @@ public class OrderList {
     }
 
     /**
-     * Finds an order using its unique Order ID (not case-sensitive).
+     * Finds an order or enquiry using its unique ID (not case-sensitive).
      *
-     * @param orderId The ID of the order to find.
+     * @param orderId The ID of the record to find.
      * @return The matching order.
-     * @throws IllegalArgumentException If the order does not exist.
+     * @throws IllegalArgumentException If the record does not exist.
      */
     public Order getById(String orderId) {
         for (Order order : orders) {
@@ -56,6 +65,19 @@ public class OrderList {
             }
         }
         throw new IllegalArgumentException("Order not found: " + orderId);
+    }
+
+    /**
+     * Returns every record whose customer phone matches the given value.
+     */
+    public ArrayList<Order> findByPhone(String phone) {
+        ArrayList<Order> matches = new ArrayList<>();
+        for (Order order : orders) {
+            if (order.getCustomer().getPhone().equals(phone)) {
+                matches.add(order);
+            }
+        }
+        return matches;
     }
 
     /**
@@ -72,6 +94,20 @@ public class OrderList {
             }
         }
         throw new IllegalArgumentException("Order not found: " + updatedOrder.getOrderId());
+    }
+
+    /**
+     * Removes the record with the given ID.
+     *
+     * @return The removed record.
+     */
+    public Order removeById(String orderId) {
+        for (int i = 0; i < orders.size(); i++) {
+            if (orderId.equalsIgnoreCase(orders.get(i).getOrderId())) {
+                return orders.remove(i);
+            }
+        }
+        throw new IllegalArgumentException("Order not found: " + orderId);
     }
 
     /**

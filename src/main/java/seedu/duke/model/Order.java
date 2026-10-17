@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Represents an order made by a customer.
+ * Represents a customer enquiry or a confirmed cake order.
  */
 public class Order {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-uuuu");
@@ -29,19 +29,26 @@ public class Order {
      * Creates a basic order with a customer and due date.
      */
     public Order(String orderId, Customer customer, LocalDate dueDate) {
-        this(orderId, customer, null, dueDate);
+        this(orderId, customer, null, dueDate, OrderStatus.QUEUED);
     }
 
     /**
-     * Creates an order with customer contact details, cake details, and a due date.
+     * Creates a confirmed order with cake details and a due date.
      */
     public Order(String orderId, Customer customer, Cake cake, LocalDate dueDate) {
+        this(orderId, customer, cake, dueDate, OrderStatus.QUEUED);
+    }
+
+    /**
+     * Creates an enquiry or order with an explicit starting status.
+     */
+    public Order(String orderId, Customer customer, Cake cake, LocalDate dueDate, OrderStatus status) {
         this.orderId = orderId;
         this.customer = customer;
         this.cake = cake;
         this.quantity = 1;
         this.dueDate = dueDate;
-        this.status = OrderStatus.QUEUED;
+        this.status = status;
     }
 
     public String getOrderId() {
@@ -73,6 +80,13 @@ public class Order {
     }
 
     /**
+     * Returns true when this record is still a customer enquiry.
+     */
+    public boolean isEnquiry() {
+        return status == OrderStatus.ENQUIRY;
+    }
+
+    /**
      * Creates an updated copy of this order.
      * Unchanged fields retain their original values.
      *
@@ -86,19 +100,18 @@ public class Order {
         Cake updatedCake = newCake != null ? newCake : cake;
         LocalDate updatedDueDate = newDueDate != null ? newDueDate : dueDate;
 
-        Order updatedOrder = new Order(orderId, updatedCustomer, updatedCake, updatedDueDate);
-        updatedOrder.setStatus(status);
-
+        Order updatedOrder = new Order(orderId, updatedCustomer, updatedCake, updatedDueDate, status);
         return updatedOrder;
     }
 
     /**
-     * Returns the full details of this order.
+     * Returns the full details of this order or enquiry.
      */
     public String toDetailedString() {
         String nl = System.lineSeparator();
+        String idLabel = isEnquiry() ? "Enquiry ID: " : "Order ID: ";
         StringBuilder details = new StringBuilder();
-        details.append("Order ID: ").append(orderId).append(nl)
+        details.append(idLabel).append(orderId).append(nl)
                 .append("Customer: ").append(customer).append(nl);
         if (dueDate != null) {
             details.append("Due date: ").append(dueDate.format(DATE_FORMATTER)).append(nl);
