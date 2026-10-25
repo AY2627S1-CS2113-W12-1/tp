@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
@@ -61,7 +62,7 @@ public class RejectEnquiryCommandTest {
     public void execute_confirmedOrder_throwsException() {
         OrderList orders = createOrderList();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new RejectEnquiryCommand("O001").execute(orders));
 
         assertTrue(exception.getMessage().contains("Only enquiries can be rejected"));
@@ -75,7 +76,7 @@ public class RejectEnquiryCommandTest {
     public void execute_unknownId_throwsException() {
         OrderList orders = createOrderList();
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(CakeQueueException.class,
                 () -> new RejectEnquiryCommand("E999").execute(orders));
 
         assertEquals(OrderStatus.ENQUIRY, orders.getById("E001").getStatus());

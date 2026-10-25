@@ -1,5 +1,8 @@
 package seedu.duke.command;
 
+//@@author HammerHead-os
+
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
@@ -20,7 +23,7 @@ public class AcceptEnquiryCommand {
     public String execute(OrderList orders) {
         Order enquiry = orders.getById(enquiryId);
         if (!enquiry.isEnquiry()) {
-            throw new IllegalArgumentException("Only enquiries can be accepted: " + enquiryId);
+            throw new CakeQueueException("Only enquiries can be accepted: " + enquiryId);
         }
         orders.removeById(enquiryId);
         Order confirmed = new Order(orders.generateOrderId(),

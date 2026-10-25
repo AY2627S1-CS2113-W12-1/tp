@@ -1,7 +1,10 @@
 package seedu.duke.command;
 
+//@@author WillChin484848
+
 import java.time.LocalDate;
 
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
@@ -55,7 +58,7 @@ public class UpdateOrderCommand {
         Cake updatedCake = oldCake;
         if (size != null || flavour != null || filling != null) {
             if (oldCake == null) {
-                throw new IllegalArgumentException("This order has no cake details.");
+                throw new CakeQueueException("This order has no cake details.");
             }
 
             updatedCake = new Cake(

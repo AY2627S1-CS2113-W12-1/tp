@@ -1,5 +1,8 @@
 package seedu.duke.command;
 
+//@@author HammerHead-os
+
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
@@ -38,15 +41,15 @@ public class CancelCommand {
     public String execute(OrderList orders) {
         Order record = orders.getById(recordId);
         if (requirePhoneMatch && !record.getCustomer().getPhone().equals(phone)) {
-            throw new IllegalArgumentException("Phone number does not match this record.");
+            throw new CakeQueueException("Phone number does not match this record.");
         }
         OrderStatus status = record.getStatus();
         if (status == OrderStatus.COLLECTED || status == OrderStatus.CANCELLED
                 || status == OrderStatus.REJECTED) {
-            throw new IllegalArgumentException("Cannot cancel a record with status " + status + ".");
+            throw new CakeQueueException("Cannot cancel a record with status " + status + ".");
         }
         if (requirePhoneMatch && status != OrderStatus.ENQUIRY) {
-            throw new IllegalArgumentException("Customers may only cancel enquiries.");
+            throw new CakeQueueException("Customers may only cancel enquiries.");
         }
         record.setStatus(OrderStatus.CANCELLED);
         return "Cancelled " + record;

@@ -1,5 +1,7 @@
 package seedu.duke.model;
 
+//@@author Eethanzyj
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;

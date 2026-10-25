@@ -24,6 +24,8 @@ dependencies {
 }
 
 test {
+    // Assertions must be enabled so `assert` statements in production code are checked during tests.
+    enableAssertions = true
     useJUnitPlatform()
 
     testLogging {

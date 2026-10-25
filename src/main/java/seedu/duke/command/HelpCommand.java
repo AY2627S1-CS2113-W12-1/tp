@@ -1,5 +1,7 @@
 package seedu.duke.command;
 
+//@@author HammerHead-os
+
 import seedu.duke.UserMode;
 
 /**
@@ -25,6 +27,7 @@ public class HelpCommand {
                     "  view ORDER_ID|ENQUIRY_ID",
                     "  edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]",
                     "  accept ENQUIRY_ID",
+                    "  mark ORDER_ID preparing|ready|collected",
                     "  reject ENQUIRY_ID",
                     "  cancel ORDER_ID|ENQUIRY_ID",
                     "  mode customer",

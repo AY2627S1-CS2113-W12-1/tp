@@ -8,20 +8,24 @@ import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
 
 /**
- * Represents a command that lists all upcoming orders.
+ * Represents a command that lists all upcoming confirmed orders.
  */
 public class ListCommand {
 
     /**
-     * Returns uncollected orders with the earliest due dates first.
-     * Legacy orders without a due date are listed last.
+     * Returns uncollected confirmed orders with the earliest due dates first.
+     * Enquiries and closed records are omitted. Legacy orders without a due date
+     * are listed last.
      *
      * @param orders The list of all orders.
      * @return The message to show the user.
      */
     public String execute(OrderList orders) {
         ArrayList<Order> all = orders.getAll();
-        all.removeIf(order -> order.getStatus() == OrderStatus.COLLECTED);
+        all.removeIf(order -> order.getStatus() == OrderStatus.COLLECTED
+                || order.getStatus() == OrderStatus.ENQUIRY
+                || order.getStatus() == OrderStatus.CANCELLED
+                || order.getStatus() == OrderStatus.REJECTED);
         all.sort(Comparator.comparing(Order::getDueDate, Comparator.nullsLast(Comparator.naturalOrder())));
         StringBuilder listing = new StringBuilder();
         for (int i = 0; i < all.size(); i++) {

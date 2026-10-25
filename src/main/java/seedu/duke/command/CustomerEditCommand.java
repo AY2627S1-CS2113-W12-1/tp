@@ -1,7 +1,10 @@
 package seedu.duke.command;
 
+//@@author HammerHead-os
+
 import java.time.LocalDate;
 
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
@@ -42,13 +45,13 @@ public class CustomerEditCommand {
     public String execute(OrderList orders) {
         Order original = orders.getById(enquiryId);
         if (original.getStatus() != OrderStatus.ENQUIRY) {
-            throw new IllegalArgumentException("Customers may only edit pending enquiries.");
+            throw new CakeQueueException("Customers may only edit pending enquiries.");
         }
         if (!original.getCustomer().getPhone().equals(phone)) {
-            throw new IllegalArgumentException("Phone number does not match this record.");
+            throw new CakeQueueException("Phone number does not match this record.");
         }
         if (name == null && dueDate == null && size == null && flavour == null && filling == null) {
-            throw new IllegalArgumentException(
+            throw new CakeQueueException(
                     "Use: edit ENQUIRY_ID p/PHONE [n/NAME] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]");
         }
 
@@ -61,7 +64,7 @@ public class CustomerEditCommand {
         Cake updatedCake = oldCake;
         if (size != null || flavour != null || filling != null) {
             if (oldCake == null) {
-                throw new IllegalArgumentException("This enquiry has no cake details.");
+                throw new CakeQueueException("This enquiry has no cake details.");
             }
             updatedCake = new Cake(
                     size != null ? size : oldCake.getSize(),

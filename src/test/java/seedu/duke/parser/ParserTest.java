@@ -239,7 +239,7 @@ public class ParserTest {
         for (String input : new String[] {"", "view", "view O1", "view 1", "view O001 extra", "viewpoint O001"}) {
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                     () -> Parser.parseView(input));
-            assertEquals("Use: view ORDER_ID", exception.getMessage());
+            assertEquals("Use: view ORDER_ID|ENQUIRY_ID", exception.getMessage());
         }
         assertThrows(IllegalArgumentException.class, () -> Parser.parseView(null));
     }

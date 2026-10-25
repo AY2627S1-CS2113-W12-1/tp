@@ -1,5 +1,8 @@
 package seedu.duke.command;
 
+//@@author HammerHead-os
+
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 
@@ -21,7 +24,7 @@ public class TrackCommand {
     public String execute(OrderList orders) {
         Order record = orders.getById(recordId);
         if (!record.getCustomer().getPhone().equals(phone)) {
-            throw new IllegalArgumentException("Phone number does not match this record.");
+            throw new CakeQueueException("Phone number does not match this record.");
         }
         return record.toDetailedString();
     }

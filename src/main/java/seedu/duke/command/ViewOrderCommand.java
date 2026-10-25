@@ -1,5 +1,7 @@
 package seedu.duke.command;
 
+//@@author anannya-mk
+
 import seedu.duke.model.OrderList;
 
 /**
@@ -15,7 +17,7 @@ public class ViewOrderCommand {
     /**
      * Returns the full details of the order with this ID.
      *
-     * @throws IllegalArgumentException if no order has that ID.
+     * @throws seedu.duke.exception.CakeQueueException if no order has that ID.
      */
     public String execute(OrderList orders) {
         return orders.getById(orderId).toDetailedString();

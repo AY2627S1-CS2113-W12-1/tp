@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
@@ -98,7 +99,7 @@ public class CustomerEditCommandTest {
     public void execute_wrongPhone_throwsException() {
         OrderList orders = createOrderList(OrderStatus.ENQUIRY, true);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new CustomerEditCommand(
                         "E001", "99999999", "Alicia Tan", null, null, null, null).execute(orders));
 
@@ -113,7 +114,7 @@ public class CustomerEditCommandTest {
     public void execute_confirmedOrder_throwsException() {
         OrderList orders = createOrderList(OrderStatus.QUEUED, true);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new CustomerEditCommand(
                         "E001", "91234567", "Alicia Tan", null, null, null, null).execute(orders));
 
@@ -127,7 +128,7 @@ public class CustomerEditCommandTest {
     public void execute_noFieldsToChange_throwsException() {
         OrderList orders = createOrderList(OrderStatus.ENQUIRY, true);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new CustomerEditCommand(
                         "E001", "91234567", null, null, null, null, null).execute(orders));
 
@@ -141,7 +142,7 @@ public class CustomerEditCommandTest {
     public void execute_cakeFieldWithoutCakeDetails_throwsException() {
         OrderList orders = createOrderList(OrderStatus.ENQUIRY, false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new CustomerEditCommand(
                         "E001", "91234567", null, null, 10, null, null).execute(orders));
 
@@ -155,7 +156,7 @@ public class CustomerEditCommandTest {
     public void execute_unknownId_throwsException() {
         OrderList orders = createOrderList(OrderStatus.ENQUIRY, true);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(CakeQueueException.class,
                 () -> new CustomerEditCommand(
                         "E999", "91234567", "Alicia Tan", null, null, null, null).execute(orders));
     }

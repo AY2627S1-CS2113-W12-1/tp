@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
@@ -76,7 +77,7 @@ public class CancelCommandTest {
     public void execute_customerWrongPhone_throwsException() {
         OrderList orders = createOrderList(OrderStatus.ENQUIRY, OrderStatus.QUEUED);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new CancelCommand("E001", "99999999").execute(orders));
 
         assertTrue(exception.getMessage().contains("Phone number does not match"));
@@ -90,7 +91,7 @@ public class CancelCommandTest {
     public void execute_customerCancelsConfirmedOrder_throwsException() {
         OrderList orders = createOrderList(OrderStatus.ENQUIRY, OrderStatus.QUEUED);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new CancelCommand("O001", "81111111").execute(orders));
 
         assertTrue(exception.getMessage().contains("Customers may only cancel enquiries"));
@@ -104,7 +105,7 @@ public class CancelCommandTest {
     public void execute_collectedOrder_throwsException() {
         OrderList orders = createOrderList(OrderStatus.ENQUIRY, OrderStatus.COLLECTED);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
                 () -> new CancelCommand("O001").execute(orders));
 
         assertTrue(exception.getMessage().contains("Cannot cancel a record with status COLLECTED"));
@@ -118,7 +119,7 @@ public class CancelCommandTest {
     public void execute_rejectedEnquiry_throwsException() {
         OrderList orders = createOrderList(OrderStatus.REJECTED, OrderStatus.QUEUED);
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(CakeQueueException.class,
                 () -> new CancelCommand("E001").execute(orders));
 
         assertEquals(OrderStatus.REJECTED, orders.getById("E001").getStatus());

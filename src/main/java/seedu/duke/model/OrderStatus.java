@@ -1,5 +1,7 @@
 package seedu.duke.model;
 
+//@@author HammerHead-os
+
 /**
  * Represents the status of an enquiry or confirmed order.
  */

@@ -2,6 +2,8 @@ package seedu.duke.model;
 
 import java.util.ArrayList;
 
+import seedu.duke.exception.CakeQueueException;
+
 /**
  * Represents the shared list of enquiries and confirmed orders.
  */
@@ -32,20 +34,36 @@ public class OrderList {
 
     /**
      * Adds an order or enquiry to the list.
+     * If the record already has an ID (e.g., it was loaded from disk), the
+     * next-ID counters are advanced past it so newly generated IDs can never
+     * collide with a restored record.
      */
     public void add(Order order) {
         assert order != null : "Order must not be null";
         orders.add(order);
+        advanceCountersPast(order.getOrderId());
+    }
+
+    private void advanceCountersPast(String recordId) {
+        if (recordId == null || !recordId.matches("[OE][0-9]+")) {
+            return;
+        }
+        int number = Integer.parseInt(recordId.substring(1));
+        if (recordId.startsWith("O")) {
+            nextOrderNumber = Math.max(nextOrderNumber, number + 1);
+        } else {
+            nextEnquiryNumber = Math.max(nextEnquiryNumber, number + 1);
+        }
     }
 
     /**
      * Gets the order at the given index. Index starts from 1.
      *
-     * @throws IllegalArgumentException if the index is out of range.
+     * @throws CakeQueueException if the index is out of range.
      */
     public Order get(int index) {
         if (index < 1 || index > orders.size()) {
-            throw new IllegalArgumentException(
+            throw new CakeQueueException(
                     "Order number must be between 1 and " + orders.size());
         }
         return orders.get(index - 1);
@@ -56,15 +74,18 @@ public class OrderList {
      *
      * @param orderId The ID of the record to find.
      * @return The matching order.
-     * @throws IllegalArgumentException If the record does not exist.
+     * @throws CakeQueueException If the record does not exist.
      */
     public Order getById(String orderId) {
+        if (orderId == null) {
+            throw new CakeQueueException("Order not found: null");
+        }
         for (Order order : orders) {
             if (orderId.equalsIgnoreCase(order.getOrderId())) {
                 return order;
             }
         }
-        throw new IllegalArgumentException("Order not found: " + orderId);
+        throw new CakeQueueException("Order not found: " + orderId);
     }
 
     /**
@@ -84,7 +105,7 @@ public class OrderList {
      * Replaces an existing order with an updated order.
      *
      * @param updatedOrder The order containing the updated details.
-     * @throws IllegalArgumentException If the order ID does not exist.
+     * @throws CakeQueueException If the order ID does not exist.
      */
     public void update(Order updatedOrder) {
         for (int i = 0; i < orders.size(); i++) {
@@ -93,7 +114,7 @@ public class OrderList {
                 return;
             }
         }
-        throw new IllegalArgumentException("Order not found: " + updatedOrder.getOrderId());
+        throw new CakeQueueException("Order not found: " + updatedOrder.getOrderId());
     }
 
     /**
@@ -102,18 +123,25 @@ public class OrderList {
      * @return The removed record.
      */
     public Order removeById(String orderId) {
+        if (orderId == null) {
+            throw new CakeQueueException("Order not found: null");
+        }
         for (int i = 0; i < orders.size(); i++) {
             if (orderId.equalsIgnoreCase(orders.get(i).getOrderId())) {
                 return orders.remove(i);
             }
         }
-        throw new IllegalArgumentException("Order not found: " + orderId);
+        throw new CakeQueueException("Order not found: " + orderId);
     }
 
     /**
      * Deletes the order at the given index. Index starts from 1.
      */
     public Order deleteOrder(int index) {
+        if (index < 1 || index > orders.size()) {
+            throw new CakeQueueException(
+                    "Order number must be between 1 and " + orders.size());
+        }
         return orders.remove(index - 1); // arraylist starts from 0
     }
 
