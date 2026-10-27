@@ -1,5 +1,8 @@
+
 package seedu.duke.command;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -12,9 +15,11 @@ import seedu.duke.model.OrderStatus;
  */
 public class ListCommand {
 
+    private static final int DUE_SOON_DAYS = 3;
+
     /**
      * Returns uncollected confirmed orders with the earliest due dates first.
-     * Enquiries and closed records are omitted. Legacy orders without a due date
+     * Enquiries and closed records are omitted. Orders without a due date
      * are listed last.
      *
      * @param orders The list of all orders.
@@ -22,22 +27,46 @@ public class ListCommand {
      */
     public String execute(OrderList orders) {
         ArrayList<Order> all = orders.getAll();
+
+        // Exclude enquiries and orders that are already closed.
         all.removeIf(order -> order.getStatus() == OrderStatus.COLLECTED
                 || order.getStatus() == OrderStatus.ENQUIRY
                 || order.getStatus() == OrderStatus.CANCELLED
                 || order.getStatus() == OrderStatus.REJECTED);
-        all.sort(Comparator.comparing(Order::getDueDate, Comparator.nullsLast(Comparator.naturalOrder())));
+
+        // Sort by due date, placing orders without a due date last.
+        all.sort(Comparator.comparing(Order::getDueDate,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+
+        LocalDate today = LocalDate.now();
         StringBuilder listing = new StringBuilder();
+
         for (int i = 0; i < all.size(); i++) {
             Order order = all.get(i);
+
             listing.append(i + 1)
                     .append(". ")
-                    .append(order)
-                    .append(System.lineSeparator());
+                    .append(order);
+
+            // Highlight overdue and approaching deadlines.
+            if (order.getDueDate() != null) {
+                long daysUntilDue = ChronoUnit.DAYS.between(today, order.getDueDate());
+
+                if (daysUntilDue < 0) {
+                    listing.append(" [OVERDUE]");
+                } else if (daysUntilDue <= DUE_SOON_DAYS) {
+                    listing.append(" [DUE SOON]");
+                }
+            }
+
+            listing.append(System.lineSeparator());
         }
+
         if (listing.length() == 0) {
             return "You have no upcoming orders.";
         }
-        return "Here are your upcoming orders:" + System.lineSeparator() + listing;
+
+        return "Here are your upcoming orders:"
+                + System.lineSeparator() + listing;
     }
 }
