@@ -32,6 +32,7 @@ public final class Parser {
             "Use: edit ENQUIRY_ID p/PHONE [n/NAME] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]";
     private static final String VIEW_USAGE = "Use: view ORDER_ID|ENQUIRY_ID";
     private static final String MARK_USAGE = "Use: mark ORDER_ID preparing|ready|collected";
+    private static final String FIND_USAGE = "Use: find KEYWORD";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
             .ofPattern("dd-MM-uuuu")
             .withResolverStyle(ResolverStyle.STRICT);
@@ -140,6 +141,24 @@ public final class Parser {
             throw new CakeQueueException(VIEW_USAGE);
         }
         return parts[1].toUpperCase(Locale.ROOT);
+    }
+
+    /**
+     * Parses a find command and returns the search keyword.
+     *
+     * @param input Command entered by the user.
+     * @return The keyword to search for, with surrounding spaces removed.
+     * @throws CakeQueueException If the command has no keyword.
+     */
+    public static String parseFind(String input) {
+        if (input == null || input.isBlank()) {
+            throw new CakeQueueException(FIND_USAGE);
+        }
+        String[] parts = input.trim().split("\\s+", 2);
+        if (parts.length != 2 || !parts[0].equalsIgnoreCase("find") || parts[1].isBlank()) {
+            throw new CakeQueueException(FIND_USAGE);
+        }
+        return parts[1].trim();
     }
 
     /**
