@@ -1,4 +1,4 @@
-# CakeQueue V1 User Guide
+# CakeQueue User Guide
 
 CakeQueue helps bakers record, list, view, and edit cake orders from the command line.
 
@@ -55,6 +55,8 @@ Example:
 ```text
 add n/Alice Tan p/91234567 d/20-10-2026 s/8 f/Chocolate fi/Strawberry
 ```
+If the due date is already over your daily capacity, CakeQueue still adds the order and shows a
+warning. See [`capacity`](#setting-a-daily-capacity-capacity).
 
 ## Listing Upcoming Orders: `list`
 
@@ -68,6 +70,35 @@ List numbers indicate display positions only. Use an Order ID such as `O001` for
 Listing orders does not change their IDs or their stored order.
 
 If no orders are available, CakeQueue shows `You have no upcoming orders.`
+
+An order whose due date has passed ends with `[OVERDUE]`. An order due within the next 3 days
+(including today) ends with `[DUE SOON]`.
+
+Enquiries and orders that are collected, cancelled or rejected are not shown. Use `enquiries` for
+enquiries and `find` or `view` for any record.
+
+## Finding Orders: `find`
+
+Format: `find KEYWORD`
+
+Shows every order and enquiry whose customer name, cake flavour or cake filling contains the
+keyword.
+
+* The search ignores upper and lower case: `find alice` finds `Alice Tan`.
+* The keyword can be part of a word: `find choc` finds `Chocolate`.
+* A keyword with spaces is searched as one phrase: `find Alice Tan` finds `Alice Tan` but not
+  `Tan Alice`.
+* All records are searched, including enquiries and collected or cancelled orders. Each result
+  ends with its status.
+
+Examples:
+
+```text
+find alice
+find chocolate
+```
+
+If nothing matches, CakeQueue shows `No orders found matching "KEYWORD".`
 
 ## Viewing an Order: `view`
 
@@ -142,6 +173,29 @@ edit O001 d/22-10-2026 f/Vanilla
 ```
 
 `update` is also accepted as an alias: `update O001 s/10`.
+
+If the new due date is over your daily capacity, CakeQueue still saves the change and shows a warning.
+
+## Setting a Daily Capacity: capacity
+
+Format: `capacity [NUMBER]`
+
+Sets the most orders you can take for one due date, from 1 to 50. The default is 5 orders per day.
+
+Without a number, capacity shows the current limit and lists any due dates already over it.
+Only active orders count: those with status QUEUED, PREPARING or READY.
+Enquiries and collected, canceled or rejected records do not count.
+
+When `add`, `accept` or `edit` leaves a due date over the limit, CakeQueue still saves the change and shows a warning,
+for example: Warning: 21-10-2026 now has 4 orders, over your daily capacity of 3.
+The limit is not saved when you exit. It returns to 5 the next time you start CakeQueue.
+
+Examples:
+
+```text
+capacity
+capacity 3
+```
 
 ## Exiting: `bye`
 
