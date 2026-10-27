@@ -1,0 +1,62 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide empty members
+
+class OrderList {
+  - dailyCapacity: int
+  + add(order)
+  + getById(id): Order
+  + getAll(): List<Order>
+  + countOrdersDueOn(date): int
+  + countOrdersByDueDate(): Map
+  + getDailyCapacity(): int
+  + setDailyCapacity(n)
+}
+
+class Order {
+  - orderId: String
+  - customerId: String
+  - dueDate: LocalDate
+  - status: OrderStatus
+}
+
+class Customer {
+  - name: String
+  - phone: String
+}
+
+class Cake {
+  - size: int
+  - flavour: String
+  - filling: String
+}
+
+enum OrderStatus {
+  ENQUIRY
+  QUEUED
+  PREPARING
+  READY
+  COLLECTED
+  CANCELLED
+  REJECTED
+}
+
+class CustomerList {
+  + fromOrders(orders): CustomerList
+  + getById(id): CustomerProfile
+}
+
+class CustomerProfile {
+  - customerId: String
+}
+
+OrderList *-- "*" Order
+Order *-- "1" Customer
+Order *-- "0..1" Cake
+Order --> "1" OrderStatus
+CustomerList *-- "*" CustomerProfile
+CustomerProfile o-- "*" Order
+CustomerList ..> OrderList : built from
+@enduml

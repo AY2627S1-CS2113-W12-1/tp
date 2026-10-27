@@ -1,0 +1,38 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide footbox
+
+participant ":BakerCli" as Cli
+participant "<<class>>\nParser" as Parser
+participant "orders:OrderList" as Orders
+participant "<<class>>\nCapacityCommand" as Cap
+
+[-> Cli : "add n/Alice ... d/21-12-2026 ..."
+activate Cli
+Cli -> Parser : parseAdd(input)
+Parser --> Cli : details
+Cli -> Orders : add(order)
+Cli -> Cap : warningFor(orders, dueDate)
+activate Cap
+Cap -> Orders : countOrdersDueOn(dueDate)
+activate Orders
+Orders --> Cap : count
+deactivate Orders
+Cap -> Orders : getDailyCapacity()
+activate Orders
+Orders --> Cap : capacity
+deactivate Orders
+Cap --> Cli : warning, or "" if count <= capacity
+deactivate Cap
+
+Cli -> Cli : print confirmation,\nthen the warning if there is one
+[<-- Cli
+deactivate Cli
+
+note right of Cli
+  accept and edit work the same way: they change
+  the order list first, then ask warningFor(...)
+  about the order's due date.
+end note
+@enduml
