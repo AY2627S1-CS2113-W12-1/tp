@@ -1,6 +1,7 @@
 package seedu.duke.model;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import seedu.duke.exception.CakeQueueException;
 
@@ -11,6 +12,9 @@ public class OrderList {
     private final ArrayList<Order> orders;
     private int nextOrderNumber;
     private int nextEnquiryNumber;
+    //@@author anannya-mk
+    private int nextCustomerNumber = 1;
+    //@@author
 
     public OrderList() {
         orders = new ArrayList<>();
@@ -40,9 +44,41 @@ public class OrderList {
      */
     public void add(Order order) {
         assert order != null : "Order must not be null";
+        assignCustomerId(order);
         orders.add(order);
         advanceCountersPast(order.getOrderId());
     }
+
+    //@@author anannya-mk
+    /**
+     * Gives a confirmed order its customer ID.
+     * A customer ID stays with the order for good: an order that already has one (for example, loaded
+     * from disk) keeps it. A new order takes the ID of the most recent order with the same phone number,
+     * or the next unused ID if that phone number has not been seen before. Enquiries get no customer ID.
+     */
+    private void assignCustomerId(Order order) {
+        String recordId = order.getOrderId();
+        if (recordId == null || !recordId.startsWith("O")) {
+            return;
+        }
+        String existingId = order.getCustomerId();
+        if (existingId != null) {
+            if (existingId.matches("C[0-9]+")) {
+                nextCustomerNumber = Math.max(nextCustomerNumber, Integer.parseInt(existingId.substring(1)) + 1);
+            }
+            return;
+        }
+        for (int i = orders.size() - 1; i >= 0; i--) {
+            Order earlier = orders.get(i);
+            if (earlier.getCustomerId() != null
+                    && Objects.equals(earlier.getCustomer().getPhone(), order.getCustomer().getPhone())) {
+                order.setCustomerId(earlier.getCustomerId());
+                return;
+            }
+        }
+        order.setCustomerId(String.format("C%03d", nextCustomerNumber++));
+    }
+    //@@author
 
     private void advanceCountersPast(String recordId) {
         if (recordId == null || !recordId.matches("[OE][0-9]+")) {

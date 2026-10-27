@@ -2,8 +2,8 @@
 
 CakeQueue helps bakers record, list, view, and edit cake orders from the command line.
 
-Orders are stored in memory only. Closing the application clears all orders, and IDs restart
-from `O001` in the next session.
+Orders are saved automatically to `data/cakequeue.txt` after every change and loaded again the next
+time CakeQueue starts. Customer IDs are saved with the orders.
 
 ## Quick Start
 
@@ -39,6 +39,17 @@ The phone number is recorded as entered; this version does not impose a phone-nu
 CakeQueue assigns a unique Order ID within the session, sets the order to `QUEUED`, and shows
 a confirmation with all its details. Invalid input does not add an order.
 
+After the order is added, CakeQueue also shows the customer's ID. A new phone number gets the next
+unused Customer ID (`C001`, then `C002`, and so on). A phone number that already has an order reuses
+that customer's ID. The ID is saved with the order and never changes, even if the phone number is
+edited later.
+
+```text
+Customer ID: C001 (new customer)
+```
+
+If the phone number already has an order, it shows `Customer ID: C001 (returning customer)`.
+
 Example:
 
 ```text
@@ -63,6 +74,7 @@ If no orders are available, CakeQueue shows `You have no upcoming orders.`
 Format: `view ORDER_ID`
 
 Shows the order's ID, customer name and phone, due date, cake size, flavour, filling, and status.
+For a confirmed order (ID starting with `O`), the details also end with the customer's ID.
 
 Example: `view O001`
 
@@ -74,16 +86,52 @@ Size: 8 inches
 Flavour: Chocolate
 Filling: Strawberry
 Status: QUEUED
+Customer ID: C001
 ```
 
 If the order does not exist, CakeQueue shows `Error: Order not found: ORDER_ID`.
+
+## Viewing a Customer: `customer`
+
+Format: `customer CUSTOMER_ID`
+
+Shows a customer's ID, name, phone number, number of orders, and whether they are a repeat
+customer (more than one order, including cancelled ones). The name and phone number are taken from
+their most recent order. Customer IDs are not case-sensitive: `customer c001` also works.
+
+Example: `customer C001`
+
+```text
+Customer ID: C001
+Name: Alice Tan
+Phone: 91234567
+Orders: 2
+Repeat customer: Yes
+```
+
+If the customer does not exist, CakeQueue shows `Error: Customer not found: CUSTOMER_ID`.
+
+## Viewing a Customer's History: `history`
+
+Format: `history CUSTOMER_ID`
+
+Lists every order placed by that customer, oldest first, including cancelled and collected
+orders. Each line ends with the order's status. Enquiries are not included until they are accepted.
+
+Example: `history C001`
+
+```text
+Order history for Alice Tan (C001):
+1. O001: Alice Tan (91234567) | Due: 22-12-2026 | Size: 8 inches | Flavour: Chocolate | Filling: Strawberry [QUEUED]
+2. O003: Alice Tan (91234567) | Due: 25-12-2026 | Size: 6 inches | Flavour: Vanilla | Filling: Cream [CANCELLED]
+```
 
 ## Editing an Order: `edit`
 
 Format: `edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]`
 
 Provide at least one field. Omitted fields remain unchanged, and the same validation rules used
-for `add` apply to supplied fields. The Order ID and status remain unchanged.
+for `add` apply to supplied fields. The Order ID, Customer ID and status remain unchanged.
 Invalid input or an unknown ID leaves existing orders unchanged.
 
 Examples:
@@ -99,7 +147,7 @@ edit O001 d/22-10-2026 f/Vanilla
 
 Format: `bye`
 
-Exits CakeQueue. Orders from this session are not saved.
+Exits CakeQueue. Your orders are already saved after each change.
 
 ## Command Summary
 
@@ -108,11 +156,14 @@ Exits CakeQueue. Orders from this session are not saved.
 | Add order | `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING` |
 | List orders | `list` |
 | View order | `view ORDER_ID` |
+| View customer | `customer CUSTOMER_ID` |
+| View customer history | `history CUSTOMER_ID` |
 | Edit order | `edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]` |
 | Update alias | `update ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]` |
 | Exit | `bye` |
 
 ## Current Limitations
 
-This version does not support saving to disk, cancellation, searching, customer IDs, customer
-history, repeat-customer detection, or changing order status through the CLI.
+A Customer ID is given out when an order is first added and never changes. If a phone number is
+edited, the order keeps its original Customer ID, and a later order with the old phone number is
+treated as a new customer.

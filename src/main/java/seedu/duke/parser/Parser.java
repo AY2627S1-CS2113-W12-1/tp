@@ -199,6 +199,25 @@ public final class Parser {
                 "Use: cancel ORDER_ID|ENQUIRY_ID");
     }
 
+    //@@author anannya-mk
+    /**
+     * Parses customer CUSTOMER_ID.
+     */
+    public static String parseCustomer(String input) {
+        return parseSingleIdCommand(input, "customer", "[Cc][0-9]{3,}",
+                "Use: customer CUSTOMER_ID");
+    }
+
+    /**
+     * Parses history CUSTOMER_ID.
+     */
+    public static String parseHistory(String input) {
+        return parseSingleIdCommand(input, "history", "[Cc][0-9]{3,}",
+                "Use: history CUSTOMER_ID");
+    }
+
+    //@@author HammerHead-os
+
     /**
      * Parses mine p/PHONE.
      */

@@ -27,7 +27,8 @@ import seedu.duke.model.OrderStatus;
  *
  * <p>Format: one record per line, fields separated by {@code |}, in the order
  * ID, status, customer name, phone, due date ({@code yyyy-MM-dd} or {@code -}),
- * cake size (or {@code -}), flavour, filling. Backslash and {@code |} inside a
+ * cake size (or {@code -}), flavour, filling and, optionally, customer ID (or {@code -}).
+ * Older files without the customer ID are still read. Backslash and {@code |} inside a
  * value are escaped as {@code \\} and {@code \|}, so names such as
  * {@code Mary | Ann} survive a save/load round trip. Plain text was chosen over
  * Java serialisation so the file stays human-readable, diffable in Git, and
@@ -37,6 +38,9 @@ public class Storage {
     private static final Logger LOGGER = Logger.getLogger(Storage.class.getName());
     private static final String NO_VALUE = "-";
     private static final int FIELD_COUNT = 8;
+    //@@author anannya-mk
+    private static final int FIELD_COUNT_WITH_CUSTOMER_ID = 9;
+    //@@author HammerHead-os
 
     private final Path dataFile;
 
@@ -138,13 +142,15 @@ public class Storage {
                 escape(dueDate),
                 escape(size),
                 escape(flavour),
-                escape(filling));
+                escape(filling),
+                escape(order.getCustomerId() == null ? NO_VALUE : order.getCustomerId()));
     }
 
     private Order parseLine(String line) {
         List<String> fields = splitEscaped(line);
-        if (fields.size() != FIELD_COUNT) {
-            throw new CakeQueueException("Expected " + FIELD_COUNT + " fields but found " + fields.size());
+        if (fields.size() != FIELD_COUNT && fields.size() != FIELD_COUNT_WITH_CUSTOMER_ID) {
+            throw new CakeQueueException("Expected " + FIELD_COUNT + " or " + FIELD_COUNT_WITH_CUSTOMER_ID
+                    + " fields but found " + fields.size());
         }
         String orderId = fields.get(0);
         if (!orderId.matches("[OE][0-9]{3,}")) {
@@ -157,7 +163,16 @@ public class Storage {
         if (!fields.get(5).equals(NO_VALUE)) {
             cake = new Cake(Integer.parseInt(fields.get(5)), fields.get(6), fields.get(7));
         }
-        return new Order(orderId, customer, cake, dueDate, status);
+        Order order = new Order(orderId, customer, cake, dueDate, status);
+        //@@author anannya-mk
+        if (fields.size() == FIELD_COUNT_WITH_CUSTOMER_ID && !fields.get(8).equals(NO_VALUE)) {
+            if (!fields.get(8).matches("C[0-9]{3,}")) {
+                throw new CakeQueueException("Invalid customer ID: " + fields.get(8));
+            }
+            order.setCustomerId(fields.get(8));
+        }
+        //@@author HammerHead-os
+        return order;
     }
 
     private String escape(String value) {

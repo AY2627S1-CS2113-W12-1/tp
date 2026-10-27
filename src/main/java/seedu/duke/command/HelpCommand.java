@@ -31,6 +31,8 @@ public class HelpCommand {
                     "  mark ORDER_ID preparing|ready|collected",
                     "  reject ENQUIRY_ID",
                     "  cancel ORDER_ID|ENQUIRY_ID",
+                    "  customer CUSTOMER_ID",
+                    "  history CUSTOMER_ID",
                     "  mode customer",
                     "  help",
                     "  bye");
