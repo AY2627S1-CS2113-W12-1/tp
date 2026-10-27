@@ -125,17 +125,25 @@ public class Order {
         return details.toString();
     }
 
+
     @Override
     public String toString() {
         if (orderId != null) {
+            // Display a placeholder when an order has no due date.
+            String dueDateText = dueDate != null
+                    ? dueDate.format(DATE_FORMATTER) : "Not specified";
+
             if (cake != null) {
-                return orderId + ": " + customer + " | Due: " + dueDate.format(DATE_FORMATTER)
+                return orderId + ": " + customer + " | Due: " + dueDateText
                         + " | Size: " + cake.getSize() + " inches | Flavour: " + cake.getFlavour()
                         + " | Filling: " + cake.getFilling() + " [" + status + "]";
             }
+
             return orderId + ": " + customer.getName() + " (due "
-                    + dueDate.format(DATE_FORMATTER) + ") [" + status + "]";
+                    + dueDateText + ") [" + status + "]";
         }
+
+        // Preserve the existing display format for orders without an ID.
         return customer.getName() + ": " + quantity + " x " + cake.getName() + " [" + status + "]";
     }
 }
