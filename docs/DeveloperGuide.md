@@ -1,10 +1,129 @@
-# Developer Guide
+# CakeQueue Developer Guide
+
+CakeQueue is a command-line app that helps home bakers manage custom cake orders. This guide is for
+developers who want to understand how it is built or add to it.
+
+## Table of Contents
+
+* [Acknowledgements](#acknowledgements)
+* [Setting Up](#setting-up)
+* [Design](#design)
+    * [Architecture](#architecture)
+    * [Parser](#parser)
+    * [Commands](#commands)
+    * [Model](#model)
+    * [Storage](#storage)
+    * [Error handling](#error-handling)
+* [Implementation](#implementation)
+    * [Add Order and customer details](#add-order-and-customer-details)
+    * [Find feature](#find-feature)
+    * [Daily capacity feature](#daily-capacity-feature)
+    * [Customer and history features](#customer-and-history-features)
+    * [View feature](#view-feature)
+* [Appendix A: Product Scope](#appendix-a-product-scope)
+* [Appendix B: User Stories](#appendix-b-user-stories)
+* [Appendix C: Non-Functional Requirements](#appendix-c-non-functional-requirements)
+* [Appendix D: Glossary](#appendix-d-glossary)
+* [Appendix E: Instructions for Manual Testing](#appendix-e-instructions-for-manual-testing)
 
 ## Acknowledgements
 
-{list here sources of all reused/adapted ideas, code, documentation, and third-party libraries -- include links to the original source as well}
+* This project started from the CS2113 team project template, which is why the code keeps the
+  `seedu.duke` package name.
+* The structure and style of this guide follow the
+  [AddressBook-Level3 Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html).
+* Diagrams are drawn with [PlantUML](https://plantuml.com). The `.puml` source of each diagram is in
+  `docs/diagrams`.
+* Tools and libraries: [JUnit 5](https://junit.org/junit5/) for tests, [Gradle](https://gradle.org) with the
+  [Shadow plugin](https://gradleup.com/shadow/) to build the JAR, and
+  [Checkstyle](https://checkstyle.org) for code style.
 
-## Design & implementation
+## Setting Up
+
+Use JDK 25. Import the project folder as a Gradle project in IntelliJ IDEA, and select Java 25 as the
+project SDK and the Gradle JVM. The entry point is `seedu.duke.Duke`. The README lists the Gradle
+commands to run, test and build the JAR. `./gradlew check` runs the tests and Checkstyle together, and
+it is also what the continuous integration build runs on Windows, macOS and Linux.
+
+## Design
+
+### Architecture
+
+![Architecture overview](diagrams/ArchitectureOverview.png)
+
+CakeQueue is split into a few small parts that each do one job:
+
+| Part | What it does |
+| --- | --- |
+| `Duke` | Starts the app. It loads the saved records, asks for a mode, and runs the baker or customer command loop. It gives each loop a *save* callback that is called after every change. |
+| `BakerCli`, `CustomerCli` | One command loop per mode. Each reads a line, picks the command by its first word, runs it, and prints the result or `Error: ...`. |
+| `Parser` | Checks the text of a command and turns it into values such as an ID or a set of fields. |
+| `command` package | One class per command, such as `FindCommand` and `CapacityCommand`. A command carries out the work and returns the text to print. |
+| `model` package | The data: `OrderList`, `Order`, `Customer`, `Cake`, `OrderStatus`, and the read-only `CustomerList` and `CustomerProfile`. |
+| `Storage` | Saves and loads the order list as a text file. |
+| `CakeQueueException` | The one exception type for errors the user can fix. |
+
+The two modes share one `OrderList`, so an enquiry sent in customer mode can be accepted straight away in
+baker mode.
+
+**How a command runs.** A command line goes through these steps:
+
+1. The command loop reads the line and looks at the first word to choose the command.
+2. `Parser` checks the rest of the line. If the input is wrong, it throws a `CakeQueueException`.
+3. The loop creates the command object with the parsed values and calls `execute(orders)`.
+4. The command reads or changes the `OrderList` and returns a message.
+5. The loop prints the message. If the command changed anything, it then runs the save callback.
+
+The sequence diagrams in [Find feature](#find-feature) and [Daily capacity feature](#daily-capacity-feature)
+show this in detail for two commands.
+
+### Parser
+
+`Parser` is a utility class with only static methods, one per command shape, such as `parseFind`,
+`parseCapacity`, `parseView` and `parseAdd`. Field-based commands (`add`, `enquire` and `edit`) use shared
+routines that find the `n/`, `p/`, `d/`, `s/`, `f/` and `fi/` prefixes, reject unknown or repeated
+prefixes and empty values, and check dates and cake sizes. The parser only checks the *format* of the
+input. Checks that need the data, such as whether an order ID exists, are done by the commands.
+
+### Commands
+
+Each command class is small and does one thing. A command is built with its parsed values and has an
+`execute(OrderList)` method that returns the text to print, so commands can be tested without any
+input or output. Commands do not print or save anything themselves. The command loop does that.
+
+### Model
+
+![Model class diagram](diagrams/ModelClassDiagram.png)
+
+* `OrderList` is the single list of all records, both enquiries and confirmed orders. It also hands out
+  new IDs (`O001` for orders, `E001` for enquiries, `C001` for customers) and keeps the daily capacity.
+* `Order` holds the customer, the cake, the due date and the status. Apart from the status and the
+  customer ID, its fields are fixed once the order is created. `edit` builds a changed copy with
+  `Order#updatedCopy`.
+* `OrderStatus` is `ENQUIRY`, `QUEUED`, `PREPARING`, `READY`, `COLLECTED`, `CANCELLED` or `REJECTED`.
+* `CustomerList` and `CustomerProfile` are built fresh from the order list when needed. They are never
+  saved, so there is only one copy of the data.
+
+### Storage
+
+`Storage` keeps the order list in `data/cakequeue.txt` as plain text, with one record per line. Plain text
+keeps the file readable, easy to compare in Git, and fixable by hand. Two choices keep the data safe:
+
+* A save writes a temporary file first and then moves it over the real file, so a crash in the middle of
+  a save cannot leave half a file.
+* A line that cannot be read when loading is skipped with a warning, so one bad line does not stop the
+  app or lose the other records.
+
+The daily capacity is not part of the saved data yet. See [Daily capacity feature](#daily-capacity-feature).
+
+### Error handling
+
+Every error the user can fix is thrown as a `CakeQueueException`, either by the parser (bad input) or by a
+command (for example, an unknown ID or a step that is not allowed). The command loops catch it, print
+`Error: <message>`, and carry on. A mistake never ends the session and never changes the data. The
+message says what is wrong and, where it helps, shows the correct format, such as `Use: find KEYWORD`.
+
+## Implementation
 
 ### Add Order and customer details
 
@@ -120,6 +239,118 @@ Diagram sources are in `docs/diagrams/add-order-class.puml` and
 `docs/diagrams/add-order-sequence.puml`. Their PNG exports are in `docs/images`.
 Update both the source and its export when the implementation changes.
 
+### Find feature
+
+#### What it does
+
+`find KEYWORD` shows every order and enquiry whose customer name, cake flavour or cake filling contains
+the keyword. The match ignores case and may be part of a word. It is available in baker mode only.
+
+#### How it works
+
+![Find sequence diagram](diagrams/FindSequence.png)
+
+1. `BakerCli` sees the command word `find` and calls `Parser.parseFind(input)`. The parser rejects a
+   missing keyword with `Use: find KEYWORD` and returns the rest of the line, trimmed, as one phrase.
+2. `BakerCli` creates a `FindCommand` with the keyword and calls `execute(orders)`.
+3. `FindCommand` goes through `orders.getAll()`. For each record it lower-cases the name, flavour and
+   filling (using `Locale.ROOT`, so the result does not depend on the user's language settings) and checks
+   whether any of them contains the lower-cased keyword. A record with no cake details is matched on the
+   name only.
+4. It returns the matches as a numbered list, in the order the records were added, or
+   `No orders found matching "KEYWORD".`
+5. `BakerCli` prints the message. `find` changes nothing, so nothing is saved.
+
+#### Design considerations
+
+**Which fields to search.**
+
+* *Alternative 1 (chosen): customer name, flavour and filling.* Pros: covers the ways a baker actually
+  looks for an order ("Alice's order", "the chocolate ones"). Cons: it does not search phone numbers or
+  dates. Customers already look up their records by phone with `mine`, and `list` is ordered by date.
+* *Alternative 2: customer name only.* Pros: simpler. Cons: the baker cannot find all orders for a flavour,
+  for example when they need to buy more of an ingredient.
+
+**How to treat a keyword that has several words.**
+
+* *Alternative 1 (chosen): one phrase.* `find Alice Tan` matches `Alice Tan` only. Pros: simple to explain
+  and predictable, and a longer phrase narrows the result.
+* *Alternative 2: match any of the words.* Pros: finds more records. Cons: a longer search finds *more*
+  results instead of fewer, which surprises users. It also needs rules for ordering the results.
+
+**Which records to search.** `find` searches all records, including enquiries and orders that are
+collected or cancelled, and shows each record's status. Pros: it can find an old order, which `list` hides.
+Cons: results can include records the baker no longer cares about, but the status makes them easy to skip.
+
+### Daily capacity feature
+
+#### What it does
+
+A home baker can only make so many cakes in a day. `capacity NUMBER` sets the most active orders the baker
+can take for one due date (1 to 50, default 5), and `capacity` shows the limit and any due dates already
+over it. When `add`, `accept` or `edit` leaves a due date over the limit, the baker is warned. The change is
+still saved. This is baker mode only.
+
+#### How it works
+
+![Capacity sequence diagram](diagrams/CapacitySequence.png)
+
+*Setting and showing the capacity.*
+
+1. `Parser.parseCapacity` returns the new number, or `null` for a bare `capacity`. It throws
+   `Daily capacity must be a whole number from 1 to 50.` for a number out of range or not a number, and
+   `Use: capacity [NUMBER]` for extra words.
+2. `CapacityCommand` calls `orders.setDailyCapacity(n)` when it got a number. `OrderList` checks the range
+   again and keeps the old value if it fails.
+3. It then asks `orders.countOrdersByDueDate()` for the number of active orders on each date, and lists the
+   dates with more orders than the capacity.
+
+*Warning after a change.*
+
+1. `add`, `accept` and `edit` run exactly as before. After the order list has changed, `BakerCli` calls
+   `CapacityCommand.warningFor(orders, dueDate)` with the due date of the order that was added, accepted
+   or edited. For `edit`, it reads the due date back from the order list, because the command may not have
+   changed it.
+2. `warningFor` returns an empty string if the order has no due date, or if
+   `orders.countOrdersDueOn(dueDate)` is not more than `orders.getDailyCapacity()`. Otherwise, it returns
+   the warning text with the date and the count.
+3. `BakerCli` appends the warning on a new line after the normal message.
+
+![Capacity activity diagram](diagrams/CapacityActivity.png)
+
+An *active* order is one with status `QUEUED`, `PREPARING` or `READY`. Enquiries do not count, because the
+baker has not agreed to them yet. Collected orders do not count, because the work is done. Cancelled and
+rejected records do not count, because no work is needed.
+
+#### Design considerations
+
+**Warn or refuse an order that goes over capacity?**
+
+* *Alternative 1 (chosen): warn and still save.* Pros: the baker decides. A baker may take a big order on a
+  busy day (a family member helps, or an old customer asks), and a hard refusal would force them to raise the
+  limit first. Cons: the baker could ignore the warning.
+* *Alternative 2: refuse the order.* Pros: it enforces the limit. Cons: it gets in the way of a normal
+  business decision, and `accept` would leave a customer's enquiry stuck.
+
+**Where to keep the capacity.**
+
+* *Alternative 1 (chosen): in `OrderList`.* Pros: the order list is already passed to every command, so no
+  command signatures change, and the counting code sits next to the data it counts. Cons: `OrderList` now
+  has a small setting in it.
+* *Alternative 2: a separate `Settings` class.* Pros: cleaner separation. Cons: every command loop and
+  command would need a new argument, which is a larger change for one number.
+
+**What to count.** *Orders per date* is used instead of baking hours per date. Pros: easy for the baker to
+understand and to set, with no need to estimate the time of each cake. Cons: a wedding cake and a cupcake
+count the same.
+
+**Not saved between runs (current limitation).** `Storage` writes one order per line, so saving the capacity
+would change the file format, which the whole team depends on. The capacity therefore goes back to 5 on each
+start. The user guide lists this as *Coming soon*.
+
+*Proposed implementation.* Write the capacity as a first line such as `#capacity 3` in the data file. Make
+`Storage.load` read that line and call `setDailyCapacity`, and make it skip other lines that start with `#`
+instead of treating them as corrupted. Older files without the line keep working with the default of 5.
 
 ### Customer and history features
 
@@ -231,31 +462,82 @@ All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, 
 
 Manual test: `add` an order, then `view O001`. Expected: the order's details, ending with a `Customer ID: C001` line. Then `view O999`. Expected: the not-found error.
 
-## Product scope
-### Target user profile
+## Appendix A: Product Scope
 
-{Describe the target user profile}
+**Target user profile**
 
-### Value proposition
+* A home baker who takes custom cake orders as a side business, working alone from home
+* Receives orders through chat apps or phone calls, and has to remember what each cake involves
+* Needs to know what is due when, and cannot make more than a few cakes in a day
+* Is comfortable typing short commands on a laptop, and prefers that to a heavy app
 
-{Describe the value proposition: what problem does it solve?}
+**Value proposition**
 
-## User Stories
+CakeQueue keeps track of upcoming custom orders and what each one involves, so the baker knows what is due
+when and does not accept more work for a day than they can actually deliver. Customers can send enquiries and
+check on them themselves, so the baker does not have to manage everything in separate chat threads.
 
-|Version| As a ... | I want to ... | So that I can ...|
-|--------|----------|---------------|------------------|
-|v1.0|new user|see usage instructions|refer to them when I forget how to use the application|
-|v2.0|user|find a to-do item by name|locate a to-do without having to go through the entire list|
+**Out of scope.** CakeQueue does not handle payments, ingredient stock, recipes or online ordering by customers.
 
-## Non-Functional Requirements
+## Appendix B: User Stories
 
-{Give non-functional requirements}
+Priorities: High (must have), Medium (nice to have), Low (unlikely to have).
 
-## Glossary
+| Version | Priority | As a ... | I want to ... | So that I can ... |
+| --- | --- | --- | --- | --- |
+| v1.0 | High | new user | see usage instructions | refer to them when I forget how to use the application |
+| v1.0 | High | baker | add an order with the customer, due date and cake details | keep a record of every cake I have promised |
+| v1.0 | High | baker | list my upcoming orders, earliest first | see what I need to bake next |
+| v1.0 | High | baker | view all the details of one order | check the cake before I start baking |
+| v1.0 | Medium | baker | edit an order | handle a change request without entering the order again |
+| v2.0 | High | baker | set a daily capacity and be warned when a date goes over it | avoid accepting more cakes than I can deliver in a day |
+| v2.0 | Medium | baker | see which dates are over capacity | ask customers to move their dates or arrange extra help |
+| v2.0 | High | baker | mark an order as preparing, ready or collected | know which cakes are in progress and which are done |
+| v2.0 | Medium | baker | cancel an order or enquiry and keep the record | keep my list accurate and still look back at it |
+| v2.0 | Medium | baker | find orders by customer name, flavour or filling | locate an order without going through the whole list |
+| v2.0 | High | customer | send an enquiry with the cake I want | ask the baker without writing in a chat app |
+| v2.0 | High | baker | accept or reject an enquiry | turn it into an order or turn it down |
+| v2.0 | Medium | customer | see my enquiries and orders using my phone number | check their status without asking the baker |
+| v2.0 | Low | customer | change or cancel my enquiry before the baker answers | fix a mistake without bothering the baker |
+| v2.0 | Medium | baker | see a customer's order history | recognise a returning customer and recall their past cakes |
+| v2.0 | High | baker | have my orders saved automatically | close the app without losing orders |
+| v2.1 | Low | baker | have my daily capacity remembered between sessions | avoid setting it again each time I start the app |
 
-* *glossary item* - Definition
+## Appendix C: Non-Functional Requirements
 
-## Instructions for manual testing
+1. **Platform.** CakeQueue should work on Windows, macOS and Linux when Java 25 is the only Java version installed.
+2. **Performance.** With up to 1,000 orders, each command should respond within 1 second on an ordinary laptop.
+   A check with 1,000 orders (including saving after every change) finished in under 2 seconds for the whole session.
+3. **Data safety.** After any command that changes data, the change should already be on disk, so closing the app or
+   a crash does not lose it. A damaged line in the data file should not stop the app from starting, and should not
+   affect the other records.
+4. **Readable data.** The data file should be plain text that a user can open, read and fix in a text editor.
+5. **Error messages.** Every invalid command should show a message that says what is wrong, and should not end the
+   session or change any data.
+6. **Single user.** CakeQueue is used by one person at a time on one computer. It does not need a network connection.
+7. **Code quality.** All code and tests should pass Checkstyle, and all tests should pass on Windows, macOS and Linux in
+   the continuous integration build before a pull request is merged.
+
+## Appendix D: Glossary
+
+* **Baker** - The person who makes the cakes and uses CakeQueue's baker mode.
+* **Customer** - A person who orders cakes. Customers use customer mode to send and track enquiries.
+* **Enquiry** - A cake request from a customer that the baker has not answered yet. Its ID starts with `E`.
+* **Order** - A confirmed cake request. Its ID starts with `O`.
+* **Active order** - An order that is `QUEUED`, `PREPARING` or `READY`. Only these count towards the daily capacity.
+* **Daily capacity** - The most active orders the baker is willing to take for one due date.
+* **Customer ID** - An ID such as `C001` that identifies one customer by phone number.
+* **Mainstream OS** - Windows, Linux and macOS.
+
+## Appendix E: Instructions for Manual Testing
+
+These steps give a path through the main features. The user guide describes each command in detail, so this appendix
+only lists inputs to copy and what to expect. The steps use dates in December 2026. If you run them after those dates,
+use later dates, because the app does not reject dates in the past.
+
+**Before you start.** Build the JAR with `./gradlew shadowJar`. Copy `build/libs/cakequeue.jar` into a new empty
+folder, open a terminal there and run `java -ea -jar cakequeue.jar`. A `data` folder appears in that folder after the
+first change.
 
 ### Add Order and customer details
 
@@ -289,3 +571,51 @@ The IDs below assume this folder has no saved records.
 If a save warning appears, the changed records are only guaranteed for the
 current session. Keep the application open while checking the destination
 folder's write permissions, then make a successful change to retry saving.
+
+### Choosing a mode
+
+1. Type `hello`. Expected: `Error: Choose a mode: baker or customer`, and the app asks again.
+2. Type `baker`. Expected: `Baker mode. Type help to see commands.`
+
+### Orders, capacity and progress (baker mode)
+
+1. `add n/Alice Tan p/91234567 d/21-12-2026 s/8 f/Chocolate fi/Strawberry`
+   Expected: `Added order O001: ...` followed by `Customer ID: C001 (new customer)`, and no warning.
+2. `capacity 1`. Expected: `Daily capacity set to 1 order per day.`
+3. `add n/Bob Lim p/81234567 d/21-12-2026 s/6 f/Vanilla fi/Cream`
+   Expected: `Warning: 21-12-2026 now has 2 orders, over your daily capacity of 1.` The order is still added.
+4. `capacity`. Expected: the capacity, then `These dates are over capacity:` with `21-12-2026: 2 orders`.
+5. `mark O001 collected`. Expected: `Error: Cannot change order O001 from QUEUED to COLLECTED. ...`
+6. `mark O001 preparing`, then `mark O001 ready`, then `mark O001 collected`. Expected: each reply ends with the new status.
+7. `capacity`. Expected: no list of over-capacity dates, because the collected order no longer counts.
+8. `capacity 0`, then `capacity abc`. Expected: `Error: Daily capacity must be a whole number from 1 to 50.`, and the capacity stays at 1.
+
+### Enquiries (customer mode, then baker mode)
+
+1. `mode customer`, then `enquire n/Cara p/92222222 d/22-12-2026 s/10 f/Mocha fi/Cream`.
+   Expected: `Submitted enquiry E001: ...`
+2. `track E001 p/92222222`. Expected: the full details of E001 with `Status: ENQUIRY`.
+3. `track E001 p/00000000`. Expected: `Error: Phone number does not match this record.`
+4. `find cara`. Expected: `Error: Unknown customer command: find. ...` (`find` is a baker command).
+5. `mode baker`, then `enquiries`. Expected: E001 is listed.
+6. `accept E001`. Expected: `Accepted enquiry E001 as order O003: ...`, and no `E001` in `enquiries` afterwards.
+
+### Searching and customers (baker mode)
+
+1. `find CHOC`. Expected: `Orders matching "CHOC":` with O001 (matches the flavour, ignoring case).
+2. `find cara`. Expected: O003 only.
+3. `find zzz`. Expected: `No orders found matching "zzz".`
+4. `find`. Expected: `Error: Use: find KEYWORD`
+5. `customer C001`. Expected: Alice Tan, `Orders: 1`, `Repeat customer: No`.
+6. `history C001`. Expected: O001 with `[COLLECTED]`.
+7. `cancel O002`, then `list`. Expected: O002 is cancelled and no longer in `list`, but `find bob` still shows it with `[CANCELLED]`.
+
+### Saving and loading
+
+1. Type `bye`, then start the app again in the same folder.
+   Expected: `Loaded 3 saved record(s).` With `baker` and `list`, O003 is still there.
+2. Type `capacity`. Expected: `Daily capacity is 5 orders per day.` (the capacity is not saved; see
+   [Daily capacity feature](#daily-capacity-feature)).
+3. Type `bye`. Add the line `this line is garbage` at the end of `data/cakequeue.txt` and start the app again.
+   Expected: a warning that line 4 is skipped, and `Loaded 3 saved record(s).` The valid records are unaffected.
+4. Delete the `data` folder and start the app again. Expected: no error, and `list` shows `You have no upcoming orders.`

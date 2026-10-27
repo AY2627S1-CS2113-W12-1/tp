@@ -1,0 +1,21 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontSize 14
+
+start
+:Baker runs add, accept or edit;
+:Change is saved to the order list;
+if (Order has a due date?) then (no)
+  :Show confirmation only;
+else (yes)
+  :Count active orders due on that date
+  (QUEUED, PREPARING or READY);
+  if (Count is more than the daily capacity?) then (yes)
+    :Show confirmation, then a warning
+    that names the date and the count;
+  else (no)
+    :Show confirmation only;
+  endif
+endif
+stop
+@enduml
