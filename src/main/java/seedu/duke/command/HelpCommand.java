@@ -23,6 +23,7 @@ public class HelpCommand {
                     "Baker commands:",
                     "  add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING",
                     "  list",
+                    "  find KEYWORD",
                     "  enquiries",
                     "  view ORDER_ID|ENQUIRY_ID",
                     "  edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]",
