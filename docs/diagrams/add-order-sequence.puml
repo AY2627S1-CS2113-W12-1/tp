@@ -1,0 +1,64 @@
+@startuml
+' Author: Eethanzyj
+title Add Order: validate, create, confirm, and save
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam sequenceMessageAlign center
+hide footbox
+
+actor Baker
+participant ":BakerCli" as Cli
+participant ":Parser" as Parser
+participant "orders:OrderList" as Orders
+participant "saveChanges:Runnable" as Save
+participant ":Storage" as Storage
+
+Baker -> Cli : add n/NAME p/PHONE d/DATE\ns/SIZE f/FLAVOUR fi/FILLING
+activate Cli
+Cli -> Cli : addOrder(input, orders)
+Cli -> Parser : parseAdd(input)
+note right of Parser
+  Check all required fields,
+  prefixes, date, and cake size.
+end note
+alt invalid input
+  Parser --> Cli : throws CakeQueueException
+  Cli --> Baker : Error with field guidance
+  note over Orders, Storage
+    No ID is generated, no order is added,
+    and no save is attempted.
+  end note
+else valid input
+  Parser --> Cli : AddOrderDetails
+  Cli -> Orders : generateOrderId()
+  Orders --> Cli : orderId
+  note right of Cli
+    Create Customer(name, phone)
+    and Cake(size, flavour, filling).
+  end note
+  create participant "order:Order" as Order
+  Cli -> Order : new Order(orderId, customer, cake, dueDate)
+  note right of Order : Initial status is QUEUED.
+  Cli -> Orders : add(order)
+  Cli --> Baker : Added order with ID and details
+  Cli -> Save : run()
+  activate Save
+  note right of Save
+    Callback supplied by Duke;
+    BakerCli does not access files directly.
+  end note
+  Save -> Storage : save(orders)
+  activate Storage
+  Storage -> Orders : getAll()
+  Orders --> Storage : current records
+  note right of Storage : Write through a temporary data file.
+  Storage --> Save : saved: boolean
+  deactivate Storage
+  opt save failed
+    Save --> Baker : Warning: changes kept for this session only
+  end
+  deactivate Save
+end
+deactivate Cli
+@enduml
