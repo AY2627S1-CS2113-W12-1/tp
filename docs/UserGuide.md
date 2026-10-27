@@ -39,8 +39,10 @@ The phone number is recorded as entered; this version does not impose a phone-nu
 CakeQueue assigns a unique Order ID within the session, sets the order to `QUEUED`, and shows
 a confirmation with all its details. Invalid input does not add an order.
 
-After the order is added, CakeQueue also shows the customer's ID. Customers are identified by
-phone number: the first phone number to place an order becomes `C001`, the next `C002`, and so on.
+After the order is added, CakeQueue also shows the customer's ID. A new phone number gets the next
+unused Customer ID (`C001`, then `C002`, and so on). A phone number that already has an order reuses
+that customer's ID. The ID is saved with the order and never changes, even if the phone number is
+edited later.
 
 ```text
 Customer ID: C001 (new customer)
@@ -94,8 +96,8 @@ If the order does not exist, CakeQueue shows `Error: Order not found: ORDER_ID`.
 Format: `customer CUSTOMER_ID`
 
 Shows a customer's ID, name, phone number, number of orders, and whether they are a repeat
-customer (more than one order, including cancelled ones). The name is taken from their most
-recent order. Customer IDs are not case-sensitive: `customer c001` also works.
+customer (more than one order, including cancelled ones). The name and phone number are taken from
+their most recent order. Customer IDs are not case-sensitive: `customer c001` also works.
 
 Example: `customer C001`
 
@@ -129,7 +131,7 @@ Order history for Alice Tan (C001):
 Format: `edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]`
 
 Provide at least one field. Omitted fields remain unchanged, and the same validation rules used
-for `add` apply to supplied fields. The Order ID and status remain unchanged.
+for `add` apply to supplied fields. The Order ID, Customer ID and status remain unchanged.
 Invalid input or an unknown ID leaves existing orders unchanged.
 
 Examples:
@@ -163,5 +165,6 @@ Exits CakeQueue. Orders from this session are not saved.
 ## Current Limitations
 
 This version does not support saving to disk, cancellation, searching, or changing order status
-through the CLI. Customer IDs are worked out from the phone numbers on saved orders, so editing
-the phone number on a customer's first order can change the IDs of later customers.
+through the CLI. A Customer ID is given out when an order is first added and never changes. If a
+phone number is edited, the order keeps its original Customer ID, and a later order with the old
+phone number is treated as a new customer.
