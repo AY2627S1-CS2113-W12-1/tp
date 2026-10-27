@@ -2,8 +2,6 @@ package seedu.duke.command;
 
 //@@author anannya-mk
 
-import seedu.duke.model.CustomerList;
-import seedu.duke.model.CustomerProfile;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 
@@ -25,12 +23,8 @@ public class ViewOrderCommand {
     public String execute(OrderList orders) {
         Order order = orders.getById(orderId);
         String details = order.toDetailedString();
-        if (order.getOrderId() != null && order.getOrderId().startsWith("O")) {
-            String phone = order.getCustomer().getPhone();
-            CustomerProfile customer = CustomerList.fromOrders(orders).findByPhone(phone).orElse(null);
-            if (customer != null) {
-                details += System.lineSeparator() + "Customer ID: " + customer.getCustomerId();
-            }
+        if (order.getCustomerId() != null) {
+            details += System.lineSeparator() + "Customer ID: " + order.getCustomerId();
         }
         return details;
     }

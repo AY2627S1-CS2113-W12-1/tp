@@ -3,6 +3,8 @@ package seedu.duke.model;
 //@@author anannya-mk
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,49 +15,57 @@ import seedu.duke.exception.CakeQueueException;
 /**
  * A snapshot of every customer, worked out from the confirmed orders in an {@link OrderList}.
  *
- * <p>A customer is identified by their phone number. Customer IDs (C001, C002, ...) are given out in
- * the order in which each phone number first appears among the confirmed orders. Because the IDs are
- * worked out from the orders every time, nothing extra has to be saved to disk, and the IDs stay the
- * same after the application is closed and reopened.</p>
+ * <p>Every confirmed order carries a Customer ID (C001, C002, ...) that is given out once, when the
+ * order is added, and saved with the order. The ID never changes afterwards, even if the order's name
+ * or phone number is edited, so an ID always refers to the same customer. This list simply groups the
+ * orders by that ID. A customer's name and phone number are those on their most recent order.</p>
  *
  * <p>Only confirmed orders (IDs starting with O) count. Enquiries (IDs starting with E) do not,
  * because an enquiry is not an order until the baker accepts it.</p>
  */
 public class CustomerList {
     private final List<CustomerProfile> customers;
+    private final Map<String, String> customerIdByPhone;
 
-    private CustomerList(List<CustomerProfile> customers) {
+    private CustomerList(List<CustomerProfile> customers, Map<String, String> customerIdByPhone) {
         this.customers = customers;
+        this.customerIdByPhone = customerIdByPhone;
     }
 
     /**
      * Builds the customer list from the confirmed orders in the given order list.
      *
      * @param orders The list of all orders and enquiries.
-     * @return The customers, with IDs assigned in order of first appearance.
+     * @return The customers, sorted by Customer ID.
      */
     public static CustomerList fromOrders(OrderList orders) {
         assert orders != null : "Order list must not be null";
-        Map<String, List<Order>> ordersByPhone = new LinkedHashMap<>();
+        Map<String, List<Order>> ordersByCustomerId = new LinkedHashMap<>();
+        Map<String, String> customerIdByPhone = new HashMap<>();
         for (Order order : orders.getAll()) {
             if (isConfirmedOrder(order)) {
-                ordersByPhone.computeIfAbsent(order.getCustomer().getPhone(), phone -> new ArrayList<>())
-                        .add(order);
+                ordersByCustomerId.computeIfAbsent(order.getCustomerId(), id -> new ArrayList<>()).add(order);
+                customerIdByPhone.put(order.getCustomer().getPhone(), order.getCustomerId());
             }
         }
 
         List<CustomerProfile> profiles = new ArrayList<>();
-        int nextNumber = 1;
-        for (Map.Entry<String, List<Order>> entry : ordersByPhone.entrySet()) {
-            String customerId = String.format("C%03d", nextNumber++);
-            profiles.add(new CustomerProfile(customerId, entry.getKey(), entry.getValue()));
+        for (Map.Entry<String, List<Order>> entry : ordersByCustomerId.entrySet()) {
+            List<Order> customerOrders = entry.getValue();
+            String latestPhone = customerOrders.get(customerOrders.size() - 1).getCustomer().getPhone();
+            profiles.add(new CustomerProfile(entry.getKey(), latestPhone, customerOrders));
         }
-        return new CustomerList(profiles);
+        profiles.sort(Comparator.comparingInt(profile -> numberOf(profile.getCustomerId())));
+        return new CustomerList(profiles, customerIdByPhone);
     }
 
     private static boolean isConfirmedOrder(Order order) {
         String orderId = order.getOrderId();
-        return orderId != null && orderId.startsWith("O");
+        return orderId != null && orderId.startsWith("O") && order.getCustomerId() != null;
+    }
+
+    private static int numberOf(String customerId) {
+        return Integer.parseInt(customerId.substring(1));
     }
 
     /**
@@ -75,18 +85,17 @@ public class CustomerList {
     }
 
     /**
-     * Finds the customer with the given phone number, if they have any confirmed orders.
+     * Finds the customer who most recently placed an order under the given phone number.
      *
      * @param phone The phone number to look for.
-     * @return The matching customer, or empty if the phone number has no confirmed orders.
+     * @return The matching customer, or empty if no confirmed order has that phone number.
      */
     public Optional<CustomerProfile> findByPhone(String phone) {
-        for (CustomerProfile customer : customers) {
-            if (customer.getPhone().equals(phone)) {
-                return Optional.of(customer);
-            }
+        String customerId = customerIdByPhone.get(phone);
+        if (customerId == null) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        return Optional.of(getById(customerId));
     }
 
     /**

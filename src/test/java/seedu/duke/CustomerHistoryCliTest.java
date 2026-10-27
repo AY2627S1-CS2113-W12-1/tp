@@ -61,6 +61,15 @@ public class CustomerHistoryCliTest {
     }
 
     @Test
+    public void run_editPhoneThenRestart_customerIdsDoNotChange() {
+        runSession("baker\n" + ADD_ALICE + ADD_BOB + "edit O001 p/90000000\nbye\n");
+        String result = runSession("baker\ncustomer C002\ncustomer C001\n" + ADD_ALICE + "bye\n");
+        assertTrue(result.contains("Name: Bob Lim"));
+        assertTrue(result.contains("Phone: 90000000"));
+        assertTrue(result.contains("Customer ID: C003 (new customer)"));
+    }
+
+    @Test
     public void run_badCustomerCommands_printErrors() {
         String result = runSession("baker\ncustomer C999\nhistory C999\ncustomer\nhistory X1\nbye\n");
         assertTrue(result.contains("Error: Customer not found: C999"));

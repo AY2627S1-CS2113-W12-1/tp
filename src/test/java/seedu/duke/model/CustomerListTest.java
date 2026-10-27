@@ -65,4 +65,33 @@ public class CustomerListTest {
                 () -> CustomerList.fromOrders(new OrderList()).getById("C999"));
         assertEquals("Customer not found: C999", exception.getMessage());
     }
+
+    @Test
+    public void fromOrders_phoneEdited_customerIdsStayWithTheSameCustomer() {
+        OrderList orders = new OrderList();
+        orders.add(order("O001", "Alice", "91111111", OrderStatus.QUEUED));
+        orders.add(order("O002", "Bob", "92222222", OrderStatus.QUEUED));
+        Order alicesOrder = orders.getById("O001");
+        orders.update(alicesOrder.updatedCopy(new Customer("Alice", "98888888"), null, null));
+        CustomerList customers = CustomerList.fromOrders(orders);
+
+        assertEquals("Bob", customers.getById("C002").getName());
+        assertEquals("92222222", customers.getById("C002").getPhone());
+        assertEquals("Alice", customers.getById("C001").getName());
+        assertEquals("98888888", customers.getById("C001").getPhone());
+    }
+
+    @Test
+    public void add_afterPhoneEdit_oldPhoneBecomesNewCustomer() {
+        OrderList orders = new OrderList();
+        orders.add(order("O001", "Alice", "91111111", OrderStatus.QUEUED));
+        orders.update(orders.getById("O001").updatedCopy(new Customer("Alice", "98888888"), null, null));
+        orders.add(order("O002", "Someone Else", "91111111", OrderStatus.QUEUED));
+        orders.add(order("O003", "Alice", "98888888", OrderStatus.QUEUED));
+        CustomerList customers = CustomerList.fromOrders(orders);
+
+        assertEquals(2, customers.size());
+        assertEquals(2, customers.getById("C001").getOrders().size());
+        assertEquals("Someone Else", customers.getById("C002").getName());
+    }
 }
