@@ -92,7 +92,7 @@ All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, 
 5. `customer C001`. Expected: `Orders: 2` and `Repeat customer: Yes`.
 6. `history C001`. Expected: two orders listed for Alice.
 7. `cancel O003`, then `history C001`. Expected: `O003` still listed, marked `[CANCELLED]`.
-8. `edit O001 p/90000000`, then `customer C002`. Expected: still Bob Lim (IDs do not change after a phone edit). `customer C001` now shows phone `90000000`.
+8. `edit O001 p/90000000`, then `customer C002`. Expected: still Bob Lim (IDs do not change after a phone edit). Then `customer C001`. Expected: still Alice Tan, but the phone shown is `91234567`, because a customer's phone comes from their newest order (`O003`). `view O001` shows the edited phone `90000000`.
 9. `customer C999`. Expected: `Error: Customer not found: C999`.
 10. `customer` with no ID. Expected: `Error: Use: customer CUSTOMER_ID`.
 11. `bye`, restart the app, enter `baker`, then `customer C002`. Expected: Bob's details (IDs are saved).

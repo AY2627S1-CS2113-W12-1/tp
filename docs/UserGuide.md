@@ -2,8 +2,8 @@
 
 CakeQueue helps bakers record, list, view, and edit cake orders from the command line.
 
-Orders are stored in memory only. Closing the application clears all orders, and IDs restart
-from `O001` in the next session.
+Orders are saved automatically to `data/cakequeue.txt` after every change and loaded again the next
+time CakeQueue starts. Customer IDs are saved with the orders.
 
 ## Quick Start
 
@@ -147,7 +147,7 @@ edit O001 d/22-10-2026 f/Vanilla
 
 Format: `bye`
 
-Exits CakeQueue. Orders from this session are not saved.
+Exits CakeQueue. Your orders are already saved after each change.
 
 ## Command Summary
 
@@ -164,7 +164,6 @@ Exits CakeQueue. Orders from this session are not saved.
 
 ## Current Limitations
 
-This version does not support saving to disk, cancellation, searching, or changing order status
-through the CLI. A Customer ID is given out when an order is first added and never changes. If a
-phone number is edited, the order keeps its original Customer ID, and a later order with the old
-phone number is treated as a new customer.
+A Customer ID is given out when an order is first added and never changes. If a phone number is
+edited, the order keeps its original Customer ID, and a later order with the old phone number is
+treated as a new customer.
