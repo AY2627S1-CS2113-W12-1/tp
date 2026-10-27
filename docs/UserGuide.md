@@ -45,6 +45,12 @@ Example:
 add n/Alice Tan p/91234567 d/20-10-2026 s/8 f/Chocolate fi/Strawberry
 ```
 
+### Cake Details Validation
+
+- Cake sizes must be 6, 8, or 10 inches.
+- Cake flavours and fillings cannot be empty or contain only whitespace.
+- Invalid cake details are rejected with an error message.
+
 ## Listing Upcoming Orders: `list`
 
 Format: `list`
@@ -52,6 +58,17 @@ Format: `list`
 Shows orders that have not been collected, including overdue orders, with the earliest due date
 first. Orders with the same due date keep their original insertion order.
 Legacy orders without a due date appear last.
+
+### Due-Date Warnings
+
+CakeQueue highlights orders with approaching or missed deadlines:
+
+- `[OVERDUE]` appears when an order's due date is before today.
+- `[DUE SOON]` appears when an order is due today or within the next 3 days.
+- Orders due more than 3 days away do not display a warning.
+- Orders without a due date do not display a warning.
+
+These warnings are calculated using the current date whenever `list` is executed.
 
 List numbers indicate display positions only. Use an Order ID such as `O001` for `view` and `edit`.
 Listing orders does not change their IDs or their stored order.
