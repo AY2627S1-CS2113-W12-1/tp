@@ -2,6 +2,7 @@ package seedu.duke;
 
 //@@author HammerHead-os
 
+import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Scanner;
@@ -10,6 +11,7 @@ import java.util.logging.Logger;
 
 import seedu.duke.command.AcceptEnquiryCommand;
 import seedu.duke.command.CancelCommand;
+import seedu.duke.command.CapacityCommand;
 import seedu.duke.command.CustomerCommand;
 import seedu.duke.command.FindCommand;
 import seedu.duke.command.HelpCommand;
@@ -71,6 +73,9 @@ public class BakerCli {
                 case "find":
                     System.out.println(new FindCommand(Parser.parseFind(input)).execute(orders));
                     break;
+                case "capacity":
+                    System.out.println(new CapacityCommand(Parser.parseCapacity(input)).execute(orders));
+                    break;
                 case "enquiries":
                     requireNoArguments(input, "enquiries");
                     System.out.println(new ListEnquiriesCommand().execute(orders));
@@ -91,7 +96,8 @@ public class BakerCli {
                             details.getFlavour(),
                             details.getFilling()
                     );
-                    System.out.println(command.execute(orders));
+                    System.out.println(command.execute(orders)
+                            + capacityWarning(orders, orders.getById(details.getOrderId()).getDueDate()));
                     afterChange.run();
                     break;
                 case "add":
@@ -105,7 +111,10 @@ public class BakerCli {
                     afterChange.run();
                     break;
                 case "accept":
-                    System.out.println(new AcceptEnquiryCommand(Parser.parseAccept(input)).execute(orders));
+                    String enquiryId = Parser.parseAccept(input);
+                    LocalDate acceptedDueDate = orders.getById(enquiryId).getDueDate();
+                    System.out.println(new AcceptEnquiryCommand(enquiryId).execute(orders)
+                            + capacityWarning(orders, acceptedDueDate));
                     afterChange.run();
                     break;
                 case "reject":
@@ -159,7 +168,15 @@ public class BakerCli {
                 details.getDueDate());
         orders.add(order);
         LOGGER.log(Level.INFO, "Added order {0}.", order.getOrderId());
-        return "Added order " + order;
+        return "Added order " + order + capacityWarning(orders, order.getDueDate());
+    }
+
+    /**
+     * Returns a line break and a warning if the date is over capacity, or an empty string.
+     */
+    private String capacityWarning(OrderList orders, LocalDate dueDate) {
+        String warning = CapacityCommand.warningFor(orders, dueDate);
+        return warning.isEmpty() ? "" : System.lineSeparator() + warning;
     }
 
     private void requireNoArguments(String input, String commandWord) {

@@ -1,6 +1,8 @@
 package seedu.duke.model;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.Objects;
 
 import seedu.duke.exception.CakeQueueException;
@@ -9,7 +11,10 @@ import seedu.duke.exception.CakeQueueException;
  * Represents the shared list of enquiries and confirmed orders.
  */
 public class OrderList {
+    public static final int DEFAULT_DAILY_CAPACITY = 5;
+    public static final int MAX_DAILY_CAPACITY = 50;
     private final ArrayList<Order> orders;
+    private int dailyCapacity;
     private int nextOrderNumber;
     private int nextEnquiryNumber;
     //@@author anannya-mk
@@ -20,6 +25,7 @@ public class OrderList {
         orders = new ArrayList<>();
         nextOrderNumber = 1;
         nextEnquiryNumber = 1;
+        dailyCapacity = DEFAULT_DAILY_CAPACITY;
     }
 
     /**
@@ -207,5 +213,59 @@ public class OrderList {
      */
     public ArrayList<Order> getAll() {
         return new ArrayList<>(orders);
+    }
+
+    /**
+     * Returns the most orders the baker can take for one due date.
+     */
+    public int getDailyCapacity() {
+        return dailyCapacity;
+    }
+
+    /**
+     * Sets the most orders the baker can take for one due date.
+     *
+     * @param capacity The new limit, from 1 to {@value #MAX_DAILY_CAPACITY}.
+     * @throws CakeQueueException If the limit is out of range.
+     */
+    public void setDailyCapacity(int capacity) {
+        if (capacity < 1 || capacity > MAX_DAILY_CAPACITY) {
+            throw new CakeQueueException("Daily capacity must be a whole number from 1 to "
+                    + MAX_DAILY_CAPACITY + ".");
+        }
+        dailyCapacity = capacity;
+    }
+
+    /**
+     * Returns how many active orders (queued, preparing or ready) are due on a date.
+     * Enquiries and collected, cancelled or rejected records are not counted.
+     */
+    public int countOrdersDueOn(LocalDate date) {
+        int count = 0;
+        for (Order order : orders) {
+            if (isActive(order) && date.equals(order.getDueDate())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Returns the number of active orders for each due date, earliest date first.
+     */
+    public TreeMap<LocalDate, Integer> countOrdersByDueDate() {
+        TreeMap<LocalDate, Integer> counts = new TreeMap<>();
+        for (Order order : orders) {
+            if (isActive(order) && order.getDueDate() != null) {
+                counts.merge(order.getDueDate(), 1, Integer::sum);
+            }
+        }
+        return counts;
+    }
+
+    private boolean isActive(Order order) {
+        OrderStatus status = order.getStatus();
+        return status == OrderStatus.QUEUED || status == OrderStatus.PREPARING
+                || status == OrderStatus.READY;
     }
 }
