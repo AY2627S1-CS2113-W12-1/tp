@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import seedu.duke.command.AcceptEnquiryCommand;
 import seedu.duke.command.CancelCommand;
 import seedu.duke.command.CustomerCommand;
+import seedu.duke.command.FindCommand;
 import seedu.duke.command.HelpCommand;
 import seedu.duke.command.HistoryCommand;
 import seedu.duke.command.ListCommand;
@@ -66,6 +67,9 @@ public class BakerCli {
                 case "list":
                     requireNoArguments(input, "list");
                     System.out.println(new ListCommand().execute(orders));
+                    break;
+                case "find":
+                    System.out.println(new FindCommand(Parser.parseFind(input)).execute(orders));
                     break;
                 case "enquiries":
                     requireNoArguments(input, "enquiries");
