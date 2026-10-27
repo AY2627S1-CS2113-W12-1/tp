@@ -9,21 +9,27 @@ import seedu.duke.exception.CakeQueueException;
  */
 public class OrderList {
     private final ArrayList<Order> orders;
+    //@@author Eethanzyj
     private int nextOrderNumber;
+    //@@author
     private int nextEnquiryNumber;
 
     public OrderList() {
         orders = new ArrayList<>();
+        //@@author Eethanzyj
         nextOrderNumber = 1;
+        //@@author
         nextEnquiryNumber = 1;
     }
 
+    //@@author Eethanzyj
     /**
      * Returns the next order ID in the format O001.
      */
     public String generateOrderId() {
         return String.format("O%03d", nextOrderNumber++);
     }
+    //@@author
 
     /**
      * Returns the next enquiry ID in the format E001.
@@ -39,7 +45,9 @@ public class OrderList {
      * collide with a restored record.
      */
     public void add(Order order) {
+        //@@author Eethanzyj
         assert order != null : "Order must not be null";
+        //@@author
         orders.add(order);
         advanceCountersPast(order.getOrderId());
     }

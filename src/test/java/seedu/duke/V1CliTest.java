@@ -10,10 +10,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+//@@author HammerHead-os
 import java.nio.file.Path;
+//@@author Eethanzyj
 
 import org.junit.jupiter.api.Test;
+//@@author HammerHead-os
 import org.junit.jupiter.api.io.TempDir;
+//@@author Eethanzyj
 
 /**
  * Tests the integrated V1 commands through the application input and output.
@@ -24,12 +28,16 @@ public class V1CliTest {
     private static final String ADD_BOB =
             "add fi/Cream f/Vanilla s/6 d/20-10-2026 p/81234567 n/Bob Lim\n";
 
+    //@@author HammerHead-os
     @TempDir
     private Path tempDir;
+    //@@author Eethanzyj
 
     @Test
     public void run_addListViewAndEdit_workTogether() {
+        //@@author HammerHead-os
         String result = runSession("baker\nlist\n" + ADD_ALICE + ADD_BOB
+                //@@author Eethanzyj
                 + "list\nview o001\nEDIT\to001\td/19-10-2026 s/10\nview O001\n"
                 + "update o002 p/81230000\nview o002\nlist\nbye\n");
 
@@ -50,15 +58,21 @@ public class V1CliTest {
 
     @Test
     public void run_invalidCommands_recoversWithoutChangingOrders() {
+        //@@author HammerHead-os
         String result = runSession("baker\n" + ADD_ALICE
+                //@@author Eethanzyj
                 + "\nlist extra\nview\nview O999\nviewpoint O001\nedit O001 s/7\n"
                 + "edit O001 d/31-02-2026\nedit O999 s/10\nbye extra\nLIST\nbye\n");
 
         assertTrue(result.contains("Error: Please enter a command."));
         assertTrue(result.contains("Error: Use: list"));
+        //@@author HammerHead-os
         assertTrue(result.contains("Error: Use: view ORDER_ID|ENQUIRY_ID"));
+        //@@author Eethanzyj
         assertTrue(result.contains("Error: Order not found: O999"));
+        //@@author HammerHead-os
         assertTrue(result.contains("Error: Unknown baker command: viewpoint"));
+        //@@author Eethanzyj
         assertTrue(result.contains("Error: Cake size must be 6, 8, or 10 inches."));
         assertTrue(result.contains("Error: Date must use DD-MM-YYYY and be valid."));
         assertTrue(result.contains("Error: Use: bye"));
@@ -77,7 +91,9 @@ public class V1CliTest {
         try (PrintStream capturedOutput = new PrintStream(output, true, StandardCharsets.UTF_8)) {
             System.setIn(new ByteArrayInputStream(commands.getBytes(StandardCharsets.UTF_8)));
             System.setOut(capturedOutput);
+            //@@author HammerHead-os
             new Duke(tempDir.resolve("cakequeue.txt")).run();
+        //@@author Eethanzyj
         } finally {
             System.setIn(originalInput);
             System.setOut(originalOutput);

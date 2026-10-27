@@ -136,6 +136,7 @@ public final class Parser {
         }
     }
 
+    //@@author
     /**
      * Parses a view command and returns the order or enquiry ID.
      *
@@ -155,6 +156,7 @@ public final class Parser {
         return parts[1].toUpperCase(Locale.ROOT);
     }
 
+    //@@author Kaishhhh
     /**
      * Parses a find command and returns the search keyword.
      *
@@ -173,6 +175,7 @@ public final class Parser {
         return parts[1].trim();
     }
 
+    //@@author HammerHead-os
     /**
      * Parses and validates a baker add command.
      */
@@ -313,6 +316,7 @@ public final class Parser {
         );
     }
 
+    //@@author
     private static AddOrderDetails parseSixFieldCommand(String input, String commandWord,
                                                         String usage) {
         if (input == null || input.isBlank()) {
@@ -334,6 +338,7 @@ public final class Parser {
                 size, fields.get("f/"), fields.get("fi/"));
     }
 
+    //@@author HammerHead-os
     private static String parseSingleIdCommand(String input, String commandWord,
                                                String idPattern, String usage) {
         if (input == null || input.isBlank()) {
@@ -347,6 +352,7 @@ public final class Parser {
         return parts[1].toUpperCase(Locale.ROOT);
     }
 
+    //@@author
     private static int parseCakeSize(String sizeText) {
         int size;
         try {
@@ -398,10 +404,10 @@ public final class Parser {
         return fields;
     }
 
-    //@@author
     /**
      * Stores the values extracted from an Add Order or Enquire command.
      */
+    //@@author Eethanzyj
     public static final class AddOrderDetails {
         private final String customerName;
         private final String phone;
@@ -469,9 +475,11 @@ public final class Parser {
 
         // Check that the command is "edit" or "update", the Order ID is valid,
         // and at least one field argument is present.
+        //@@author Eethanzyj
         if (parts.length != 3
                 || (!parts[0].equalsIgnoreCase("edit") && !parts[0].equalsIgnoreCase("update"))
                 || !parts[1].matches("[Oo][0-9]{3,}")) {
+            //@@author WillChin484848
             throw new CakeQueueException(UPDATE_USAGE);
         }
 
@@ -502,7 +510,9 @@ public final class Parser {
         // Store the validated values in an UpdateOrderDetails object.
         // Fields that were not supplied remain null.
         return new UpdateOrderDetails(
+                //@@author Eethanzyj
                 parts[1].toUpperCase(Locale.ROOT),
+                //@@author WillChin484848
                 fields.get("n/"),
                 fields.get("p/"),
                 dueDate,

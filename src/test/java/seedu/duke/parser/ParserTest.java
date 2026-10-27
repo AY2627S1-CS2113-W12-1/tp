@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
  * Tests parsing and validation of Add Order, View Order, and Edit Order input.
  */
 public class ParserTest {
+    //@@author Eethanzyj
     private static final String VALID_INPUT = "add n/Alice Tan p/91234567 d/20-10-2026 "
             + "s/8 f/Dark Chocolate fi/Strawberry Cream";
 
@@ -99,6 +100,7 @@ public class ParserTest {
         assertThrows(IllegalArgumentException.class, () -> Parser.parseAdd("list"));
         assertThrows(IllegalArgumentException.class, () -> Parser.parseAdd(VALID_INPUT.replace("add ", "add extra ")));
     }
+    //@@author WillChin484848
     /**
      * Tests that an update command can contain multiple fields.
      */
@@ -211,6 +213,7 @@ public class ParserTest {
                 () -> Parser.parseUpdate("update O1 n/Bob"));
     }
 
+    //@@author Eethanzyj
     @Test
     public void parseUpdate_editAliasAndLowercaseId_returnsCanonicalId() {
         Parser.UpdateOrderDetails details = Parser.parseUpdate("EDIT\to001\ts/10 d/22-10-2026");
@@ -239,8 +242,11 @@ public class ParserTest {
         for (String input : new String[] {"", "view", "view O1", "view 1", "view O001 extra", "viewpoint O001"}) {
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                     () -> Parser.parseView(input));
+            //@@author HammerHead-os
             assertEquals("Use: view ORDER_ID|ENQUIRY_ID", exception.getMessage());
+            //@@author Eethanzyj
         }
         assertThrows(IllegalArgumentException.class, () -> Parser.parseView(null));
     }
+    //@@author
 }

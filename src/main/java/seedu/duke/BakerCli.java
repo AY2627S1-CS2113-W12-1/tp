@@ -29,7 +29,9 @@ import seedu.duke.parser.Parser;
  * Runs the baker-facing CakeQueue commands.
  */
 public class BakerCli {
+    //@@author Eethanzyj
     private static final Logger LOGGER = Logger.getLogger(BakerCli.class.getName());
+    //@@author HammerHead-os
 
     /**
      * Handles baker commands until the user exits or switches mode.
@@ -42,6 +44,7 @@ public class BakerCli {
         assert scanner != null && orders != null && afterChange != null
                 : "Scanner, order list and save callback must not be null";
         System.out.println("Baker mode. Type help to see commands.");
+        //@@author Eethanzyj
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine().trim();
             try {
@@ -50,6 +53,7 @@ public class BakerCli {
                 case "bye":
                     requireNoArguments(input, "bye");
                     System.out.println("Bye. Hope to see you again soon!");
+                    //@@author HammerHead-os
                     return Optional.empty();
                 case "mode":
                     UserMode nextMode = Parser.parseModeCommand(input);
@@ -60,13 +64,16 @@ public class BakerCli {
                     requireNoArguments(input, "help");
                     System.out.println(new HelpCommand(UserMode.BAKER).execute());
                     break;
+                //@@author Eethanzyj
                 case "list":
                     requireNoArguments(input, "list");
                     System.out.println(new ListCommand().execute(orders));
                     break;
+                //@@author Kaishhhh
                 case "find":
                     System.out.println(new FindCommand(Parser.parseFind(input)).execute(orders));
                     break;
+                //@@author HammerHead-os
                 case "enquiries":
                     requireNoArguments(input, "enquiries");
                     System.out.println(new ListEnquiriesCommand().execute(orders));
@@ -75,8 +82,10 @@ public class BakerCli {
                     String recordId = Parser.parseView(input);
                     System.out.println(new ViewOrderCommand(recordId).execute(orders));
                     break;
+                //@@author Eethanzyj
                 case "edit":
                 case "update":
+                    //@@author HammerHead-os
                     Parser.UpdateOrderDetails details = Parser.parseUpdate(input);
                     UpdateOrderCommand command = new UpdateOrderCommand(
                             details.getOrderId(),
@@ -90,8 +99,10 @@ public class BakerCli {
                     System.out.println(command.execute(orders));
                     afterChange.run();
                     break;
+                //@@author Eethanzyj
                 case "add":
                     System.out.println(addOrder(input, orders));
+                    //@@author HammerHead-os
                     afterChange.run();
                     break;
                 case "mark":
@@ -119,12 +130,15 @@ public class BakerCli {
                             + ". Type help to see baker commands.");
                 }
             } catch (CakeQueueException exception) {
+                //@@author Eethanzyj
                 System.out.println("Error: " + exception.getMessage());
+                //@@author HammerHead-os
             }
         }
         return Optional.empty();
     }
 
+    //@@author Eethanzyj
     private String addOrder(String input, OrderList orders) {
         Parser.AddOrderDetails details = Parser.parseAdd(input);
         Order order = new Order(orders.generateOrderId(),
@@ -135,9 +149,12 @@ public class BakerCli {
         LOGGER.log(Level.INFO, "Added order {0}.", order.getOrderId());
         return "Added order " + order;
     }
+    //@@author HammerHead-os
 
+    //@@author Eethanzyj
     private void requireNoArguments(String input, String commandWord) {
         if (!input.equalsIgnoreCase(commandWord)) {
+            //@@author HammerHead-os
             throw new CakeQueueException("Use: " + commandWord);
         }
     }

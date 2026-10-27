@@ -7,13 +7,17 @@ import java.time.format.DateTimeFormatter;
  * Represents a customer enquiry or a confirmed cake order.
  */
 public class Order {
+    //@@author Eethanzyj
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-uuuu");
 
     private final String orderId;
+    //@@author
     private final Customer customer;
     private final Cake cake;
     private final int quantity;
+    //@@author Eethanzyj
     private final LocalDate dueDate;
+    //@@author
     private OrderStatus status;
 
     public Order(Customer customer, Cake cake, int quantity) {
@@ -51,9 +55,11 @@ public class Order {
         this.status = status;
     }
 
+    //@@author Eethanzyj
     public String getOrderId() {
         return orderId;
     }
+    //@@author
 
     public Customer getCustomer() {
         return customer;
@@ -67,9 +73,11 @@ public class Order {
         return quantity;
     }
 
+    //@@author Eethanzyj
     public LocalDate getDueDate() {
         return dueDate;
     }
+    //@@author
 
     public OrderStatus getStatus() {
         return status;
@@ -127,6 +135,7 @@ public class Order {
 
     @Override
     public String toString() {
+        //@@author Eethanzyj
         if (orderId != null) {
             if (cake != null) {
                 return orderId + ": " + customer + " | Due: " + dueDate.format(DATE_FORMATTER)
@@ -136,6 +145,7 @@ public class Order {
             return orderId + ": " + customer.getName() + " (due "
                     + dueDate.format(DATE_FORMATTER) + ") [" + status + "]";
         }
+        //@@author
         return customer.getName() + ": " + quantity + " x " + cake.getName() + " [" + status + "]";
     }
 }

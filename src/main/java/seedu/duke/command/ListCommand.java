@@ -26,7 +26,9 @@ public class ListCommand {
                 || order.getStatus() == OrderStatus.ENQUIRY
                 || order.getStatus() == OrderStatus.CANCELLED
                 || order.getStatus() == OrderStatus.REJECTED);
+        //@@author Eethanzyj
         all.sort(Comparator.comparing(Order::getDueDate, Comparator.nullsLast(Comparator.naturalOrder())));
+        //@@author
         StringBuilder listing = new StringBuilder();
         for (int i = 0; i < all.size(); i++) {
             Order order = all.get(i);
