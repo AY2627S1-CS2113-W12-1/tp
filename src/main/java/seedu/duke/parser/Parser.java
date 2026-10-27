@@ -20,6 +20,18 @@ import seedu.duke.model.OrderStatus;
  */
 public final class Parser {
     private static final List<String> PREFIXES = List.of("n/", "p/", "d/", "s/", "f/", "fi/");
+    //@@author Eethanzyj
+    /**
+     * Gives a field's purpose and syntax when a required value is missing.
+     */
+    private static final Map<String, String> FIELD_GUIDANCE = Map.of(
+            "n/", "a customer name using n/NAME",
+            "p/", "a phone number using p/PHONE",
+            "d/", "a due date using d/DD-MM-YYYY",
+            "s/", "a cake size using s/6, s/8, or s/10",
+            "f/", "a cake flavour using f/FLAVOUR",
+            "fi/", "a cake filling using fi/FILLING");
+    //@@author
     private static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
     private static final String USAGE = "Use: add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
     private static final String ENQUIRE_USAGE =
@@ -365,10 +377,11 @@ public final class Parser {
             }
             String prefix = matcher.group(1);
             if (!PREFIXES.contains(prefix)) {
-                throw new CakeQueueException("Unknown field: " + prefix);
+                throw new CakeQueueException("Unknown field: " + prefix
+                        + ". Supported prefixes: " + String.join(", ", PREFIXES) + ".");
             }
             if (fields.containsKey(prefix)) {
-                throw new CakeQueueException("Duplicate field: " + prefix);
+                throw new CakeQueueException("Duplicate field: " + prefix + ". Supply each field once.");
             }
             previousPrefix = prefix;
             valueStart = matcher.end();
@@ -378,7 +391,8 @@ public final class Parser {
         }
         for (String prefix : PREFIXES) {
             if (!fields.containsKey(prefix) || fields.get(prefix).isBlank()) {
-                throw new CakeQueueException("Missing value for " + prefix);
+                throw new CakeQueueException("Missing value for " + prefix
+                        + ". Please provide " + FIELD_GUIDANCE.get(prefix) + ".");
             }
         }
         return fields;
