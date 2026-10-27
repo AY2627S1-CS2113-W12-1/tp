@@ -23,11 +23,34 @@ public class Cake {
         //@@author
     }
 
-    //@@author Eethanzyj
+    //@@author WillChin484848
     /**
-     * Creates an order cake with a size, flavour, and filling; pricing is not recorded yet.
+     * Creates a cake with the specified size, flavour, and filling.
+     *
+     * @param size The cake size in inches.
+     * @param flavour The cake flavour.
+     * @param filling The cake filling.
+     * @throws IllegalArgumentException If the cake details are invalid.
      */
     public Cake(int size, String flavour, String filling) {
+        // Reject unsupported cake sizes to prevent invalid orders.
+        if (size != 6 && size != 8 && size != 10) {
+            throw new IllegalArgumentException(
+                    "Cake size must be 6, 8, or 10 inches.");
+        }
+
+        // A cake must have a meaningful flavour and filling.
+        if (flavour == null || flavour.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Cake flavour cannot be empty.");
+        }
+
+        if (filling == null || filling.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Cake filling cannot be empty.");
+        }
+
+        //@@author Eethanzyj
         this.name = flavour;
         this.flavour = flavour;
         this.price = 0;
@@ -35,6 +58,7 @@ public class Cake {
         this.filling = filling;
     }
     //@@author
+
 
     public String getName() {
         return name;

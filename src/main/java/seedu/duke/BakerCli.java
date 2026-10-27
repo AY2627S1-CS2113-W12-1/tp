@@ -2,6 +2,7 @@ package seedu.duke;
 
 //@@author HammerHead-os
 
+import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Scanner;
@@ -10,8 +11,11 @@ import java.util.logging.Logger;
 
 import seedu.duke.command.AcceptEnquiryCommand;
 import seedu.duke.command.CancelCommand;
+import seedu.duke.command.CapacityCommand;
+import seedu.duke.command.CustomerCommand;
 import seedu.duke.command.FindCommand;
 import seedu.duke.command.HelpCommand;
+import seedu.duke.command.HistoryCommand;
 import seedu.duke.command.ListCommand;
 import seedu.duke.command.ListEnquiriesCommand;
 import seedu.duke.command.MarkCommand;
@@ -21,6 +25,8 @@ import seedu.duke.command.ViewOrderCommand;
 import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
+import seedu.duke.model.CustomerList;
+import seedu.duke.model.CustomerProfile;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.parser.Parser;
@@ -73,6 +79,9 @@ public class BakerCli {
                 case "find":
                     System.out.println(new FindCommand(Parser.parseFind(input)).execute(orders));
                     break;
+                case "capacity":
+                    System.out.println(new CapacityCommand(Parser.parseCapacity(input)).execute(orders));
+                    break;
                 //@@author HammerHead-os
                 case "enquiries":
                     requireNoArguments(input, "enquiries");
@@ -96,12 +105,14 @@ public class BakerCli {
                             details.getFlavour(),
                             details.getFilling()
                     );
-                    System.out.println(command.execute(orders));
+                    System.out.println(command.execute(orders)
+                            + capacityWarning(orders, orders.getById(details.getOrderId()).getDueDate()));
                     afterChange.run();
                     break;
                 //@@author Eethanzyj
                 case "add":
-                    System.out.println(addOrder(input, orders));
+                    //@@author anannya-mk
+                    System.out.println(addOrderAndReportCustomer(input, orders));
                     //@@author HammerHead-os
                     afterChange.run();
                     break;
@@ -112,7 +123,10 @@ public class BakerCli {
                     afterChange.run();
                     break;
                 case "accept":
-                    System.out.println(new AcceptEnquiryCommand(Parser.parseAccept(input)).execute(orders));
+                    String enquiryId = Parser.parseAccept(input);
+                    LocalDate acceptedDueDate = orders.getById(enquiryId).getDueDate();
+                    System.out.println(new AcceptEnquiryCommand(enquiryId).execute(orders)
+                            + capacityWarning(orders, acceptedDueDate));
                     afterChange.run();
                     break;
                 case "reject":
@@ -123,6 +137,14 @@ public class BakerCli {
                     System.out.println(new CancelCommand(Parser.parseBakerCancel(input)).execute(orders));
                     afterChange.run();
                     break;
+                //@@author anannya-mk
+                case "customer":
+                    System.out.println(new CustomerCommand(Parser.parseCustomer(input)).execute(orders));
+                    break;
+                case "history":
+                    System.out.println(new HistoryCommand(Parser.parseHistory(input)).execute(orders));
+                    break;
+                //@@author HammerHead-os
                 case "":
                     throw new CakeQueueException("Please enter a command.");
                 default:
@@ -138,6 +160,19 @@ public class BakerCli {
         return Optional.empty();
     }
 
+    //@@author anannya-mk
+    /**
+     * Adds an order, then tells the baker which customer it belongs to and whether they are new.
+     */
+    private String addOrderAndReportCustomer(String input, OrderList orders) {
+        String phone = Parser.parseAdd(input).getPhone();
+        boolean isNewCustomer = CustomerList.fromOrders(orders).findByPhone(phone).isEmpty();
+        String added = addOrder(input, orders);
+        CustomerProfile customer = CustomerList.fromOrders(orders).findByPhone(phone).orElseThrow();
+        return added + System.lineSeparator() + "Customer ID: " + customer.getCustomerId()
+                + (isNewCustomer ? " (new customer)" : " (returning customer)");
+    }
+
     //@@author Eethanzyj
     private String addOrder(String input, OrderList orders) {
         Parser.AddOrderDetails details = Parser.parseAdd(input);
@@ -147,7 +182,16 @@ public class BakerCli {
                 details.getDueDate());
         orders.add(order);
         LOGGER.log(Level.INFO, "Added order {0}.", order.getOrderId());
-        return "Added order " + order;
+        //@@author Kaishhhh
+        return "Added order " + order + capacityWarning(orders, order.getDueDate());
+    }
+
+    /**
+     * Returns a line break and a warning if the date is over capacity, or an empty string.
+     */
+    private String capacityWarning(OrderList orders, LocalDate dueDate) {
+        String warning = CapacityCommand.warningFor(orders, dueDate);
+        return warning.isEmpty() ? "" : System.lineSeparator() + warning;
     }
     //@@author HammerHead-os
 

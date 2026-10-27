@@ -16,7 +16,7 @@ participant ":Storage" as Storage
 
 Baker -> Cli : add n/NAME p/PHONE d/DATE\ns/SIZE f/FLAVOUR fi/FILLING
 activate Cli
-Cli -> Cli : addOrder(input, orders)
+Cli -> Cli : addOrderAndReportCustomer(input, orders)
 Cli -> Parser : parseAdd(input)
 note right of Parser
   Check all required fields,
@@ -31,6 +31,9 @@ alt invalid input
   end note
 else valid input
   Parser --> Cli : AddOrderDetails
+  ref over Cli, Orders : Look up whether this phone already has a customer
+  Cli -> Cli : addOrder(input, orders)
+  note right of Parser : The add helper validates the input again.
   Cli -> Orders : generateOrderId()
   Orders --> Cli : orderId
   note right of Cli
@@ -41,7 +44,14 @@ else valid input
   Cli -> Order : new Order(orderId, customer, cake, dueDate)
   note right of Order : Initial status is QUEUED.
   Cli -> Orders : add(order)
-  Cli --> Baker : Added order with ID and details
+  Orders -> Order : setCustomerId(customerId)
+  note right of Order
+    Reuse the matching phone's ID,
+    or assign the next Customer ID.
+  end note
+  ref over Cli, Orders : Check capacity; warn if over the limit
+  ref over Cli, Orders : Look up customer and append ID and new/returning label
+  Cli --> Baker : Added order, optional capacity warning, and Customer ID
   Cli -> Save : run()
   activate Save
   note right of Save

@@ -60,12 +60,18 @@ public class UpdateOrderCommand {
             if (oldCake == null) {
                 throw new CakeQueueException("This order has no cake details.");
             }
+            try {
+                // Preserve existing cake details when a field is not updated.
+                updatedCake = new Cake(
+                        size != null ? size : oldCake.getSize(),
+                        flavour != null ? flavour : oldCake.getFlavour(),
+                        filling != null ? filling : oldCake.getFilling()
+                );
+            } catch (IllegalArgumentException exception) {
+                // Convert model validation errors into user-facing command errors.
+                throw new CakeQueueException(exception.getMessage());
+            }
 
-            updatedCake = new Cake(
-                    size != null ? size : oldCake.getSize(),
-                    flavour != null ? flavour : oldCake.getFlavour(),
-                    filling != null ? filling : oldCake.getFilling()
-            );
         }
 
         Order updatedOrder = original.updatedCopy(

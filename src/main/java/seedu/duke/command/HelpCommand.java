@@ -24,6 +24,7 @@ public class HelpCommand {
                     "  add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING",
                     "  list",
                     "  find KEYWORD",
+                    "  capacity [NUMBER]",
                     "  enquiries",
                     "  view ORDER_ID|ENQUIRY_ID",
                     "  edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]",
@@ -31,6 +32,8 @@ public class HelpCommand {
                     "  mark ORDER_ID preparing|ready|collected",
                     "  reject ENQUIRY_ID",
                     "  cancel ORDER_ID|ENQUIRY_ID",
+                    "  customer CUSTOMER_ID",
+                    "  history CUSTOMER_ID",
                     "  mode customer",
                     "  help",
                     "  bye");

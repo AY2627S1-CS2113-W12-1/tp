@@ -9,6 +9,7 @@ skinparam classAttributeIconSize 0
 hide empty members
 
 class BakerCli {
+  - addOrderAndReportCustomer(input, orders): String
   - addOrder(input, orders): String
 }
 class Parser {
@@ -20,6 +21,7 @@ class OrderList {
 }
 class Order {
   - orderId: String
+  - customerId: String
   - dueDate: LocalDate
   - status: OrderStatus
 }
@@ -44,5 +46,6 @@ note bottom of Order
   Add Order always supplies one Customer
   and one Cake. Older constructors also
   support orders without cake details.
+  OrderList.add assigns the Customer ID.
 end note
 @enduml

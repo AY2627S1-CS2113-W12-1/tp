@@ -127,6 +127,37 @@ public class AddOrderReliabilityTest {
         assertEquals("A file cannot be used as a directory.", Files.readString(blockedParent));
     }
 
+    @Test
+    public void run_enquiryAndAdd_preservesCustomerIdsAndCapacityRules() {
+        Path dataFile = tempDir.resolve("cakequeue.txt");
+        String enquiry = VALID_ADD.replace("add n/Alice Tan p/91234567", "enquire n/Bob Lim p/81234567");
+        String invalidEnquiry = enquiry.replace("n/Bob Lim ", "");
+
+        String output = runSession(dataFile, "customer\n" + invalidEnquiry + "\n" + enquiry
+                + "\nmode baker\ncapacity 1\n" + VALID_ADD
+                + "\naccept E001\ncustomer C002\nhistory C002\nbye\n");
+
+        assertTrue(output.contains("Error: Missing value for n/. "
+                + "Please provide a customer name using n/NAME."));
+        assertTrue(output.contains("Customer ID: C001 (new customer)"));
+        assertTrue(output.contains("Accepted enquiry E001 as order O002"));
+        assertTrue(output.contains("Name: Bob Lim"));
+        assertTrue(output.contains("Order history for Bob Lim (C002):"));
+        // The pending enquiry does not fill capacity; only accepting it causes a warning.
+        assertEquals(1, output.lines().filter(line -> line.startsWith("Warning: 30-10-2026")).count());
+
+        OrderList loaded = new Storage(dataFile).load();
+        assertEquals(2, loaded.size());
+        assertEquals("C001", loaded.getById("O001").getCustomerId());
+        assertEquals("C002", loaded.getById("O002").getCustomerId());
+        assertEquals("Alice Tan", loaded.getById("O001").getCustomer().getName());
+        assertEquals("Bob Lim", loaded.getById("O002").getCustomer().getName());
+
+        String restarted = runSession(dataFile, "baker\ncapacity\ncustomer C002\nbye\n");
+        assertTrue(restarted.contains("Daily capacity is 5 orders per day."));
+        assertTrue(restarted.contains("Name: Bob Lim"));
+    }
+
     /**
      * Runs a session against the specified temporary file and restores console streams.
      */
