@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 import seedu.duke.UserMode;
 import seedu.duke.exception.CakeQueueException;
+import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
 
 /**
@@ -32,6 +33,7 @@ public final class Parser {
             "Use: edit ENQUIRY_ID p/PHONE [n/NAME] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]";
     private static final String VIEW_USAGE = "Use: view ORDER_ID|ENQUIRY_ID";
     private static final String MARK_USAGE = "Use: mark ORDER_ID preparing|ready|collected";
+    private static final String CAPACITY_USAGE = "Use: capacity [NUMBER]";
     private static final String FIND_USAGE = "Use: find KEYWORD";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
             .ofPattern("dd-MM-uuuu")
@@ -159,6 +161,36 @@ public final class Parser {
             throw new CakeQueueException(FIND_USAGE);
         }
         return parts[1].trim();
+    }
+
+    /**
+     * Parses a capacity command.
+     *
+     * @param input Command entered by the user.
+     * @return The new daily capacity, or null if the user only wants to see it.
+     * @throws CakeQueueException If the command is invalid or the number is out of range.
+     */
+    public static Integer parseCapacity(String input) {
+        if (input == null || input.isBlank()) {
+            throw new CakeQueueException(CAPACITY_USAGE);
+        }
+        String[] parts = input.trim().split("\\s+");
+        if (parts.length > 2 || !parts[0].equalsIgnoreCase("capacity")) {
+            throw new CakeQueueException(CAPACITY_USAGE);
+        }
+        if (parts.length == 1) {
+            return null;
+        }
+        try {
+            int capacity = Integer.parseInt(parts[1]);
+            if (capacity < 1 || capacity > OrderList.MAX_DAILY_CAPACITY) {
+                throw new NumberFormatException();
+            }
+            return capacity;
+        } catch (NumberFormatException exception) {
+            throw new CakeQueueException("Daily capacity must be a whole number from 1 to "
+                    + OrderList.MAX_DAILY_CAPACITY + ".", exception);
+        }
     }
 
     /**
