@@ -10,7 +10,9 @@ import java.util.logging.Logger;
 
 import seedu.duke.command.AcceptEnquiryCommand;
 import seedu.duke.command.CancelCommand;
+import seedu.duke.command.CustomerCommand;
 import seedu.duke.command.HelpCommand;
+import seedu.duke.command.HistoryCommand;
 import seedu.duke.command.ListCommand;
 import seedu.duke.command.ListEnquiriesCommand;
 import seedu.duke.command.MarkCommand;
@@ -20,6 +22,8 @@ import seedu.duke.command.ViewOrderCommand;
 import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
+import seedu.duke.model.CustomerList;
+import seedu.duke.model.CustomerProfile;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.parser.Parser;
@@ -87,7 +91,7 @@ public class BakerCli {
                     afterChange.run();
                     break;
                 case "add":
-                    System.out.println(addOrder(input, orders));
+                    System.out.println(addOrderAndReportCustomer(input, orders));
                     afterChange.run();
                     break;
                 case "mark":
@@ -108,6 +112,14 @@ public class BakerCli {
                     System.out.println(new CancelCommand(Parser.parseBakerCancel(input)).execute(orders));
                     afterChange.run();
                     break;
+                //@@author anannya-mk
+                case "customer":
+                    System.out.println(new CustomerCommand(Parser.parseCustomer(input)).execute(orders));
+                    break;
+                case "history":
+                    System.out.println(new HistoryCommand(Parser.parseHistory(input)).execute(orders));
+                    break;
+                //@@author HammerHead-os
                 case "":
                     throw new CakeQueueException("Please enter a command.");
                 default:
@@ -121,6 +133,20 @@ public class BakerCli {
         return Optional.empty();
     }
 
+    //@@author anannya-mk
+    /**
+     * Adds an order, then tells the baker which customer it belongs to and whether they are new.
+     */
+    private String addOrderAndReportCustomer(String input, OrderList orders) {
+        String phone = Parser.parseAdd(input).getPhone();
+        boolean isNewCustomer = CustomerList.fromOrders(orders).findByPhone(phone).isEmpty();
+        String added = addOrder(input, orders);
+        CustomerProfile customer = CustomerList.fromOrders(orders).findByPhone(phone).orElseThrow();
+        return added + System.lineSeparator() + "Customer ID: " + customer.getCustomerId()
+                + (isNewCustomer ? " (new customer)" : " (returning customer)");
+    }
+
+    //@@author HammerHead-os
     private String addOrder(String input, OrderList orders) {
         Parser.AddOrderDetails details = Parser.parseAdd(input);
         Order order = new Order(orders.generateOrderId(),
