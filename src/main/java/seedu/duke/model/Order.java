@@ -7,13 +7,17 @@ import java.time.format.DateTimeFormatter;
  * Represents a customer enquiry or a confirmed cake order.
  */
 public class Order {
+    //@@author Eethanzyj
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-uuuu");
 
     private final String orderId;
+    //@@author
     private final Customer customer;
     private final Cake cake;
     private final int quantity;
+    //@@author Eethanzyj
     private final LocalDate dueDate;
+    //@@author
     private OrderStatus status;
     //@@author anannya-mk
     private String customerId;
@@ -54,9 +58,11 @@ public class Order {
         this.status = status;
     }
 
+    //@@author Eethanzyj
     public String getOrderId() {
         return orderId;
     }
+    //@@author
 
     public Customer getCustomer() {
         return customer;
@@ -70,9 +76,11 @@ public class Order {
         return quantity;
     }
 
+    //@@author Eethanzyj
     public LocalDate getDueDate() {
         return dueDate;
     }
+    //@@author
 
     public OrderStatus getStatus() {
         return status;
@@ -151,9 +159,11 @@ public class Order {
     @Override
     public String toString() {
         if (orderId != null) {
+            //@@author WillChin484848
             // Display a placeholder when an order has no due date.
             String dueDateText = dueDate != null
                     ? dueDate.format(DATE_FORMATTER) : "Not specified";
+            //@@author
 
             if (cake != null) {
                 return orderId + ": " + customer + " | Due: " + dueDateText
@@ -164,7 +174,6 @@ public class Order {
             return orderId + ": " + customer.getName() + " (due "
                     + dueDateText + ") [" + status + "]";
         }
-
         // Preserve the existing display format for orders without an ID.
         return customer.getName() + ": " + quantity + " x " + cake.getName() + " [" + status + "]";
     }

@@ -21,6 +21,18 @@ import seedu.duke.model.OrderStatus;
  */
 public final class Parser {
     private static final List<String> PREFIXES = List.of("n/", "p/", "d/", "s/", "f/", "fi/");
+    //@@author Eethanzyj
+    /**
+     * Gives a field's purpose and syntax when a required value is missing.
+     */
+    private static final Map<String, String> FIELD_GUIDANCE = Map.of(
+            "n/", "a customer name using n/NAME",
+            "p/", "a phone number using p/PHONE",
+            "d/", "a due date using d/DD-MM-YYYY",
+            "s/", "a cake size using s/6, s/8, or s/10",
+            "f/", "a cake flavour using f/FLAVOUR",
+            "fi/", "a cake filling using fi/FILLING");
+    //@@author
     private static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
     private static final String USAGE = "Use: add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
     private static final String ENQUIRE_USAGE =
@@ -126,6 +138,7 @@ public final class Parser {
         }
     }
 
+    //@@author
     /**
      * Parses a view command and returns the order or enquiry ID.
      *
@@ -145,6 +158,7 @@ public final class Parser {
         return parts[1].toUpperCase(Locale.ROOT);
     }
 
+    //@@author Kaishhhh
     /**
      * Parses a find command and returns the search keyword.
      *
@@ -163,6 +177,7 @@ public final class Parser {
         return parts[1].trim();
     }
 
+    //@@author Kaishhhh
     /**
      * Parses a capacity command.
      *
@@ -193,6 +208,7 @@ public final class Parser {
         }
     }
 
+    //@@author HammerHead-os
     /**
      * Parses and validates a baker add command.
      */
@@ -352,6 +368,7 @@ public final class Parser {
         );
     }
 
+    //@@author
     private static AddOrderDetails parseSixFieldCommand(String input, String commandWord,
                                                         String usage) {
         if (input == null || input.isBlank()) {
@@ -373,6 +390,7 @@ public final class Parser {
                 size, fields.get("f/"), fields.get("fi/"));
     }
 
+    //@@author HammerHead-os
     private static String parseSingleIdCommand(String input, String commandWord,
                                                String idPattern, String usage) {
         if (input == null || input.isBlank()) {
@@ -386,6 +404,7 @@ public final class Parser {
         return parts[1].toUpperCase(Locale.ROOT);
     }
 
+    //@@author
     private static int parseCakeSize(String sizeText) {
         int size;
         try {
@@ -416,10 +435,11 @@ public final class Parser {
             }
             String prefix = matcher.group(1);
             if (!PREFIXES.contains(prefix)) {
-                throw new CakeQueueException("Unknown field: " + prefix);
+                throw new CakeQueueException("Unknown field: " + prefix
+                        + ". Supported prefixes: " + String.join(", ", PREFIXES) + ".");
             }
             if (fields.containsKey(prefix)) {
-                throw new CakeQueueException("Duplicate field: " + prefix);
+                throw new CakeQueueException("Duplicate field: " + prefix + ". Supply each field once.");
             }
             previousPrefix = prefix;
             valueStart = matcher.end();
@@ -429,16 +449,17 @@ public final class Parser {
         }
         for (String prefix : PREFIXES) {
             if (!fields.containsKey(prefix) || fields.get(prefix).isBlank()) {
-                throw new CakeQueueException("Missing value for " + prefix);
+                throw new CakeQueueException("Missing value for " + prefix
+                        + ". Please provide " + FIELD_GUIDANCE.get(prefix) + ".");
             }
         }
         return fields;
     }
 
-    //@@author
     /**
      * Stores the values extracted from an Add Order or Enquire command.
      */
+    //@@author Eethanzyj
     public static final class AddOrderDetails {
         private final String customerName;
         private final String phone;
@@ -506,9 +527,11 @@ public final class Parser {
 
         // Check that the command is "edit" or "update", the Order ID is valid,
         // and at least one field argument is present.
+        //@@author Eethanzyj
         if (parts.length != 3
                 || (!parts[0].equalsIgnoreCase("edit") && !parts[0].equalsIgnoreCase("update"))
                 || !parts[1].matches("[Oo][0-9]{3,}")) {
+            //@@author WillChin484848
             throw new CakeQueueException(UPDATE_USAGE);
         }
 
@@ -539,7 +562,9 @@ public final class Parser {
         // Store the validated values in an UpdateOrderDetails object.
         // Fields that were not supplied remain null.
         return new UpdateOrderDetails(
+                //@@author Eethanzyj
                 parts[1].toUpperCase(Locale.ROOT),
+                //@@author WillChin484848
                 fields.get("n/"),
                 fields.get("p/"),
                 dueDate,

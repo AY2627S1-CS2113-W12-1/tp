@@ -15,7 +15,9 @@ public class OrderList {
     public static final int MAX_DAILY_CAPACITY = 50;
     private final ArrayList<Order> orders;
     private int dailyCapacity;
+    //@@author Eethanzyj
     private int nextOrderNumber;
+    //@@author
     private int nextEnquiryNumber;
     //@@author anannya-mk
     private int nextCustomerNumber = 1;
@@ -23,17 +25,21 @@ public class OrderList {
 
     public OrderList() {
         orders = new ArrayList<>();
+        //@@author Eethanzyj
         nextOrderNumber = 1;
+        //@@author
         nextEnquiryNumber = 1;
         dailyCapacity = DEFAULT_DAILY_CAPACITY;
     }
 
+    //@@author Eethanzyj
     /**
      * Returns the next order ID in the format O001.
      */
     public String generateOrderId() {
         return String.format("O%03d", nextOrderNumber++);
     }
+    //@@author
 
     /**
      * Returns the next enquiry ID in the format E001.
@@ -49,7 +55,9 @@ public class OrderList {
      * collide with a restored record.
      */
     public void add(Order order) {
+        //@@author Eethanzyj
         assert order != null : "Order must not be null";
+        //@@author
         assignCustomerId(order);
         orders.add(order);
         advanceCountersPast(order.getOrderId());

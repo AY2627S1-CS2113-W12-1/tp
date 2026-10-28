@@ -7,19 +7,23 @@ public class Cake {
     private final String name;
     private final String flavour;
     private final double price;
+    //@@author Eethanzyj
     // Size and filling are specified for order cakes; the existing menu constructor leaves them unset.
     private final int size;
     private final String filling;
+    //@@author
 
     public Cake(String name, String flavour, double price) {
         this.name = name;
         this.flavour = flavour;
         this.price = price;
+        //@@author Eethanzyj
         this.size = 0;
         this.filling = "";
+        //@@author
     }
 
-
+    //@@author WillChin484848
     /**
      * Creates a cake with the specified size, flavour, and filling.
      *
@@ -46,12 +50,14 @@ public class Cake {
                     "Cake filling cannot be empty.");
         }
 
+        //@@author Eethanzyj
         this.name = flavour;
         this.flavour = flavour;
         this.price = 0;
         this.size = size;
         this.filling = filling;
     }
+    //@@author
 
 
     public String getName() {
@@ -66,6 +72,7 @@ public class Cake {
         return price;
     }
 
+    //@@author Eethanzyj
     public int getSize() {
         return size;
     }
@@ -73,6 +80,7 @@ public class Cake {
     public String getFilling() {
         return filling;
     }
+    //@@author
 
     @Override
     public String toString() {

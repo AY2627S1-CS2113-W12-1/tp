@@ -204,8 +204,9 @@ public class ParserErrorTest {
         assertEquals("Use: enquire n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING",
                 exception.getMessage());
         // A present-but-incomplete field list names the first missing field.
-        assertEquals("Missing value for p/", assertThrows(CakeQueueException.class,
-                () -> Parser.parseEnquire("enquire n/Alice")).getMessage());
+        assertEquals("Missing value for p/. Please provide a phone number using p/PHONE.",
+                assertThrows(CakeQueueException.class,
+                    () -> Parser.parseEnquire("enquire n/Alice")).getMessage());
 
         assertThrows(CakeQueueException.class, () -> Parser.parseEnquire(null));
         assertThrows(CakeQueueException.class, () -> Parser.parseEnquire(""));
@@ -230,11 +231,11 @@ public class ParserErrorTest {
     public void parseAdd_errorMessages_identifyTheProblem() {
         CakeQueueException unknown = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD + " x/Extra"));
-        assertEquals("Unknown field: x/", unknown.getMessage());
+        assertEquals("Unknown field: x/. Supported prefixes: n/, p/, d/, s/, f/, fi/.", unknown.getMessage());
 
         CakeQueueException duplicate = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD + " n/Bob"));
-        assertEquals("Duplicate field: n/", duplicate.getMessage());
+        assertEquals("Duplicate field: n/. Supply each field once.", duplicate.getMessage());
 
         CakeQueueException missing = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD.replace("fi/Strawberry", "")));

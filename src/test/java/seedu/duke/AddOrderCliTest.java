@@ -9,21 +9,29 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+//@@author HammerHead-os
 import java.nio.file.Path;
+//@@author Eethanzyj
 
 import org.junit.jupiter.api.Test;
+//@@author HammerHead-os
 import org.junit.jupiter.api.io.TempDir;
+//@@author Eethanzyj
 
 /**
  * Tests the Add Order command through the application input and output.
  */
 public class AddOrderCliTest {
+    //@@author HammerHead-os
     @TempDir
     private Path tempDir;
+    //@@author Eethanzyj
 
     @Test
     public void run_invalidThenValidOrders_showsErrorAndSequentialIds() {
+        //@@author HammerHead-os
         String commands = "baker\nadd n/Alice Tan d/20-10-2026\n"
+                //@@author Eethanzyj
                 + "add n/Alice Tan p/91234567 d/20-10-2026 s/8 f/Chocolate fi/Strawberry\n"
                 + "add fi/Cream f/Vanilla s/6 d/21-10-2026 p/81234567 n/Bob Lim\nbye\n";
         InputStream originalInput = System.in;
@@ -33,7 +41,9 @@ public class AddOrderCliTest {
         try (PrintStream capturedOutput = new PrintStream(output, true, StandardCharsets.UTF_8)) {
             System.setIn(new ByteArrayInputStream(commands.getBytes(StandardCharsets.UTF_8)));
             System.setOut(capturedOutput);
+            //@@author HammerHead-os
             new Duke(tempDir.resolve("cakequeue.txt")).run();
+        //@@author Eethanzyj
         } finally {
             System.setIn(originalInput);
             System.setOut(originalOutput);

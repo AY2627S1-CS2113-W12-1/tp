@@ -33,10 +33,11 @@ public class ListCommand {
                 || order.getStatus() == OrderStatus.ENQUIRY
                 || order.getStatus() == OrderStatus.CANCELLED
                 || order.getStatus() == OrderStatus.REJECTED);
-
         // Sort by due date, placing orders without a due date last.
+        //@@author Eethanzyj
         all.sort(Comparator.comparing(Order::getDueDate,
                 Comparator.nullsLast(Comparator.naturalOrder())));
+        //@@author
 
         LocalDate today = LocalDate.now();
         StringBuilder listing = new StringBuilder();
