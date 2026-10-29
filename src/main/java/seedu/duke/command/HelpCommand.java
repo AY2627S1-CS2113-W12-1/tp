@@ -16,7 +16,6 @@ public class HelpCommand {
                 "  list",
                 "  enquiries",
                 "  stats",
-                "  search NAME|PHONE",
                 "  find KEYWORD",
                 "  capacity [NUMBER]",
                 "  view ORDER_ID|ENQUIRY_ID",

@@ -60,22 +60,6 @@ public final class Parser {
     }
 
     /**
-     * Parses {@code search QUERY} where QUERY is a name fragment or phone number.
-     *
-     * @return The trimmed search query string.
-     */
-    public static String parseSearch(String input) {
-        if (input == null || input.isBlank()) {
-            throw new CakeQueueException("Use: search NAME|PHONE");
-        }
-        String[] parts = input.trim().split("\\s+", 2);
-        if (!parts[0].equalsIgnoreCase("search") || parts.length < 2 || parts[1].isBlank()) {
-            throw new CakeQueueException("Use: search NAME|PHONE");
-        }
-        return parts[1].trim();
-    }
-
-    /**
      * Parses {@code delete ORDER_ID|ENQUIRY_ID}.
      */
     public static String parseDelete(String input) {

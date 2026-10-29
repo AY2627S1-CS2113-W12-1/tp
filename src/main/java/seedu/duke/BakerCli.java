@@ -22,7 +22,6 @@ import seedu.duke.command.ListEnquiriesCommand;
 import seedu.duke.command.MarkCommand;
 import seedu.duke.command.NoteCommand;
 import seedu.duke.command.RejectEnquiryCommand;
-import seedu.duke.command.SearchCommand;
 import seedu.duke.command.StatsCommand;
 import seedu.duke.command.UpdateOrderCommand;
 import seedu.duke.command.ViewOrderCommand;
@@ -149,9 +148,6 @@ public class BakerCli {
                             enqDetails.getFlavour(), enqDetails.getFilling()
                     ).execute(orders));
                     afterChange.run();
-                    break;
-                case "search":
-                    System.out.println(new SearchCommand(Parser.parseSearch(input)).execute(orders));
                     break;
                 case "delete":
                     System.out.println(new DeleteCommand(Parser.parseDelete(input)).execute(orders));
