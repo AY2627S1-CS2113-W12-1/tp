@@ -1,0 +1,30 @@
+@startuml CustomerSequenceDiagram
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide footbox
+
+participant ":BakerCli" as Cli
+participant "<<class>>\nParser" as Parser
+participant ":CustomerCommand" as Cmd
+participant "customers:CustomerList" as Customers
+
+activate Cli
+Cli -> Parser : parseCustomer("customer c001")
+activate Parser
+Parser --> Cli : "C001"
+deactivate Parser
+create Cmd
+Cli -> Cmd : new CustomerCommand("C001")
+Cli -> Cmd : execute(orders)
+activate Cmd
+create Customers
+Cmd -> Customers : fromOrders(orders)
+Customers --> Cmd : customers
+Cmd -> Customers : getById("C001")
+activate Customers
+Customers --> Cmd : profile
+deactivate Customers
+Cmd --> Cli : customer details text
+deactivate Cmd
+deactivate Cli
+@enduml

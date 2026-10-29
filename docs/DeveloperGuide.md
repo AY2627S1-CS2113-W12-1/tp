@@ -112,7 +112,9 @@ input or output. Commands do not print or save anything themselves. The command 
 `Storage` keeps the order list in `data/cakequeue.txt` as plain text, with one record per line:
 `ID | STATUS | NAME | PHONE | DUE | SIZE | FLAVOUR | FILLING | CUSTOMER_ID | NOTES`, where `-` marks an empty
 value and `\|` is an escaped `|` inside a value. The customer ID and notes were added in v2.0; lines with 8 or 9
-fields from older versions still load. Plain text
+fields from older versions still load. A 9-field line normally ends with a customer ID, but some files were saved
+with notes in that position, so a 9th field that does not look like an ID (one letter then digits) is read as
+notes, and the record gets a customer ID when it is loaded. Plain text
 keeps the file readable, easy to compare in Git, and fixable by hand. Two choices keep the data safe:
 
 * A save writes a temporary file first and then moves it over the real file, so a crash in the middle of
@@ -265,8 +267,8 @@ reviews pending enquiries with `enquiries`, then either `reject`s one (status `R
 
 ![Accept enquiry sequence diagram](diagrams/EnquireAcceptSequenceDiagram.png)
 
-`AcceptEnquiryCommand` removes the `E` record and adds a new `O` record in `QUEUED` with the same customer, cake
-and date. `OrderList#add` then gives it a Customer ID, and `BakerCli` checks the daily capacity for its due date.
+`AcceptEnquiryCommand` removes the `E` record and adds a new `O` record in `QUEUED` with the same customer, cake,
+date and notes. `OrderList#add` then gives it a Customer ID, and `BakerCli` checks the daily capacity for its due date.
 
 *Why accept creates a new ID instead of renaming `E001` to `O001`.* IDs are `final` in `Order`. Creating a new ID
 keeps IDs immutable, which `getById` and `Storage` rely on, and the reply ("accepted `E001` as `O001`") makes the
@@ -452,24 +454,7 @@ The Customer ID is saved as the 9th field in the data file (`-` when absent). `S
 
 #### Sequence of `customer C001`
 
-```plantuml
-@startuml
-participant ":BakerCli" as Cli
-participant ":Parser" as Parser
-participant ":CustomerCommand" as Cmd
-participant "customers:CustomerList" as Customers
-
-Cli -> Parser : parseCustomer("customer c001")
-Parser --> Cli : "C001"
-Cli -> Cmd : new CustomerCommand("C001")
-Cli -> Cmd : execute(orders)
-Cmd -> Customers : fromOrders(orders)
-Customers --> Cmd : customers
-Cmd -> Customers : getById("C001")
-Customers --> Cmd : profile
-Cmd --> Cli : customer details text
-@enduml
-```
+![Customer sequence diagram](diagrams/CustomerSequenceDiagram.png)
 
 `history` works the same way, with `HistoryCommand` building a numbered list from `profile.getOrders()` instead.
 

@@ -16,7 +16,9 @@ import seedu.duke.model.OrderStatus;
  */
 public class ListCommand {
 
+    //@@author WillChin484848
     private static final int DUE_SOON_DAYS = 3;
+    //@@author Kaishhhh
 
     /**
      * Returns uncollected confirmed orders with the earliest due dates first.
@@ -29,18 +31,20 @@ public class ListCommand {
     public String execute(OrderList orders) {
         ArrayList<Order> all = orders.getAll();
 
+        //@@author HammerHead-os
         // Exclude enquiries and orders that are already closed.
         all.removeIf(order -> order.getStatus() == OrderStatus.COLLECTED
                 || order.getStatus() == OrderStatus.ENQUIRY
                 || order.getStatus() == OrderStatus.CANCELLED
                 || order.getStatus() == OrderStatus.REJECTED);
-        // Sort by due date, placing orders without a due date last.
         //@@author Eethanzyj
+        // Sort by due date, placing orders without a due date last.
         all.sort(Comparator.comparing(Order::getDueDate,
                 Comparator.nullsLast(Comparator.naturalOrder())));
-        //@@author
 
+        //@@author WillChin484848
         LocalDate today = LocalDate.now();
+        //@@author Kaishhhh
         StringBuilder listing = new StringBuilder();
 
         for (int i = 0; i < all.size(); i++) {
@@ -50,6 +54,7 @@ public class ListCommand {
                     .append(". ")
                     .append(order);
 
+            //@@author WillChin484848
             // Highlight overdue and approaching deadlines.
             if (order.getDueDate() != null) {
                 long daysUntilDue = ChronoUnit.DAYS.between(today, order.getDueDate());
@@ -60,6 +65,7 @@ public class ListCommand {
                     listing.append(" [DUE SOON]");
                 }
             }
+            //@@author Kaishhhh
 
             listing.append(System.lineSeparator());
         }

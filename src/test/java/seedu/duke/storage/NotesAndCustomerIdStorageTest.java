@@ -59,6 +59,43 @@ public class NotesAndCustomerIdStorageTest {
     }
 
     @Test
+    public void load_nineFieldLineWithNotes_keepsNotesAndSurvivesNextSave() throws IOException {
+        Path file = tempDir.resolve("cakequeue.txt");
+        Files.write(file, List.of(
+                "O001 | QUEUED | Alice | 91234567 | 2030-12-01 | 8 | Chocolate | Cream | No nuts",
+                "E001 | ENQUIRY | Bob | 81234567 | 2030-12-02 | 6 | Vanilla | Cream | Extra \\| candles"));
+
+        OrderList loaded = new Storage(file).load();
+
+        assertEquals(2, loaded.size());
+        assertEquals("No nuts", loaded.getById("O001").getNotes());
+        assertEquals("C001", loaded.getById("O001").getCustomerId());
+        assertEquals("Extra | candles", loaded.getById("E001").getNotes());
+
+        new Storage(file).save(loaded);
+        OrderList reloaded = new Storage(file).load();
+
+        assertEquals(2, reloaded.size());
+        assertEquals("No nuts", reloaded.getById("O001").getNotes());
+        assertEquals("C001", reloaded.getById("O001").getCustomerId());
+        assertEquals("Extra | candles", reloaded.getById("E001").getNotes());
+    }
+
+    @Test
+    public void load_nineFieldLineWithIdLikeValue_isStillTreatedAsCustomerId() throws IOException {
+        Path file = tempDir.resolve("cakequeue.txt");
+        Files.write(file, List.of(
+                "O001 | QUEUED | Alice | 91234567 | 2030-12-01 | 8 | Chocolate | Cream | C007",
+                "O002 | QUEUED | Bob | 81234567 | 2030-12-01 | 8 | Chocolate | Cream | X1"));
+
+        OrderList loaded = new Storage(file).load();
+
+        assertEquals(1, loaded.size());
+        assertEquals("C007", loaded.getById("O001").getCustomerId());
+        assertEquals("", loaded.getById("O001").getNotes());
+    }
+
+    @Test
     public void save_writesNotesAfterCustomerId() throws IOException {
         Path file = tempDir.resolve("cakequeue.txt");
         OrderList orders = new OrderList();

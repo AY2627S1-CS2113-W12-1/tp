@@ -284,7 +284,7 @@ note O001 -clear
 Format: `accept ENQUIRY_ID`
 
 Turns a pending enquiry into a confirmed order with status `QUEUED`. The enquiry gets a new
-Order ID, which CakeQueue shows in its reply. Only enquiries can be accepted.
+Order ID, which CakeQueue shows in its reply, and keeps its notes. Only enquiries can be accepted.
 
 Example: `accept E001`
 
