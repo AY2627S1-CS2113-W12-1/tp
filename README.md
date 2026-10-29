@@ -3,7 +3,7 @@
 CakeQueue is a Java command-line app for recording and managing cake orders.
 V1 supports adding, listing, viewing, and editing orders.
 
-Orders are kept in memory and are cleared when the app closes.
+Orders are kept in memory and are cleared when the app closes. 
 
 ## Setup
 
