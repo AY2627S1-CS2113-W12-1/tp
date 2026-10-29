@@ -1,29 +1,25 @@
 @startuml OrderStateDiagram
-title Lifecycle of an enquiry / order (OrderStatus)
+skinparam shadowing false
+skinparam defaultFontSize 14
 
-[*] --> ENQUIRY : customer: enquire
-[*] --> QUEUED : baker: add
+[*] --> ENQUIRY : enquire
+[*] --> QUEUED : add
 
-ENQUIRY --> QUEUED : baker: accept\n(new O-prefixed ID)
-ENQUIRY --> REJECTED : baker: reject
+ENQUIRY --> QUEUED : accept\n(new O-prefixed ID)
+ENQUIRY --> REJECTED : reject
 ENQUIRY --> CANCELLED : cancel
 
-QUEUED --> PREPARING : baker: mark preparing
-PREPARING --> READY : baker: mark ready
-READY --> COLLECTED : baker: mark collected
+QUEUED --> PREPARING : mark preparing
+PREPARING --> READY : mark ready
+READY --> COLLECTED : mark collected
 QUEUED --> CANCELLED : cancel
 PREPARING --> CANCELLED : cancel
 READY --> CANCELLED : cancel
 
-COLLECTED --> [*]
-CANCELLED --> [*]
-REJECTED --> [*]
+COLLECTED --> [*] : delete
+CANCELLED --> [*] : delete
+REJECTED --> [*] : delete
 
-note right of ENQUIRY
-  Customers may edit or cancel
-  only while in this state, and
-  only with their own phone number.
-end note
 note right of QUEUED
   mark moves one step at a time.
   Skipping (QUEUED to READY) or

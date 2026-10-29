@@ -8,6 +8,7 @@ class OrderList {
   - dailyCapacity: int
   + add(order)
   + getById(id): Order
+  + removeById(id): Order
   + getAll(): List<Order>
   + countOrdersDueOn(date): int
   + countOrdersByDueDate(): Map
@@ -20,6 +21,7 @@ class Order {
   - customerId: String
   - dueDate: LocalDate
   - status: OrderStatus
+  - notes: String
 }
 
 class Customer {

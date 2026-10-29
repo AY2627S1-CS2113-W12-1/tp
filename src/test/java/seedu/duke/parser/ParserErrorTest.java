@@ -94,11 +94,11 @@ public class ParserErrorTest {
     public void parseAdd_errorMessages_identifyTheProblem() {
         CakeQueueException unknown = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD + " x/Extra"));
-        assertEquals("Unknown field: x/", unknown.getMessage());
+        assertEquals("Unknown field: x/. Supported prefixes: n/, p/, d/, s/, f/, fi/.", unknown.getMessage());
 
         CakeQueueException duplicate = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD + " n/Bob"));
-        assertEquals("Duplicate field: n/", duplicate.getMessage());
+        assertEquals("Duplicate field: n/. Supply each field once.", duplicate.getMessage());
 
         CakeQueueException missing = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD.replace("fi/Strawberry", "")));
@@ -110,12 +110,12 @@ public class ParserErrorTest {
     @Test
     public void parseUpdate_allFields_returnsEveryValue() {
         Parser.UpdateOrderDetails details = Parser.parseUpdate(
-                "edit O001 n/Bob Tan p/81111111 d/25-10-2026 s/6 f/Vanilla fi/Cream");
+                "edit O001 n/Bob Tan p/81111111 d/25-10-2030 s/6 f/Vanilla fi/Cream");
 
         assertEquals("O001", details.getOrderId());
         assertEquals("Bob Tan", details.getName());
         assertEquals("81111111", details.getPhone());
-        assertEquals(LocalDate.of(2026, 10, 25), details.getDueDate());
+        assertEquals(LocalDate.of(2030, 10, 25), details.getDueDate());
         assertEquals(6, details.getSize());
         assertEquals("Vanilla", details.getFlavour());
         assertEquals("Cream", details.getFilling());
