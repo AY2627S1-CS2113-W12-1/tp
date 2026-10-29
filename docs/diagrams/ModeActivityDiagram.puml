@@ -1,0 +1,30 @@
+@startuml ModeActivityDiagram
+title Choosing and switching modes (Duke + the two CLIs)
+
+start
+:Load saved records (Storage);
+:Print "Choose a mode: baker or customer";
+repeat
+  :Read one line;
+  if (Valid mode?\nbaker/1/b or customer/2/c) then (yes)
+  else (no)
+    :Print "Error: Choose a mode...";
+  endif
+repeat while (No valid mode yet?)
+
+repeat
+  if (Current mode?) then (BAKER)
+    :Run BakerCli loop;
+  else (CUSTOMER)
+    :Run CustomerCli loop;
+  endif
+  note right
+    Inside a CLI loop, each command is
+    parsed, executed, printed, and (if it
+    changed anything) saved. Invalid input
+    prints an Error and the loop continues.
+  end note
+repeat while (User typed "mode ..."\n(returned next mode)) is (switch)
+-> user typed bye, or input ended;
+stop
+@enduml

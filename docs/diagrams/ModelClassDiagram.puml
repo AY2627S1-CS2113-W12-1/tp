@@ -1,0 +1,68 @@
+@startuml ModelClassDiagram
+title CakeQueue model (simplified: minor getters omitted)
+
+class OrderList {
+  - orders: ArrayList<Order>
+  - nextOrderNumber: int
+  - nextEnquiryNumber: int
+  + generateOrderId(): String
+  + generateEnquiryId(): String
+  + add(order: Order)
+  + getById(id: String): Order
+  + findByPhone(phone: String): ArrayList<Order>
+  + update(updated: Order)
+  + removeById(id: String): Order
+  + getAll(): ArrayList<Order>
+}
+
+class Order {
+  - orderId: String
+  - quantity: int
+  - dueDate: LocalDate
+  + isEnquiry(): boolean
+  + updatedCopy(...): Order
+  + toDetailedString(): String
+}
+
+class Customer {
+  - name: String
+  - phone: String
+}
+
+class Cake {
+  - name: String
+  - flavour: String
+  - price: double
+  - size: int
+  - filling: String
+}
+
+enum OrderStatus {
+  ENQUIRY
+  QUEUED
+  PREPARING
+  READY
+  COLLECTED
+  CANCELLED
+  REJECTED
+}
+
+OrderList "1" *-- "0..*" Order : contains >
+Order --> "1" Customer : ordered by >
+Order --> "0..1" Cake : describes >
+Order --> "1" OrderStatus : has >
+
+note right of Order
+  One class represents both an
+  enquiry (status ENQUIRY, E-prefixed ID)
+  and a confirmed order (O-prefixed ID).
+  updatedCopy returns a changed copy
+  instead of mutating fields, so edits
+  never half-update a record.
+end note
+note bottom of OrderList
+  add() advances the ID counters past
+  any restored ID, so IDs loaded from
+  disk are never reused (v2.0).
+end note
+@enduml

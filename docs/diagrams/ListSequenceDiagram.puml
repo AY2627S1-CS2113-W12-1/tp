@@ -1,0 +1,30 @@
+@startuml ListSequenceDiagram
+title Listing upcoming orders: list
+
+actor Baker
+participant "BakerCli" as Cli
+participant "ListCommand" as Cmd
+participant "OrderList" as List
+
+Baker -> Cli : list
+Cli -> Cmd : new ListCommand()
+Cli -> Cmd : execute(orders)
+activate Cmd
+Cmd -> List : getAll()
+List --> Cmd : copy of all records
+note right of Cmd
+  Works on the copy returned by
+  getAll(), so filtering/sorting
+  here can never reorder or delete
+  the stored records.
+end note
+Cmd -> Cmd : remove ENQUIRY / COLLECTED /\nCANCELLED / REJECTED records
+Cmd -> Cmd : sort by due date\n(earliest first, no-date last)
+alt at least one upcoming order
+  Cmd --> Cli : "Here are your upcoming orders:" + lines
+else no upcoming orders
+  Cmd --> Cli : "You have no upcoming orders."
+end
+deactivate Cmd
+Cli --> Baker : print message
+@enduml

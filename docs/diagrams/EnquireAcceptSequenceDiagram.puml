@@ -1,0 +1,48 @@
+@startuml EnquireAcceptSequenceDiagram
+title Customer enquiry accepted by the baker (dual-mode workflow)
+
+actor Customer
+actor Baker
+participant "Duke" as Duke
+participant "CustomerCli" as CustCli
+participant "BakerCli" as BakerCli
+participant "Parser" as Parser
+participant "EnquireCommand" as Enquire
+participant "AcceptEnquiryCommand" as Accept
+participant "OrderList\n(shared)" as List
+
+Customer -> Duke : choose "customer"
+Duke -> CustCli : run(scanner, orders, saveChanges)
+Customer -> CustCli : enquire n/Alice Tan p/91234567 ...
+CustCli -> Parser : parseEnquire(input)
+Parser --> CustCli : AddOrderDetails
+CustCli -> Enquire : new EnquireCommand(details...)
+Enquire -> List : generateEnquiryId()
+List --> Enquire : "E001"
+Enquire -> List : add(Order E001, status ENQUIRY)
+Enquire --> CustCli : Submitted enquiry E001: ...
+CustCli -> CustCli : saveChanges.run()
+CustCli --> Customer : print confirmation
+
+Customer -> CustCli : mode baker
+CustCli --> Duke : Optional.of(BAKER)
+Duke -> BakerCli : run(scanner, same orders, saveChanges)
+Baker -> BakerCli : accept E001
+BakerCli -> Parser : parseAccept(input)
+Parser --> BakerCli : "E001"
+BakerCli -> Accept : new AcceptEnquiryCommand(E001)
+Accept -> List : getById("E001")
+List --> Accept : enquiry (status ENQUIRY)
+Accept -> List : removeById("E001")
+Accept -> List : generateOrderId()
+List --> Accept : "O001"
+Accept -> List : add(Order O001, same customer/cake/date, QUEUED)
+Accept --> BakerCli : Accepted enquiry E001 as order O001: ...
+BakerCli -> BakerCli : saveChanges.run()
+BakerCli --> Baker : print confirmation
+note over List
+  Both CLIs receive the same OrderList instance from Duke,
+  so records created in customer mode are visible in baker
+  mode (and vice versa) without any copying.
+end note
+@enduml
