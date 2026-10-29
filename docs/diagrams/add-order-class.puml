@@ -1,0 +1,51 @@
+@startuml
+' Author: Eethanzyj
+!pragma layout smetana
+title Add Order and per-order customer details
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam classAttributeIconSize 0
+hide empty members
+
+class BakerCli {
+  - addOrderAndReportCustomer(input, orders): String
+  - addOrder(input, orders): String
+}
+class Parser {
+  {static} + parseAdd(input): AddOrderDetails
+}
+class OrderList {
+  + generateOrderId(): String
+  + add(order): void
+}
+class Order {
+  - orderId: String
+  - customerId: String
+  - dueDate: LocalDate
+  - status: OrderStatus
+}
+class Customer {
+  - name: String
+  - phone: String
+}
+class Cake {
+  - size: int
+  - flavour: String
+  - filling: String
+}
+
+BakerCli ..> Parser : parses
+BakerCli ..> OrderList : uses
+BakerCli ..> Order : creates
+OrderList "1" --> "0..*" Order : stores
+Order "0..*" --> "1" Customer
+Order "0..*" --> "0..1" Cake
+
+note bottom of Order
+  Add Order always supplies one Customer
+  and one Cake. Older constructors also
+  support orders without cake details.
+  OrderList.add assigns the Customer ID.
+end note
+@enduml

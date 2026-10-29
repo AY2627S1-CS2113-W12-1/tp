@@ -1,27 +1,25 @@
-@startuml ModelClassDiagram
-title CakeQueue model (simplified: minor getters omitted)
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide empty members
 
 class OrderList {
-  - orders: ArrayList<Order>
-  - nextOrderNumber: int
-  - nextEnquiryNumber: int
-  + generateOrderId(): String
-  + generateEnquiryId(): String
-  + add(order: Order)
-  + getById(id: String): Order
-  + findByPhone(phone: String): ArrayList<Order>
-  + update(updated: Order)
-  + removeById(id: String): Order
-  + getAll(): ArrayList<Order>
+  - dailyCapacity: int
+  + add(order)
+  + getById(id): Order
+  + getAll(): List<Order>
+  + countOrdersDueOn(date): int
+  + countOrdersByDueDate(): Map
+  + getDailyCapacity(): int
+  + setDailyCapacity(n)
 }
 
 class Order {
   - orderId: String
-  - quantity: int
+  - customerId: String
   - dueDate: LocalDate
-  + isEnquiry(): boolean
-  + updatedCopy(...): Order
-  + toDetailedString(): String
+  - status: OrderStatus
 }
 
 class Customer {
@@ -30,10 +28,8 @@ class Customer {
 }
 
 class Cake {
-  - name: String
-  - flavour: String
-  - price: double
   - size: int
+  - flavour: String
   - filling: String
 }
 
@@ -47,22 +43,20 @@ enum OrderStatus {
   REJECTED
 }
 
-OrderList "1" *-- "0..*" Order : contains >
-Order --> "1" Customer : ordered by >
-Order --> "0..1" Cake : describes >
-Order --> "1" OrderStatus : has >
+class CustomerList {
+  + fromOrders(orders): CustomerList
+  + getById(id): CustomerProfile
+}
 
-note right of Order
-  One class represents both an
-  enquiry (status ENQUIRY, E-prefixed ID)
-  and a confirmed order (O-prefixed ID).
-  updatedCopy returns a changed copy
-  instead of mutating fields, so edits
-  never half-update a record.
-end note
-note bottom of OrderList
-  add() advances the ID counters past
-  any restored ID, so IDs loaded from
-  disk are never reused (v2.0).
-end note
+class CustomerProfile {
+  - customerId: String
+}
+
+OrderList *-- "*" Order
+Order *-- "1" Customer
+Order *-- "0..1" Cake
+Order --> "1" OrderStatus
+CustomerList *-- "*" CustomerProfile
+CustomerProfile o-- "*" Order
+CustomerList ..> OrderList : built from
 @enduml

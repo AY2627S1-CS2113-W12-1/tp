@@ -2,6 +2,7 @@ package seedu.duke.command;
 
 //@@author anannya-mk
 
+import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 
 /**
@@ -20,6 +21,11 @@ public class ViewOrderCommand {
      * @throws seedu.duke.exception.CakeQueueException if no order has that ID.
      */
     public String execute(OrderList orders) {
-        return orders.getById(orderId).toDetailedString();
+        Order order = orders.getById(orderId);
+        String details = order.toDetailedString();
+        if (order.getCustomerId() != null) {
+            details += System.lineSeparator() + "Customer ID: " + order.getCustomerId();
+        }
+        return details;
     }
 }

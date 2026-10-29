@@ -1,0 +1,38 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide footbox
+
+participant ":BakerCli" as Cli
+participant "<<class>>\nParser" as Parser
+participant "f:FindCommand" as Find
+participant "orders:OrderList" as Orders
+
+[-> Cli : "find alice"
+activate Cli
+Cli -> Parser : parseFind("find alice")
+activate Parser
+Parser --> Cli : "alice"
+deactivate Parser
+
+create Find
+Cli -> Find : new FindCommand("alice")
+Cli -> Find : execute(orders)
+activate Find
+Find -> Orders : getAll()
+activate Orders
+Orders --> Find : records
+deactivate Orders
+
+loop for each record
+  opt name, flavour or filling contains "alice" (ignoring case)
+    Find -> Find : add record to matches
+  end
+end
+
+Find --> Cli : message listing the matches
+deactivate Find
+Cli -> Cli : print message
+[<-- Cli
+deactivate Cli
+@enduml

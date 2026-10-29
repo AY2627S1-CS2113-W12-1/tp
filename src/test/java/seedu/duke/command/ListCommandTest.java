@@ -46,6 +46,7 @@ class ListCommandTest {
         assertFalse(result.contains("Alex"));
     }
 
+    //@@author Eethanzyj
     @Test
     void execute_unsortedDates_sortsWithoutChangingStoredOrder() {
         OrderList orders = new OrderList();
@@ -89,4 +90,84 @@ class ListCommandTest {
         assertTrue(result.contains("1. O001"));
         assertTrue(result.contains("2. Alex"));
     }
+    //@@author
+
+    //@@author WillChin484848
+    /**
+     * Verifies that an order due before today is marked as overdue.
+     */
+    @Test
+    void execute_overdueOrder_displaysOverdueWarning() {
+        OrderList orders = new OrderList();
+
+        // Set the due date to yesterday to guarantee an overdue order.
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        Order order = new Order("O001", new Customer("Alice"),
+                new Cake(6, "Chocolate", "Cream"), yesterday);
+        orders.add(order);
+
+        String result = new ListCommand().execute(orders);
+
+        assertTrue(result.contains("[OVERDUE]"));
+        assertFalse(result.contains("[DUE SOON]"));
+    }
+
+    /**
+     * Verifies that an order due exactly three days from today
+     * is marked as due soon.
+     */
+    @Test
+    void execute_dueInThreeDays_displaysDueSoonWarning() {
+        OrderList orders = new OrderList();
+
+        // Three days is the inclusive boundary for due-soon warnings.
+        LocalDate dueDate = LocalDate.now().plusDays(3);
+        Order order = new Order("O001", new Customer("Alice"),
+                new Cake(8, "Vanilla", "Cream"), dueDate);
+        orders.add(order);
+
+        String result = new ListCommand().execute(orders);
+
+        assertTrue(result.contains("[DUE SOON]"));
+        assertFalse(result.contains("[OVERDUE]"));
+    }
+
+    /**
+     * Verifies that an order due today is marked as due soon.
+     */
+    @Test
+    void execute_dueToday_displaysDueSoonWarning() {
+        OrderList orders = new OrderList();
+
+        // An order due today must be included in the due-soon range.
+        Order order = new Order("O001", new Customer("Alice"),
+                new Cake(10, "Matcha", "Cream"), LocalDate.now());
+        orders.add(order);
+
+        String result = new ListCommand().execute(orders);
+
+        assertTrue(result.contains("[DUE SOON]"));
+        assertFalse(result.contains("[OVERDUE]"));
+    }
+
+    /**
+     * Verifies that an order due more than three days away
+     * does not display a warning.
+     */
+    @Test
+    void execute_dueInFourDays_displaysNoWarning() {
+        OrderList orders = new OrderList();
+
+        // Four days is outside the due-soon warning range.
+        LocalDate dueDate = LocalDate.now().plusDays(4);
+        Order order = new Order("O001", new Customer("Alice"),
+                new Cake(6, "Strawberry", "Cream"), dueDate);
+        orders.add(order);
+
+        String result = new ListCommand().execute(orders);
+
+        assertFalse(result.contains("[DUE SOON]"));
+        assertFalse(result.contains("[OVERDUE]"));
+    }
+    //@@author
 }

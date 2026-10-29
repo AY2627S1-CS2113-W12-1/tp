@@ -1,16 +1,13 @@
-# Eethan Zhang - Project Portfolio Page
+# Eethanzyj - Project Portfolio Page
 
-## Project: CakeQueue
+## Overview
 
-CakeQueue helps home bakers manage custom cake orders, and lets customers submit
-enquiries from a separate command interface. (TODO: each member personalises this page
-before submission — it is a stub created at the start of the v2.0 iteration.)
+CakeQueue is a command-line application that helps bakers manage cake orders and customer details.
 
 ### Summary of Contributions
 
-* **Code contributed:** (TODO: insert your RepoSense / tP Code Dashboard link here)
-* **Enhancements implemented:** Order creation (`add`): six-field parsing/validation and OrderList integration, CLI integration tests.
-  (See the Developer Guide section under my name for design details.)
-* **Documentation:** (TODO: list User Guide / Developer Guide parts you wrote or reviewed)
-* **Review/mentoring:** (TODO: PRs reviewed, issues triaged, teammates helped)
-* **Beyond the project:** (TODO: optional)
+- Implemented Add Order to record customer and cake details, validate input, assign Order IDs, and display confirmations. [PR #11](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/11)
+- Improved Add Order error messages for missing, duplicate, and unknown fields. [PR #25](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/25)
+- Added JUnit tests for parsing, invalid input, saving, and restarting.
+- Updated the Add Order sections of the User Guide and Developer Guide, including class and sequence diagrams.
+- Reviewed the customer/history feature and identified a Customer ID stability bug. [PR #19](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/19)

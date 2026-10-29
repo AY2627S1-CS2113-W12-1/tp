@@ -1,16 +1,36 @@
+
 # Will Chin - Project Portfolio Page
 
 ## Project: CakeQueue
 
-CakeQueue helps home bakers manage custom cake orders, and lets customers submit
-enquiries from a separate command interface. (TODO: each member personalises this page
-before submission — it is a stub created at the start of the v2.0 iteration.)
+CakeQueue is a command-line application that helps bakers manage
+cake orders, customer information, and upcoming deadlines.
 
-### Summary of Contributions
+## Summary of Contributions
 
-* **Code contributed:** (TODO: insert your RepoSense / tP Code Dashboard link here)
-* **Enhancements implemented:** Edit/update order (`edit`/`update`): partial-field updates preserving unsupplied fields, and its tests.
-  (See the Developer Guide section under my name for design details.)
-* **Documentation:** (TODO: list User Guide / Developer Guide parts you wrote or reviewed)
-* **Review/mentoring:** (TODO: PRs reviewed, issues triaged, teammates helped)
-* **Beyond the project:** (TODO: optional)
+### 1. Update Order Feature
+
+- Implemented the `edit` command to update existing cake orders.
+- Supported editing customer names, phone numbers, due dates,
+  cake sizes, flavours, and fillings.
+- Ensured unspecified fields remain unchanged during updates.
+- Added validation and error handling for invalid updates.
+- Wrote JUnit tests to verify the update functionality.
+
+### 2. Cake Details Improvements
+
+- Added model-level validation for supported cake sizes.
+- Improved validation of cake flavours and fillings.
+- Improved exception handling when updating cake details.
+- Added handling for orders without due dates.
+
+### 3. Due-Date Warnings
+
+- Implemented `[OVERDUE]` warnings for orders past their due dates.
+- Implemented `[DUE SOON]` warnings for orders due within 3 days.
+- Added JUnit tests covering overdue orders and warning boundaries.
+
+### 4. Documentation
+
+- Updated the User Guide to explain cake validation and
+  due-date warning behaviour.
