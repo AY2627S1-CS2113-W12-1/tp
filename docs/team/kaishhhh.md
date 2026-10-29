@@ -61,7 +61,7 @@ CakeQueue is a command-line application that helps bakers manage cake orders and
 
 #### Review/mentoring contributions
 
-* Reviewed teammates' pull requests: {add the PR numbers you reviewed, e.g. [#19](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/19)}
+* Reviewed teammates' pull requests
 
 #### Contributions beyond the project team
 
