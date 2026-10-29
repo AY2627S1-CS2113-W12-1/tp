@@ -25,9 +25,9 @@ public class FindCliTest {
     @Test
     public void run_findAfterAdding_showsOnlyMatchingOrders() {
         String result = runSession(
-                "baker\n"
-                        + "add n/Alice Tan p/91234567 d/20-10-2026 s/8 f/Chocolate fi/Strawberry\n"
-                        + "add n/Bob Lim p/81111111 d/21-10-2026 s/6 f/Vanilla fi/Cream\n"
+                ""
+                        + "add n/Alice Tan p/91234567 d/20-10-2030 s/8 f/Chocolate fi/Strawberry\n"
+                        + "add n/Bob Lim p/81111111 d/21-10-2030 s/6 f/Vanilla fi/Cream\n"
                         + "find alice\n"
                         + "bye\n");
 
@@ -39,8 +39,8 @@ public class FindCliTest {
     @Test
     public void run_findNoMatchOrMissingKeyword_recoversAndKeepsRunning() {
         String result = runSession(
-                "baker\n"
-                        + "add n/Alice Tan p/91234567 d/20-10-2026 s/8 f/Chocolate fi/Strawberry\n"
+                ""
+                        + "add n/Alice Tan p/91234567 d/20-10-2030 s/8 f/Chocolate fi/Strawberry\n"
                         + "find Zed\n"
                         + "find\n"
                         + "list\n"
@@ -52,15 +52,20 @@ public class FindCliTest {
     }
 
     @Test
-    public void run_findInCustomerMode_isNotAvailable() {
-        String result = runSession("customer\nfind Alice\nbye\n");
+    public void run_findEnquiry_showsEnquiryWithStatus() {
+        String result = runSession(
+                "enquire n/Cara Lee p/92222222 d/21-10-2030 s/8 f/Mocha fi/Cream\n"
+                        + "find mocha\n"
+                        + "bye\n");
 
-        assertTrue(result.contains("Error: Unknown customer command: find"));
+        assertTrue(result.contains("Orders matching \"mocha\":"));
+        assertTrue(result.contains("1. E001: Cara Lee"));
+        assertTrue(result.contains("[ENQUIRY]"));
     }
 
     @Test
     public void run_findIsListedInBakerHelp() {
-        String result = runSession("baker\nhelp\nbye\n");
+        String result = runSession("help\nbye\n");
 
         assertTrue(result.contains("find KEYWORD"));
     }

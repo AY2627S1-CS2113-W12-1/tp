@@ -16,7 +16,8 @@ public class HelpCommand {
                 "  list",
                 "  enquiries",
                 "  stats",
-                "  search NAME|PHONE",
+                "  find KEYWORD",
+                "  capacity [NUMBER]",
                 "  view ORDER_ID|ENQUIRY_ID",
                 "  edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]",
                 "  note ORDER_ID TEXT  (or  note ORDER_ID -clear)",
@@ -25,6 +26,8 @@ public class HelpCommand {
                 "  reject ENQUIRY_ID",
                 "  cancel ORDER_ID|ENQUIRY_ID",
                 "  delete ORDER_ID|ENQUIRY_ID",
+                "  customer CUSTOMER_ID",
+                "  history CUSTOMER_ID",
                 "  help",
                 "  bye");
     }

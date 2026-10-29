@@ -27,7 +27,9 @@ import seedu.duke.model.OrderStatus;
  *
  * <p>Format: one record per line, fields separated by {@code |}, in the order
  * ID, status, customer name, phone, due date ({@code yyyy-MM-dd} or {@code -}),
- * cake size (or {@code -}), flavour, filling. Backslash and {@code |} inside a
+ * cake size (or {@code -}), flavour, filling, customer ID (or {@code -}) and notes (or {@code -}).
+ * Older files without the customer ID or the notes are still read, including 9-field lines whose
+ * last field holds notes instead of a customer ID. Backslash and {@code |} inside a
  * value are escaped as {@code \\} and {@code \|}, so names such as
  * {@code Mary | Ann} survive a save/load round trip. Plain text was chosen over
  * Java serialisation so the file stays human-readable, diffable in Git, and
@@ -36,7 +38,11 @@ import seedu.duke.model.OrderStatus;
 public class Storage {
     private static final Logger LOGGER = Logger.getLogger(Storage.class.getName());
     private static final String NO_VALUE = "-";
-    private static final int FIELD_COUNT = 9;
+    private static final int FIELD_COUNT = 8;
+    //@@author anannya-mk
+    private static final int FIELD_COUNT_WITH_CUSTOMER_ID = 9;
+    //@@author HammerHead-os
+    private static final int FIELD_COUNT_WITH_NOTES = 10;
 
     private final Path dataFile;
 
@@ -140,14 +146,15 @@ public class Storage {
                 escape(size),
                 escape(flavour),
                 escape(filling),
+                escape(order.getCustomerId() == null ? NO_VALUE : order.getCustomerId()),
                 escape(notes));
     }
 
     private Order parseLine(String line) {
         List<String> fields = splitEscaped(line);
-        // Support both 8-field (legacy, no notes) and 9-field (current) formats.
-        if (fields.size() != FIELD_COUNT && fields.size() != FIELD_COUNT - 1) {
-            throw new CakeQueueException("Expected " + FIELD_COUNT + " fields but found " + fields.size());
+        if (fields.size() < FIELD_COUNT || fields.size() > FIELD_COUNT_WITH_NOTES) {
+            throw new CakeQueueException("Expected " + FIELD_COUNT + " to " + FIELD_COUNT_WITH_NOTES
+                    + " fields but found " + fields.size());
         }
         String orderId = fields.get(0);
         if (!orderId.matches("[OE][0-9]{3,}")) {
@@ -161,13 +168,39 @@ public class Storage {
             cake = new Cake(Integer.parseInt(fields.get(5)), fields.get(6), fields.get(7));
         }
         Order order = new Order(orderId, customer, cake, dueDate, status);
-        // Load notes if present (9-field format); legacy files without a notes field get empty notes.
-        if (fields.size() == FIELD_COUNT) {
-            String notes = fields.get(8).equals(NO_VALUE) ? "" : fields.get(8);
+        //@@author Kaishhhh
+        if (fields.size() == FIELD_COUNT_WITH_CUSTOMER_ID && isLegacyNotes(fields.get(8))) {
+            // A 9-field line from the short-lived "notes without customer ID" format.
+            order.setNotes(fields.get(8));
+            return order;
+        }
+        //@@author anannya-mk
+        if (fields.size() >= FIELD_COUNT_WITH_CUSTOMER_ID && !fields.get(8).equals(NO_VALUE)) {
+            if (!fields.get(8).matches("C[0-9]{3,}")) {
+                throw new CakeQueueException("Invalid customer ID: " + fields.get(8));
+            }
+            order.setCustomerId(fields.get(8));
+        }
+        //@@author HammerHead-os
+        // Load notes if present (10-field format); older files without a notes field get empty notes.
+        if (fields.size() == FIELD_COUNT_WITH_NOTES) {
+            String notes = fields.get(9).equals(NO_VALUE) ? "" : fields.get(9);
             order.setNotes(notes);
         }
         return order;
     }
+
+    //@@author Kaishhhh
+    /**
+     * Returns true if the 9th field of a 9-field line holds notes rather than a customer ID.
+     * Some data files were saved with notes in that position and no customer ID. A value that
+     * looks like an ID (one letter followed by digits, such as {@code C001} or {@code X1}) is
+     * still treated as a customer ID, so a damaged ID is reported instead of being read as notes.
+     */
+    private boolean isLegacyNotes(String value) {
+        return !value.equals(NO_VALUE) && !value.matches("[A-Za-z][0-9]+");
+    }
+    //@@author HammerHead-os
 
     private String escape(String value) {
         return value.replace("\\", "\\\\").replace("|", "\\|");

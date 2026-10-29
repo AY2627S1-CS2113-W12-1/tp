@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import seedu.duke.exception.CakeQueueException;
+import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
 
 /**
@@ -19,6 +20,18 @@ import seedu.duke.model.OrderStatus;
  */
 public final class Parser {
     private static final List<String> PREFIXES = List.of("n/", "p/", "d/", "s/", "f/", "fi/");
+    //@@author Eethanzyj
+    /**
+     * Gives a field's purpose and syntax when a required value is missing.
+     */
+    private static final Map<String, String> FIELD_GUIDANCE = Map.of(
+            "n/", "a customer name using n/NAME",
+            "p/", "a phone number using p/PHONE",
+            "d/", "a due date using d/DD-MM-YYYY",
+            "s/", "a cake size using s/6, s/8, or s/10",
+            "f/", "a cake flavour using f/FLAVOUR",
+            "fi/", "a cake filling using fi/FILLING");
+    //@@author
     private static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
     private static final String USAGE = "Use: add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
     private static final String ENQUIRE_USAGE =
@@ -29,6 +42,8 @@ public final class Parser {
                     + "[s/SIZE] [f/FLAVOUR] [fi/FILLING]";
     private static final String VIEW_USAGE = "Use: view ORDER_ID|ENQUIRY_ID";
     private static final String MARK_USAGE = "Use: mark ORDER_ID preparing|ready|collected";
+    private static final String CAPACITY_USAGE = "Use: capacity [NUMBER]";
+    private static final String FIND_USAGE = "Use: find KEYWORD";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
             .ofPattern("dd-MM-uuuu")
             .withResolverStyle(ResolverStyle.STRICT);
@@ -38,26 +53,10 @@ public final class Parser {
 
     /**
      * Parses and validates an enquire command (same fields as add).
-     * The date must not be in the past, and the phone must be digits only (8+ digits).
+     * The date must not be in the past, and the phone must have at least 8 digits.
      */
     public static AddOrderDetails parseEnquire(String input) {
         return parseSixFieldCommand(input, "enquire", ENQUIRE_USAGE);
-    }
-
-    /**
-     * Parses {@code search QUERY} where QUERY is a name fragment or phone number.
-     *
-     * @return The trimmed search query string.
-     */
-    public static String parseSearch(String input) {
-        if (input == null || input.isBlank()) {
-            throw new CakeQueueException("Use: search NAME|PHONE");
-        }
-        String[] parts = input.trim().split("\\s+", 2);
-        if (!parts[0].equalsIgnoreCase("search") || parts.length < 2 || parts[1].isBlank()) {
-            throw new CakeQueueException("Use: search NAME|PHONE");
-        }
-        return parts[1].trim();
     }
 
     /**
@@ -156,6 +155,7 @@ public final class Parser {
         }
     }
 
+    //@@author
     /**
      * Parses a view command and returns the order or enquiry ID.
      *
@@ -175,6 +175,57 @@ public final class Parser {
         return parts[1].toUpperCase(Locale.ROOT);
     }
 
+    //@@author Kaishhhh
+    /**
+     * Parses a find command and returns the search keyword.
+     *
+     * @param input Command entered by the user.
+     * @return The keyword to search for, with surrounding spaces removed.
+     * @throws CakeQueueException If the command has no keyword.
+     */
+    public static String parseFind(String input) {
+        if (input == null || input.isBlank()) {
+            throw new CakeQueueException(FIND_USAGE);
+        }
+        String[] parts = input.trim().split("\\s+", 2);
+        if (parts.length != 2 || !parts[0].equalsIgnoreCase("find") || parts[1].isBlank()) {
+            throw new CakeQueueException(FIND_USAGE);
+        }
+        return parts[1].trim();
+    }
+
+    //@@author Kaishhhh
+    /**
+     * Parses a capacity command.
+     *
+     * @param input Command entered by the user.
+     * @return The new daily capacity, or null if the user only wants to see it.
+     * @throws CakeQueueException If the command is invalid or the number is out of range.
+     */
+    public static Integer parseCapacity(String input) {
+        if (input == null || input.isBlank()) {
+            throw new CakeQueueException(CAPACITY_USAGE);
+        }
+        String[] parts = input.trim().split("\\s+");
+        if (parts.length > 2 || !parts[0].equalsIgnoreCase("capacity")) {
+            throw new CakeQueueException(CAPACITY_USAGE);
+        }
+        if (parts.length == 1) {
+            return null;
+        }
+        try {
+            int capacity = Integer.parseInt(parts[1]);
+            if (capacity < 1 || capacity > OrderList.MAX_DAILY_CAPACITY) {
+                throw new NumberFormatException();
+            }
+            return capacity;
+        } catch (NumberFormatException exception) {
+            throw new CakeQueueException("Daily capacity must be a whole number from 1 to "
+                    + OrderList.MAX_DAILY_CAPACITY + ".", exception);
+        }
+    }
+
+    //@@author HammerHead-os
     /**
      * Parses and validates a baker add command.
      */
@@ -206,6 +257,24 @@ public final class Parser {
                 "Use: cancel ORDER_ID|ENQUIRY_ID");
     }
 
+    //@@author anannya-mk
+    /**
+     * Parses customer CUSTOMER_ID.
+     */
+    public static String parseCustomer(String input) {
+        return parseSingleIdCommand(input, "customer", "[Cc][0-9]{3,}",
+                "Use: customer CUSTOMER_ID");
+    }
+
+    /**
+     * Parses history CUSTOMER_ID.
+     */
+    public static String parseHistory(String input) {
+        return parseSingleIdCommand(input, "history", "[Cc][0-9]{3,}",
+                "Use: history CUSTOMER_ID");
+    }
+
+    //@@author HammerHead-os
     private static AddOrderDetails parseSixFieldCommand(String input, String commandWord,
                                                         String usage) {
         if (input == null || input.isBlank()) {
@@ -233,13 +302,16 @@ public final class Parser {
     }
 
     /**
-     * Validates that a phone number contains only digits and is at least 8 digits long.
-     * This catches obvious typos (letters, spaces) without enforcing a specific country format.
+     * Validates that a phone number has at least 8 digits and otherwise only spaces, {@code +} or {@code -}.
+     * This catches obvious typos (letters, symbols) while still accepting formatted numbers such as
+     * {@code +65 9123-4567}, without enforcing a specific country format.
      */
     private static void validatePhone(String phone) {
-        if (!phone.matches("\\d{8,}")) {
-            throw new CakeQueueException(
-                    "Phone must be at least 8 digits and contain only numbers.");
+        boolean hasAllowedCharacters = phone.matches("[0-9+\\- ]+");
+        long digitCount = phone.chars().filter(Character::isDigit).count();
+        if (!hasAllowedCharacters || digitCount < 8) {
+            throw new CakeQueueException("Phone must have at least 8 digits, "
+                    + "and may only contain digits, spaces, + and -.");
         }
     }
 
@@ -256,6 +328,7 @@ public final class Parser {
         return parts[1].toUpperCase(Locale.ROOT);
     }
 
+    //@@author
     private static int parseCakeSize(String sizeText) {
         int size;
         try {
@@ -286,10 +359,11 @@ public final class Parser {
             }
             String prefix = matcher.group(1);
             if (!PREFIXES.contains(prefix)) {
-                throw new CakeQueueException("Unknown field: " + prefix);
+                throw new CakeQueueException("Unknown field: " + prefix
+                        + ". Supported prefixes: " + String.join(", ", PREFIXES) + ".");
             }
             if (fields.containsKey(prefix)) {
-                throw new CakeQueueException("Duplicate field: " + prefix);
+                throw new CakeQueueException("Duplicate field: " + prefix + ". Supply each field once.");
             }
             previousPrefix = prefix;
             valueStart = matcher.end();
@@ -299,16 +373,17 @@ public final class Parser {
         }
         for (String prefix : PREFIXES) {
             if (!fields.containsKey(prefix) || fields.get(prefix).isBlank()) {
-                throw new CakeQueueException("Missing value for " + prefix);
+                throw new CakeQueueException("Missing value for " + prefix
+                        + ". Please provide " + FIELD_GUIDANCE.get(prefix) + ".");
             }
         }
         return fields;
     }
 
-    //@@author
     /**
      * Stores the values extracted from an Add Order command.
      */
+    //@@author Eethanzyj
     public static final class AddOrderDetails {
         private final String customerName;
         private final String phone;
@@ -376,9 +451,11 @@ public final class Parser {
 
         // Check that the command is "edit" or "update", the Order ID is valid,
         // and at least one field argument is present.
+        //@@author Eethanzyj
         if (parts.length != 3
                 || (!parts[0].equalsIgnoreCase("edit") && !parts[0].equalsIgnoreCase("update"))
                 || !parts[1].matches("[Oo][0-9]{3,}")) {
+            //@@author WillChin484848
             throw new CakeQueueException(UPDATE_USAGE);
         }
 
@@ -396,7 +473,19 @@ public final class Parser {
                 throw new CakeQueueException(
                         "Date must use DD-MM-YYYY and be valid.", exception);
             }
+            //@@author Kaishhhh
+            // Apply the same rules as add, so an edit cannot move an order into the past.
+            if (dueDate.isBefore(LocalDate.now())) {
+                throw new CakeQueueException("Due date cannot be in the past.");
+            }
+            //@@author WillChin484848
         }
+
+        //@@author Kaishhhh
+        if (fields.containsKey("p/")) {
+            validatePhone(fields.get("p/"));
+        }
+        //@@author WillChin484848
 
         // A null value means the user did not request a size change.
         Integer size = null;
@@ -409,7 +498,9 @@ public final class Parser {
         // Store the validated values in an UpdateOrderDetails object.
         // Fields that were not supplied remain null.
         return new UpdateOrderDetails(
+                //@@author Eethanzyj
                 parts[1].toUpperCase(Locale.ROOT),
+                //@@author WillChin484848
                 fields.get("n/"),
                 fields.get("p/"),
                 dueDate,

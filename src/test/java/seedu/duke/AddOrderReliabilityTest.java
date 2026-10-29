@@ -31,7 +31,7 @@ import seedu.duke.storage.Storage;
  */
 public class AddOrderReliabilityTest {
     private static final String VALID_ADD =
-            "add n/Alice Tan p/91234567 d/30-10-2026 s/8 f/Chocolate fi/Strawberry";
+            "add n/Alice Tan p/91234567 d/30-10-2030 s/8 f/Chocolate fi/Strawberry";
 
     @TempDir
     private Path tempDir;
@@ -39,19 +39,19 @@ public class AddOrderReliabilityTest {
     @Test
     public void run_invalidAdds_preservesSavedDataAndNextId() throws IOException {
         Path dataFile = tempDir.resolve("cakequeue.txt");
-        runSession(dataFile, "baker\n" + VALID_ADD + "\nbye\n");
+        runSession(dataFile, VALID_ADD + "\nbye\n");
         byte[] originalData = Files.readAllBytes(dataFile);
         List<String> invalidAdds = List.of(
                 VALID_ADD.replace("n/Alice Tan ", ""),
                 VALID_ADD.replace("n/Alice Tan", "n/   "),
                 VALID_ADD.replace("p/91234567", "p/   "),
-                VALID_ADD.replace("30-10-2026", "31-02-2026"),
+                VALID_ADD.replace("30-10-2030", "31-02-2030"),
                 VALID_ADD.replace("s/8", "s/7"),
                 VALID_ADD + " n/Bob",
                 VALID_ADD + " x/Extra");
         String rejectedCommands = String.join("\n", invalidAdds) + "\n";
 
-        String rejectedOutput = runSession(dataFile, "baker\n" + rejectedCommands + "bye\n");
+        String rejectedOutput = runSession(dataFile, rejectedCommands + "bye\n");
 
         assertEquals(invalidAdds.size(), rejectedOutput.lines()
                 .filter(line -> line.startsWith("Error:")).count());
@@ -61,7 +61,7 @@ public class AddOrderReliabilityTest {
 
         // A valid add after the errors in the same session must still receive O002.
         String recoveredOutput = runSession(dataFile,
-                "baker\n" + rejectedCommands + VALID_ADD + "\nbye\n");
+                rejectedCommands + VALID_ADD + "\nbye\n");
         assertTrue(recoveredOutput.contains("Added order O002:"));
         OrderList restored = new Storage(dataFile).load();
         assertEquals(2, restored.size());
@@ -75,14 +75,14 @@ public class AddOrderReliabilityTest {
         String input = VALID_ADD.replace("n/Alice Tan", "n/   Élodie O'Connor-Tan   ")
                 .replace("p/91234567", "p/   +65 9123-4567   ");
 
-        runSession(dataFile, "baker\n" + input + "\nbye\n");
-        String restartedOutput = runSession(dataFile, "baker\nview O001\nbye\n");
+        runSession(dataFile, input + "\nbye\n");
+        String restartedOutput = runSession(dataFile, "view O001\nbye\n");
         Order restored = new Storage(dataFile).load().getById("O001");
 
         assertTrue(restartedOutput.contains("Customer: Élodie O'Connor-Tan (+65 9123-4567)"));
         assertEquals("Élodie O'Connor-Tan", restored.getCustomer().getName());
         assertEquals("+65 9123-4567", restored.getCustomer().getPhone());
-        assertEquals(LocalDate.of(2026, 10, 30), restored.getDueDate());
+        assertEquals(LocalDate.of(2030, 10, 30), restored.getDueDate());
         assertEquals(8, restored.getCake().getSize());
         assertEquals("Chocolate", restored.getCake().getFlavour());
         assertEquals("Strawberry", restored.getCake().getFilling());
@@ -92,7 +92,7 @@ public class AddOrderReliabilityTest {
     @Test
     public void run_editOneCustomerName_leavesOtherOrderUnchanged() {
         Path dataFile = tempDir.resolve("cakequeue.txt");
-        runSession(dataFile, "baker\n" + VALID_ADD + "\n" + VALID_ADD
+        runSession(dataFile, VALID_ADD + "\n" + VALID_ADD
                 + "\nedit O001 n/Alicia Tan\nbye\n");
         OrderList restored = new Storage(dataFile).load();
         Order edited = restored.getById("O001");
@@ -116,7 +116,7 @@ public class AddOrderReliabilityTest {
         Files.writeString(blockedParent, "A file cannot be used as a directory.");
         Path dataFile = blockedParent.resolve("cakequeue.txt");
 
-        String output = runSession(dataFile, "baker\n" + VALID_ADD + "\nview O001\nbye\n");
+        String output = runSession(dataFile, VALID_ADD + "\nview O001\nbye\n");
 
         assertTrue(output.contains("Added order O001:"));
         assertTrue(output.contains("Warning: Could not save your data. "
@@ -133,8 +133,8 @@ public class AddOrderReliabilityTest {
         String enquiry = VALID_ADD.replace("add n/Alice Tan p/91234567", "enquire n/Bob Lim p/81234567");
         String invalidEnquiry = enquiry.replace("n/Bob Lim ", "");
 
-        String output = runSession(dataFile, "customer\n" + invalidEnquiry + "\n" + enquiry
-                + "\nmode baker\ncapacity 1\n" + VALID_ADD
+        String output = runSession(dataFile, invalidEnquiry + "\n" + enquiry
+                + "\ncapacity 1\n" + VALID_ADD
                 + "\naccept E001\ncustomer C002\nhistory C002\nbye\n");
 
         assertTrue(output.contains("Error: Missing value for n/. "
@@ -144,7 +144,7 @@ public class AddOrderReliabilityTest {
         assertTrue(output.contains("Name: Bob Lim"));
         assertTrue(output.contains("Order history for Bob Lim (C002):"));
         // The pending enquiry does not fill capacity; only accepting it causes a warning.
-        assertEquals(1, output.lines().filter(line -> line.startsWith("Warning: 30-10-2026")).count());
+        assertEquals(1, output.lines().filter(line -> line.startsWith("Warning: 30-10-2030")).count());
 
         OrderList loaded = new Storage(dataFile).load();
         assertEquals(2, loaded.size());
@@ -153,7 +153,7 @@ public class AddOrderReliabilityTest {
         assertEquals("Alice Tan", loaded.getById("O001").getCustomer().getName());
         assertEquals("Bob Lim", loaded.getById("O002").getCustomer().getName());
 
-        String restarted = runSession(dataFile, "baker\ncapacity\ncustomer C002\nbye\n");
+        String restarted = runSession(dataFile, "capacity\ncustomer C002\nbye\n");
         assertTrue(restarted.contains("Daily capacity is 5 orders per day."));
         assertTrue(restarted.contains("Name: Bob Lim"));
     }

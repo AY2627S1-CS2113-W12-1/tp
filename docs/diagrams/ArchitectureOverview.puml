@@ -6,7 +6,6 @@ hide empty members
 
 class Duke
 class BakerCli
-class CustomerCli
 class Parser <<utility>>
 class "XYZCommand" as Command
 class OrderList
@@ -14,15 +13,12 @@ class Order
 class Storage
 class CakeQueueException
 
-Duke --> BakerCli : runs in baker mode
-Duke --> CustomerCli : runs in customer mode
+Duke --> BakerCli : runs
 Duke --> Storage : loads and saves
 Duke --> OrderList : owns
 
 BakerCli ..> Parser
-CustomerCli ..> Parser
 BakerCli ..> Command
-CustomerCli ..> Command
 Command ..> OrderList : reads/changes
 Storage ..> OrderList : fills/reads
 OrderList o-- "*" Order

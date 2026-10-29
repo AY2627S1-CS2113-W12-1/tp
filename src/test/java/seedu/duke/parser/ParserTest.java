@@ -121,7 +121,7 @@ public class ParserTest {
         assertThrows(IllegalArgumentException.class,
                 () -> Parser.parseAdd(VALID_INPUT.replace("add ", "add extra ")));
     }
-
+    //@@author WillChin484848
     /**
      * Tests that an update command can contain multiple fields.
      * parseUpdate has no past-date check — dates are informational edits.
@@ -203,6 +203,7 @@ public class ParserTest {
                 () -> Parser.parseUpdate("update O1 n/Bob"));
     }
 
+    //@@author Eethanzyj
     @Test
     public void parseUpdate_editAliasAndLowercaseId_returnsCanonicalId() {
         Parser.UpdateOrderDetails details = Parser.parseUpdate("EDIT\to001\ts/10 d/22-10-2028");
@@ -232,8 +233,11 @@ public class ParserTest {
                                           "view O001 extra", "viewpoint O001"}) {
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                     () -> Parser.parseView(input));
+            //@@author HammerHead-os
             assertEquals("Use: view ORDER_ID|ENQUIRY_ID", exception.getMessage());
+            //@@author Eethanzyj
         }
         assertThrows(IllegalArgumentException.class, () -> Parser.parseView(null));
     }
+    //@@author
 }

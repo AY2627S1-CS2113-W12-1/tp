@@ -31,6 +31,9 @@ public class AcceptEnquiryCommand {
                 enquiry.getCake(),
                 enquiry.getDueDate(),
                 OrderStatus.QUEUED);
+        //@@author Kaishhhh
+        confirmed.setNotes(enquiry.getNotes());
+        //@@author HammerHead-os
         orders.add(confirmed);
         return "Accepted enquiry " + enquiryId + " as order " + confirmed;
     }
