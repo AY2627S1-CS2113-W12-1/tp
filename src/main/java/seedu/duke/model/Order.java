@@ -15,6 +15,8 @@ public class Order {
     private final int quantity;
     private final LocalDate dueDate;
     private OrderStatus status;
+    /** Free-text notes for allergens, special decorations, etc. Empty string means no notes. */
+    private String notes;
 
     public Order(Customer customer, Cake cake, int quantity) {
         this.orderId = null;
@@ -49,6 +51,7 @@ public class Order {
         this.quantity = 1;
         this.dueDate = dueDate;
         this.status = status;
+        this.notes = "";
     }
 
     public String getOrderId() {
@@ -79,6 +82,15 @@ public class Order {
         this.status = status;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    /** Sets free-text notes on this order. Pass an empty string to clear notes. */
+    public void setNotes(String notes) {
+        this.notes = notes != null ? notes : "";
+    }
+
     /**
      * Returns true when this record is still a customer enquiry.
      */
@@ -99,8 +111,8 @@ public class Order {
         Customer updatedCustomer = newCustomer != null ? newCustomer : customer;
         Cake updatedCake = newCake != null ? newCake : cake;
         LocalDate updatedDueDate = newDueDate != null ? newDueDate : dueDate;
-
         Order updatedOrder = new Order(orderId, updatedCustomer, updatedCake, updatedDueDate, status);
+        updatedOrder.setNotes(this.notes);
         return updatedOrder;
     }
 
@@ -122,6 +134,9 @@ public class Order {
                     .append("Filling: ").append(cake.getFilling()).append(nl);
         }
         details.append("Status: ").append(status);
+        if (!notes.isEmpty()) {
+            details.append(nl).append("Notes: ").append(notes);
+        }
         return details.toString();
     }
 

@@ -36,7 +36,7 @@ import seedu.duke.model.OrderStatus;
 public class Storage {
     private static final Logger LOGGER = Logger.getLogger(Storage.class.getName());
     private static final String NO_VALUE = "-";
-    private static final int FIELD_COUNT = 8;
+    private static final int FIELD_COUNT = 9;
 
     private final Path dataFile;
 
@@ -130,6 +130,7 @@ public class Storage {
         String size = cake == null ? NO_VALUE : String.valueOf(cake.getSize());
         String flavour = cake == null ? NO_VALUE : cake.getFlavour();
         String filling = cake == null ? NO_VALUE : cake.getFilling();
+        String notes = order.getNotes().isEmpty() ? NO_VALUE : order.getNotes();
         return String.join(" | ",
                 escape(order.getOrderId()),
                 escape(order.getStatus().name()),
@@ -138,12 +139,14 @@ public class Storage {
                 escape(dueDate),
                 escape(size),
                 escape(flavour),
-                escape(filling));
+                escape(filling),
+                escape(notes));
     }
 
     private Order parseLine(String line) {
         List<String> fields = splitEscaped(line);
-        if (fields.size() != FIELD_COUNT) {
+        // Support both 8-field (legacy, no notes) and 9-field (current) formats.
+        if (fields.size() != FIELD_COUNT && fields.size() != FIELD_COUNT - 1) {
             throw new CakeQueueException("Expected " + FIELD_COUNT + " fields but found " + fields.size());
         }
         String orderId = fields.get(0);
@@ -157,7 +160,13 @@ public class Storage {
         if (!fields.get(5).equals(NO_VALUE)) {
             cake = new Cake(Integer.parseInt(fields.get(5)), fields.get(6), fields.get(7));
         }
-        return new Order(orderId, customer, cake, dueDate, status);
+        Order order = new Order(orderId, customer, cake, dueDate, status);
+        // Load notes if present (9-field format); legacy files without a notes field get empty notes.
+        if (fields.size() == FIELD_COUNT) {
+            String notes = fields.get(8).equals(NO_VALUE) ? "" : fields.get(8);
+            order.setNotes(notes);
+        }
+        return order;
     }
 
     private String escape(String value) {
