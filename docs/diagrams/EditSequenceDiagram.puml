@@ -1,0 +1,39 @@
+@startuml EditSequenceDiagram
+title Baker edits an order: edit ORDER_ID [fields...]  (alias: update)
+
+actor Baker
+participant "BakerCli" as Cli
+participant "Parser" as Parser
+participant "UpdateOrderCommand" as Cmd
+participant "OrderList" as List
+participant "Order" as Order
+
+Baker -> Cli : edit O001 s/10 d/22-10-2026
+Cli -> Parser : parseUpdate(input)
+activate Parser
+note right of Parser
+  At least one field is required.
+  null in UpdateOrderDetails means
+  "field not supplied, keep the
+  old value". Supplied date/size
+  are validated as in add.
+end note
+Parser --> Cli : UpdateOrderDetails\n(O001, size=10, dueDate=..., rest null)
+deactivate Parser
+Cli -> Cmd : new UpdateOrderCommand(details...)
+Cli -> Cmd : execute(orders)
+Cmd -> List : getById("O001")
+List --> Cmd : original Order
+Cmd -> Cmd : build updated Customer / Cake\nkeeping every unsupplied field
+Cmd -> Order : updatedCopy(customer, cake, dueDate)
+Order --> Cmd : new Order, same ID and status
+Cmd -> List : update(updatedOrder)
+note right of List
+  update replaces the record with
+  the same ID in place; the ID,
+  status and list position are
+  unchanged.
+end note
+Cmd --> Cli : Updated order O001: ...
+Cli --> Baker : print confirmation
+@enduml

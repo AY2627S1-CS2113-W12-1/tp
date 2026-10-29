@@ -7,21 +7,16 @@ import java.time.format.DateTimeFormatter;
  * Represents a customer enquiry or a confirmed cake order.
  */
 public class Order {
-    //@@author Eethanzyj
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-uuuu");
 
     private final String orderId;
-    //@@author
     private final Customer customer;
     private final Cake cake;
     private final int quantity;
-    //@@author Eethanzyj
     private final LocalDate dueDate;
-    //@@author
     private OrderStatus status;
-    //@@author anannya-mk
-    private String customerId;
-    //@@author
+    /** Free-text notes for allergens, special decorations, etc. Empty string means no notes. */
+    private String notes;
 
     public Order(Customer customer, Cake cake, int quantity) {
         this.orderId = null;
@@ -56,13 +51,12 @@ public class Order {
         this.quantity = 1;
         this.dueDate = dueDate;
         this.status = status;
+        this.notes = "";
     }
 
-    //@@author Eethanzyj
     public String getOrderId() {
         return orderId;
     }
-    //@@author
 
     public Customer getCustomer() {
         return customer;
@@ -76,11 +70,9 @@ public class Order {
         return quantity;
     }
 
-    //@@author Eethanzyj
     public LocalDate getDueDate() {
         return dueDate;
     }
-    //@@author
 
     public OrderStatus getStatus() {
         return status;
@@ -90,23 +82,14 @@ public class Order {
         this.status = status;
     }
 
-    //@@author anannya-mk
-    /**
-     * Returns the ID of the customer who placed this order, such as C001.
-     * It is null for enquiries, which do not have a customer ID until they are accepted.
-     */
-    public String getCustomerId() {
-        return customerId;
+    public String getNotes() {
+        return notes;
     }
 
-    /**
-     * Sets the customer ID. It is assigned once when the order is added and never changes afterwards,
-     * even if the customer's name or phone number is edited.
-     */
-    public void setCustomerId(String customerId) {
-        this.customerId = customerId;
+    /** Sets free-text notes on this order. Pass an empty string to clear notes. */
+    public void setNotes(String notes) {
+        this.notes = notes != null ? notes : "";
     }
-    //@@author
 
     /**
      * Returns true when this record is still a customer enquiry.
@@ -128,9 +111,8 @@ public class Order {
         Customer updatedCustomer = newCustomer != null ? newCustomer : customer;
         Cake updatedCake = newCake != null ? newCake : cake;
         LocalDate updatedDueDate = newDueDate != null ? newDueDate : dueDate;
-
         Order updatedOrder = new Order(orderId, updatedCustomer, updatedCake, updatedDueDate, status);
-        updatedOrder.customerId = customerId;
+        updatedOrder.setNotes(this.notes);
         return updatedOrder;
     }
 
@@ -152,29 +134,23 @@ public class Order {
                     .append("Filling: ").append(cake.getFilling()).append(nl);
         }
         details.append("Status: ").append(status);
+        if (!notes.isEmpty()) {
+            details.append(nl).append("Notes: ").append(notes);
+        }
         return details.toString();
     }
-
 
     @Override
     public String toString() {
         if (orderId != null) {
-            //@@author WillChin484848
-            // Display a placeholder when an order has no due date.
-            String dueDateText = dueDate != null
-                    ? dueDate.format(DATE_FORMATTER) : "Not specified";
-            //@@author
-
             if (cake != null) {
-                return orderId + ": " + customer + " | Due: " + dueDateText
+                return orderId + ": " + customer + " | Due: " + dueDate.format(DATE_FORMATTER)
                         + " | Size: " + cake.getSize() + " inches | Flavour: " + cake.getFlavour()
                         + " | Filling: " + cake.getFilling() + " [" + status + "]";
             }
-
             return orderId + ": " + customer.getName() + " (due "
-                    + dueDateText + ") [" + status + "]";
+                    + dueDate.format(DATE_FORMATTER) + ") [" + status + "]";
         }
-        // Preserve the existing display format for orders without an ID.
         return customer.getName() + ": " + quantity + " x " + cake.getName() + " [" + status + "]";
     }
 }

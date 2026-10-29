@@ -1,0 +1,36 @@
+@startuml MarkAndSaveSequenceDiagram
+title v2.0: baker marks an order, change is saved immediately
+
+actor Baker
+participant "BakerCli" as Cli
+participant "Parser" as Parser
+participant "MarkCommand" as Mark
+participant "OrderList" as List
+participant "Duke\n(saveChanges)" as Duke
+participant "Storage" as Storage
+database "data/cakequeue.txt" as File
+
+Baker -> Cli : mark O001 preparing
+Cli -> Parser : parseMark(input)
+Parser --> Cli : MarkDetails(O001, PREPARING)
+Cli -> Mark : new MarkCommand(O001, PREPARING)
+Cli -> Mark : execute(orders)
+Mark -> List : getById("O001")
+List --> Mark : Order, status QUEUED
+alt requested step is the next step\n(QUEUED -> PREPARING -> READY -> COLLECTED)
+  Mark -> Mark : setStatus(PREPARING)
+  Mark --> Cli : Updated order O001 ... [PREPARING]
+  Cli --> Baker : print confirmation
+  Cli -> Duke : saveChanges.run()
+  Duke -> Storage : save(orders)
+  Storage -> File : write temp file, then move\nover data file
+  Storage --> Duke : true
+else step skipped, repeated, or record not a confirmed order
+  Mark --> Cli : throws IllegalArgumentException\n(e.g. Cannot change ... QUEUED to COLLECTED)
+  Cli --> Baker : Error: ...
+  note right of Cli
+    No save happens: nothing changed,
+    so the file already matches memory.
+  end note
+end
+@enduml
