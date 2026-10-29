@@ -1,7 +1,5 @@
 package seedu.duke.command;
 
-//@@author HammerHead-os
-
 import java.time.LocalDate;
 
 import seedu.duke.model.Cake;
@@ -11,7 +9,9 @@ import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
 
 /**
- * Creates a customer enquiry waiting for baker acceptance.
+ * Creates a new customer enquiry on behalf of the baker.
+ * The enquiry is assigned an E-prefixed ID and starts with status ENQUIRY.
+ * The baker can then accept or reject it later.
  */
 public class EnquireCommand {
     private final String name;
@@ -22,7 +22,7 @@ public class EnquireCommand {
     private final String filling;
 
     /**
-     * Creates a command with the enquiry details.
+     * Creates the command with all enquiry details.
      */
     public EnquireCommand(String name, String phone, LocalDate dueDate,
                           int size, String flavour, String filling) {
@@ -35,10 +35,11 @@ public class EnquireCommand {
     }
 
     /**
-     * Adds an enquiry with status ENQUIRY and an E-prefixed ID.
+     * Adds the enquiry to the order list and returns a confirmation message.
      */
     public String execute(OrderList orders) {
-        Order enquiry = new Order(orders.generateEnquiryId(),
+        Order enquiry = new Order(
+                orders.generateEnquiryId(),
                 new Customer(name, phone),
                 new Cake(size, flavour, filling),
                 dueDate,

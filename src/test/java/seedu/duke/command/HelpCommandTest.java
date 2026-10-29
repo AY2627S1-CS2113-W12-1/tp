@@ -5,40 +5,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-import seedu.duke.UserMode;
-
 /**
- * Tests that help text matches the commands available in each user mode.
+ * Tests that baker help text lists all available commands.
  */
 public class HelpCommandTest {
 
-    /**
-     * Tests that baker help lists baker-only commands such as accept and reject.
-     */
     @Test
-    public void execute_bakerMode_listsBakerCommandsOnly() {
-        String help = new HelpCommand(UserMode.BAKER).execute();
+    public void execute_listsBakerCommands() {
+        String help = new HelpCommand().execute();
 
         assertTrue(help.contains("Baker commands:"));
+        assertTrue(help.contains("add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING"));
+        assertTrue(help.contains("enquire n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING"));
         assertTrue(help.contains("accept ENQUIRY_ID"));
         assertTrue(help.contains("reject ENQUIRY_ID"));
-        assertTrue(help.contains("mode customer"));
+        assertTrue(help.contains("mark ORDER_ID preparing|ready|collected"));
+        assertTrue(help.contains("search NAME|PHONE"));
+        assertTrue(help.contains("stats"));
+        assertTrue(help.contains("delete ORDER_ID|ENQUIRY_ID"));
+        assertTrue(help.contains("note ORDER_ID"));
         assertFalse(help.contains("Customer commands:"));
-        assertFalse(help.contains("enquire n/NAME"));
-    }
-
-    /**
-     * Tests that customer help lists customer-only commands such as enquire and track.
-     */
-    @Test
-    public void execute_customerMode_listsCustomerCommandsOnly() {
-        String help = new HelpCommand(UserMode.CUSTOMER).execute();
-
-        assertTrue(help.contains("Customer commands:"));
-        assertTrue(help.contains("enquire n/NAME"));
-        assertTrue(help.contains("track ID p/PHONE"));
-        assertTrue(help.contains("mode baker"));
-        assertFalse(help.contains("Baker commands:"));
-        assertFalse(help.contains("accept ENQUIRY_ID"));
     }
 }

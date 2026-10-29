@@ -61,8 +61,9 @@ public class CakeQueueExceptionTest {
 
     @Test
     public void parser_nonNumericSize_throwsCakeQueueExceptionWithNumberFormatCause() {
+        // Use a future date so the past-date check doesn't fire before the size check.
         CakeQueueException exception = assertThrows(CakeQueueException.class,
-                () -> Parser.parseAdd("add n/Alice p/91234567 d/20-10-2026 "
+                () -> Parser.parseAdd("add n/Alice p/91234567 d/20-10-2028 "
                         + "s/large f/Chocolate fi/Strawberry"));
 
         assertTrue(exception.getMessage().contains("Cake size must be 6, 8, or 10"));

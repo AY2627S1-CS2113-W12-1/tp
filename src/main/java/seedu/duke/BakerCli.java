@@ -3,18 +3,22 @@ package seedu.duke;
 //@@author HammerHead-os
 
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import seedu.duke.command.AcceptEnquiryCommand;
 import seedu.duke.command.CancelCommand;
+import seedu.duke.command.DeleteCommand;
+import seedu.duke.command.EnquireCommand;
 import seedu.duke.command.HelpCommand;
 import seedu.duke.command.ListCommand;
 import seedu.duke.command.ListEnquiriesCommand;
 import seedu.duke.command.MarkCommand;
+import seedu.duke.command.NoteCommand;
 import seedu.duke.command.RejectEnquiryCommand;
+import seedu.duke.command.SearchCommand;
+import seedu.duke.command.StatsCommand;
 import seedu.duke.command.UpdateOrderCommand;
 import seedu.duke.command.ViewOrderCommand;
 import seedu.duke.exception.CakeQueueException;
@@ -31,13 +35,11 @@ public class BakerCli {
     private static final Logger LOGGER = Logger.getLogger(BakerCli.class.getName());
 
     /**
-     * Handles baker commands until the user exits or switches mode.
+     * Handles baker commands until the user exits.
      * {@code afterChange} is run after every successful change so the caller
-     * can persist the shared order list.
-     *
-     * @return The next mode to enter, or empty to exit the application.
+     * can persist the order list.
      */
-    public Optional<UserMode> run(Scanner scanner, OrderList orders, Runnable afterChange) {
+    public void run(Scanner scanner, OrderList orders, Runnable afterChange) {
         assert scanner != null && orders != null && afterChange != null
                 : "Scanner, order list and save callback must not be null";
         System.out.println("Baker mode. Type help to see commands.");
@@ -49,15 +51,10 @@ public class BakerCli {
                 case "bye":
                     requireNoArguments(input, "bye");
                     System.out.println("Bye. Hope to see you again soon!");
-                    return Optional.empty();
-                case "mode":
-                    UserMode nextMode = Parser.parseModeCommand(input);
-                    System.out.println("Switching to " + nextMode.name().toLowerCase(Locale.ROOT)
-                            + " mode.");
-                    return Optional.of(nextMode);
+                    return;
                 case "help":
                     requireNoArguments(input, "help");
-                    System.out.println(new HelpCommand(UserMode.BAKER).execute());
+                    System.out.println(new HelpCommand().execute());
                     break;
                 case "list":
                     requireNoArguments(input, "list");
@@ -108,6 +105,33 @@ public class BakerCli {
                     System.out.println(new CancelCommand(Parser.parseBakerCancel(input)).execute(orders));
                     afterChange.run();
                     break;
+                case "enquire":
+                    Parser.AddOrderDetails enqDetails = Parser.parseEnquire(input);
+                    System.out.println(new EnquireCommand(
+                            enqDetails.getCustomerName(), enqDetails.getPhone(),
+                            enqDetails.getDueDate(), enqDetails.getSize(),
+                            enqDetails.getFlavour(), enqDetails.getFilling()
+                    ).execute(orders));
+                    afterChange.run();
+                    break;
+                case "search":
+                    System.out.println(new SearchCommand(Parser.parseSearch(input)).execute(orders));
+                    break;
+                case "delete":
+                    System.out.println(new DeleteCommand(Parser.parseDelete(input)).execute(orders));
+                    afterChange.run();
+                    break;
+                case "stats":
+                    requireNoArguments(input, "stats");
+                    System.out.println(new StatsCommand().execute(orders));
+                    break;
+                case "note":
+                    Parser.NoteDetails noteDetails = Parser.parseNote(input);
+                    System.out.println(new NoteCommand(
+                            noteDetails.getRecordId(), noteDetails.getText()
+                    ).execute(orders));
+                    afterChange.run();
+                    break;
                 case "":
                     throw new CakeQueueException("Please enter a command.");
                 default:
@@ -118,7 +142,6 @@ public class BakerCli {
                 System.out.println("Error: " + exception.getMessage());
             }
         }
-        return Optional.empty();
     }
 
     private String addOrder(String input, OrderList orders) {

@@ -3,9 +3,9 @@ package seedu.duke;
 //@@author HammerHead-os
 
 /**
- * Selects which CakeQueue command interface the user may access.
+ * Placeholder enum kept for future extensibility.
+ * Currently the application runs in baker mode only.
  */
 public enum UserMode {
-    BAKER,
-    CUSTOMER
+    BAKER
 }

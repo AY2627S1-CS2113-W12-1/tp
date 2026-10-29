@@ -3,14 +3,11 @@ package seedu.duke;
 //@@author HammerHead-os
 
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.OrderList;
-import seedu.duke.parser.Parser;
 import seedu.duke.storage.Storage;
 
 /**
@@ -40,9 +37,7 @@ public class Duke {
     }
 
     /**
-     * Loads saved records, chooses a user mode, then runs baker or customer
-     * interfaces until exit. Modes may be switched with {@code mode baker} or
-     * {@code mode customer} without clearing the shared order list.
+     * Loads saved records, then runs the baker interface until exit.
      * Every successful change is saved immediately, so closing the app (or a
      * crash) after a change does not lose it.
      */
@@ -61,30 +56,7 @@ public class Duke {
             }
         };
         System.out.println("Hello! I'm CakeQueue.");
-        System.out.println("Choose a mode: baker or customer");
-
-        UserMode mode = null;
-        while (mode == null && scanner.hasNextLine()) {
-            String input = scanner.nextLine().trim();
-            try {
-                mode = Parser.parseMode(input);
-            } catch (CakeQueueException exception) {
-                System.out.println("Error: " + exception.getMessage());
-            }
-        }
-        if (mode == null) {
-            return;
-        }
-
-        while (mode != null) {
-            Optional<UserMode> nextMode;
-            if (mode == UserMode.BAKER) {
-                nextMode = new BakerCli().run(scanner, orders, saveChanges);
-            } else {
-                nextMode = new CustomerCli().run(scanner, orders, saveChanges);
-            }
-            mode = nextMode.orElse(null);
-        }
+        new BakerCli().run(scanner, orders, saveChanges);
     }
 
     /**
