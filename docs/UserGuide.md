@@ -128,7 +128,7 @@ Format: `list`
 
 Shows active confirmed orders, including overdue orders, with the earliest due date first.
 Enquiries, cancelled, rejected, and collected records are excluded. Use `enquiries` for enquiries,
-and `find`, `search` or `view` for any record.
+and `find` or `view` for any record.
 
 Orders with the same due date keep their original order. List numbers are display positions only;
 use an Order ID such as `O001` in other commands.
@@ -186,17 +186,6 @@ find chocolate
 ```
 
 If nothing matches, CakeQueue shows `No orders found matching "KEYWORD".`
-
-## Searching by Name or Phone: `search`
-
-Format: `search NAME|PHONE`
-
-Shows every record whose customer name contains `NAME` (ignoring case), or whose phone number is
-exactly `PHONE` as it was entered. Use `search` when a customer calls and gives their number.
-
-Examples: `search alice`, `search 91234567`
-
-If nothing matches, CakeQueue shows `No records found for: QUERY`.
 
 ## Viewing a Record: `view`
 
@@ -336,7 +325,7 @@ Format: `delete ORDER_ID` or `delete ENQUIRY_ID`
 
 Removes a record for good. Only records that are cancelled, rejected or collected can be deleted, so
 an active order cannot be lost by mistake. Cancel it first if you really want to remove it.
-A deleted record no longer appears in `find`, `search` or a customer's `history`.
+A deleted record no longer appears in `find` or a customer's `history`.
 
 Example: `delete O001`
 
@@ -384,7 +373,6 @@ extra to save on exit. Check for save warnings before exiting.
 | List pending enquiries | `enquiries` |
 | Show summary | `stats` |
 | Find by name, flavour or filling | `find KEYWORD` |
-| Search by name or phone | `search NAME\|PHONE` |
 | View record | `view ORDER_ID` or `view ENQUIRY_ID` |
 | View customer | `customer CUSTOMER_ID` |
 | View customer history | `history CUSTOMER_ID` |
@@ -404,8 +392,8 @@ extra to save on exit. Check for save warnings before exiting.
 * The daily capacity limit is not saved between sessions. It returns to 5 each time CakeQueue starts.
 * A Customer ID is given out when an order is first added and never changes. If a phone number is
   edited, the order keeps its original Customer ID.
-* `search` matches a phone number only when it is typed exactly as it was saved. `find` searches
-  name, flavour and filling, but not phone numbers or dates.
+* `find` searches name, flavour and filling, but not phone numbers or dates. To look up a customer's
+  orders, use `history CUSTOMER_ID`.
 * If you `delete` the most recently created record, its ID may be given to a new record after you
   restart CakeQueue, because IDs continue from the highest ID still saved.
 * Only one copy of CakeQueue should use the same `data` folder at a time.

@@ -20,10 +20,10 @@ public class HelpCommandTest {
         assertTrue(help.contains("accept ENQUIRY_ID"));
         assertTrue(help.contains("reject ENQUIRY_ID"));
         assertTrue(help.contains("mark ORDER_ID preparing|ready|collected"));
-        assertTrue(help.contains("search NAME|PHONE"));
         assertTrue(help.contains("stats"));
         assertTrue(help.contains("delete ORDER_ID|ENQUIRY_ID"));
         assertTrue(help.contains("note ORDER_ID"));
         assertFalse(help.contains("Customer commands:"));
+        assertFalse(help.contains("search"));
     }
 }

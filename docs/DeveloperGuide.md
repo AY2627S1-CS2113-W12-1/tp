@@ -16,12 +16,12 @@ developers who want to understand how it is built or add to it.
     * [Error handling](#error-handling)
 * [Implementation](#implementation)
     * [Add Order and customer details](#add-order-and-customer-details)
-  * [Enquiries, status marking and storage](#enquiries-status-marking-and-storage)
+    * [Enquiries, status marking and storage](#enquiries-status-marking-and-storage)
     * [Find feature](#find-feature)
     * [Daily capacity feature](#daily-capacity-feature)
     * [Customer and history features](#customer-and-history-features)
     * [View feature](#view-feature)
-  * [Notes, search, delete and stats](#notes-search-delete-and-stats)
+    * [Notes, delete and stats](#notes-delete-and-stats)
 * [Appendix A: Product Scope](#appendix-a-product-scope)
 * [Appendix B: User Stories](#appendix-b-user-stories)
 * [Appendix C: Non-Functional Requirements](#appendix-c-non-functional-requirements)
@@ -275,7 +275,7 @@ link clear.
 *Why customer mode was removed.* v1 had a separate customer command loop in which customers sent and tracked their
 own enquiries, proving ownership with their phone number. The team removed it in v2.0. A phone number is weak
 proof of identity, and two command loops sharing one terminal did not match how a home baker actually works:
-customers send requests by message, and the baker types them in. Recording enquiries in baker mode keeps the
+customers send requests by message, and the baker types them in. Recording enquiries with `enquire` keeps the
 useful part (requests that are not yet agreed do not count as orders or towards capacity) with one command loop.
 
 #### Production status marking (`mark`)
@@ -309,7 +309,7 @@ an ID that is already in use.
 #### What it does
 
 `find KEYWORD` shows every order and enquiry whose customer name, cake flavour or cake filling contains
-the keyword. The match ignores case and may be part of a word. It is available in baker mode only.
+the keyword. The match ignores case and may be part of a word.
 
 #### How it works
 
@@ -332,7 +332,7 @@ the keyword. The match ignores case and may be part of a word. It is available i
 
 * *Alternative 1 (chosen): customer name, flavour and filling.* Pros: covers the ways a baker actually
   looks for an order ("Alice's order", "the chocolate ones"). Cons: it does not search phone numbers or
-  dates. The `search` command already finds records by exact phone number, and `list` is ordered by date.
+  dates. A customer's orders can be listed with `history`, and `list` is ordered by date.
 * *Alternative 2: customer name only.* Pros: simpler. Cons: the baker cannot find all orders for a flavour,
   for example when they need to buy more of an ingredient.
 
@@ -354,7 +354,7 @@ Cons: results can include records the baker no longer cares about, but the statu
 A home baker can only make so many cakes in a day. `capacity NUMBER` sets the most active orders the baker
 can take for one due date (1 to 50, default 5), and `capacity` shows the limit and any due dates already
 over it. When `add`, `accept` or `edit` leaves a due date over the limit, the baker is warned. The change is
-still saved. This is baker mode only.
+still saved.
 
 #### How it works
 
@@ -411,7 +411,7 @@ count the same.
 
 **Not saved between runs (current limitation).** `Storage` writes one order per line, so saving the capacity
 would change the file format, which the whole team depends on. The capacity therefore goes back to 5 on each
-start. The user guide lists this as *Coming soon*.
+start. The user guide lists this under Current Limitations.
 
 *Proposed implementation.* Write the capacity as a first line such as `#capacity 3` in the data file. Make
 `Storage.load` read that line and call `setDailyCapacity`, and make it skip other lines that start with `#`
@@ -424,8 +424,6 @@ instead of treating them as corrupted. Older files without the line keep working
 - `customer CUSTOMER_ID` shows a customer's ID, name, phone number, number of orders and whether they are a repeat customer.
 - `history CUSTOMER_ID` lists every order the customer has placed, including cancelled ones, with each order's status.
 - `add` also prints the customer's ID and whether they are new or returning. `view` shows the customer's ID for an order.
-
-Both commands are available in baker mode only.
 
 #### Design
 
@@ -500,11 +498,11 @@ All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, 
 - Pros: IDs would never change.
 - Cons: a second file to load and save, which could disagree with the order file.
 
-**Identifying customers by phone number, not name.** Two customers can share a name, and one customer's name can be spelled differently across orders. The `search` command also looks records up by phone number.
+**Identifying customers by phone number, not name.** Two customers can share a name, and one customer's name can be spelled differently across orders. The phone number is also what the baker usually has when a customer calls.
 
 #### Manual testing
 
-1. Start the app and enter `baker`.
+1. Start the app in an empty folder.
 2. `add n/Alice Tan p/91234567 d/22-12-2026 s/8 f/Chocolate fi/Strawberry`. Expected: `Customer ID: C001 (new customer)`.
 3. `add n/Bob Lim p/81234567 d/20-12-2026 s/6 f/Vanilla fi/Cream`. Expected: `Customer ID: C002 (new customer)`.
 4. Add Alice again with a different date. Expected: `Customer ID: C001 (returning customer)`.
@@ -514,7 +512,7 @@ All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, 
 8. `edit O001 p/90000000`, then `customer C002`. Expected: still Bob Lim (IDs do not change after a phone edit). Then `customer C001`. Expected: still Alice Tan, but the phone shown is `91234567`, because a customer's phone comes from their newest order (`O003`). `view O001` shows the edited phone `90000000`.
 9. `customer C999`. Expected: `Error: Customer not found: C999`.
 10. `customer` with no ID. Expected: `Error: Use: customer CUSTOMER_ID`.
-11. `bye`, restart the app, enter `baker`, then `customer C002`. Expected: Bob's details (IDs are saved).
+11. `bye`, restart the app, then `customer C002`. Expected: Bob's details (IDs are saved).
 
 ### View feature
 
@@ -527,17 +525,16 @@ All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, 
 
 Manual test: `add` an order, then `view O001`. Expected: the order's details, ending with a `Customer ID: C001` line. Then `view O999`. Expected: the not-found error.
 
-### Notes, search, delete and stats
+### Notes, delete and stats
 
 <!-- Commands added by Gitanjali (HammerHead-os) in v2.0. -->
 
-These four baker commands each have one command class and one parser method, following the same pattern as the
+These three baker commands each have one command class and one parser method, following the same pattern as the
 other commands.
 
 | Command | Class | How it works |
 | --- | --- | --- |
 | `note ID TEXT` / `note ID -clear` | `NoteCommand` | Looks the record up with `getById` and calls `Order#setNotes`. `-clear` sets an empty string. `Order#updatedCopy` copies the notes, so `edit` keeps them. |
-| `search NAME\|PHONE` | `SearchCommand` | Goes through `getAll()` and keeps records whose name contains the query (ignoring case) or whose phone equals the query exactly. |
 | `delete ID` | `DeleteCommand` | Allows deleting only `CANCELLED`, `REJECTED` or `COLLECTED` records, then calls `OrderList#removeById`. |
 | `stats` | `StatsCommand` | Counts records by status and finds the earliest due date among active orders. Read-only. |
 
@@ -548,8 +545,6 @@ other commands.
   notes would need a list.
 * *`delete` only removes closed records.* An active order cannot be lost by one mistyped command; the baker must
   `cancel` it first. Cancelled records otherwise stay in `history`, which is why deleting is offered at all.
-* *`search` and `find` both exist.* `search` matches a phone number exactly, which suits a customer calling in.
-  `find` searches flavour and filling as well as the name, which suits planning ("all the chocolate cakes").
 
 **Known limitation.** After a restart, `OrderList` continues IDs from the highest ID it loads. If the newest record
 was deleted, its ID can be given out again. *Proposed fix:* save the next-ID counters in the data file, the same way
@@ -567,8 +562,8 @@ as the [proposed capacity setting](#daily-capacity-feature).
 **Value proposition**
 
 CakeQueue keeps track of upcoming custom orders and what each one involves, so the baker knows what is due
-when and does not accept more work for a day than they can actually deliver. Customers can send enquiries and
-check on them themselves, so the baker does not have to manage everything in separate chat threads.
+when and does not accept more work for a day than they can actually deliver. Enquiries are kept apart from confirmed
+orders, so the baker does not have to manage everything in separate chat threads.
 
 **Out of scope.** CakeQueue does not handle payments, ingredient stock, recipes or online ordering by customers.
 
@@ -590,7 +585,6 @@ Priorities: High (must have), Medium (nice to have), Low (unlikely to have).
 | v2.0 | Medium | baker | find orders by customer name, flavour or filling | locate an order without going through the whole list |
 | v2.0 | High | baker | record a customer's enquiry before agreeing to it | keep requests I have not accepted yet apart from real orders |
 | v2.0 | High | baker | accept or reject an enquiry | turn it into an order or turn it down |
-| v2.0 | Medium | baker | search records by customer name or phone number | find a caller's orders quickly |
 | v2.0 | Medium | baker | add notes such as allergies to an order | remember special requests when I bake |
 | v2.0 | Low | baker | delete records that are closed | keep my data file tidy |
 | v2.0 | Low | baker | see a summary of my queue | know at a glance how busy I am |
@@ -695,13 +689,11 @@ folder's write permissions, then make a successful change to retry saving.
    because enquiries do not count.
 4. `accept E001`. Expected: `Accepted enquiry E001 as order O003: ...`, and no `E001` in `enquiries` afterwards.
 
-### Notes, search, delete and stats
+### Notes, delete and stats
 
 1. `note O003 No nuts`, then `view O003`. Expected: the details end with `Notes: No nuts` and `Customer ID: C003`.
-2. `search cara`, then `search 92222222`. Expected: both find O003. `search 9222` finds nothing, because a
-   phone number must match exactly.
-3. `delete O003`. Expected: an error, because only cancelled, rejected or collected records can be deleted.
-4. `stats`. Expected: a summary with 2 active orders and 1 collected order.
+2. `delete O003`. Expected: an error, because only cancelled, rejected or collected records can be deleted.
+3. `stats`. Expected: a summary with 2 active orders and 1 collected order.
 
 ### Searching and customers
 
