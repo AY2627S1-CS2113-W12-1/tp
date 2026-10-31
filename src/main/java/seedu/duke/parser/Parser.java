@@ -205,15 +205,19 @@ public final class Parser {
         if (input == null || input.isBlank()) {
             throw new CakeQueueException(usage);
         }
+        //@@author Eethanzyj
         String[] command = input.trim().split("\\s+", 2);
+        //@@author HammerHead-os
         if (!command[0].equalsIgnoreCase(commandWord) || command.length != 2) {
             throw new CakeQueueException(usage);
         }
         Map<String, String> fields = parseFields(command[1], usage);
+        //@@author Eethanzyj
         LocalDate dueDate;
         try {
             dueDate = LocalDate.parse(fields.get("d/"), DATE_FORMATTER);
         } catch (DateTimeParseException exception) {
+            //@@author HammerHead-os
             throw new CakeQueueException("Date must use DD-MM-YYYY and be valid.", exception);
         }
         // Reject dates in the past — a baker cannot bake for yesterday.
@@ -283,6 +287,7 @@ public final class Parser {
                 fields.put(previousPrefix, arguments.substring(valueStart, matcher.start()).trim());
             }
             String prefix = matcher.group(1);
+            //@@author Eethanzyj
             if (!PREFIXES.contains(prefix)) {
                 throw new CakeQueueException("Unknown field: " + prefix
                         + ". Supported prefixes: " + String.join(", ", PREFIXES) + ".");
@@ -290,18 +295,21 @@ public final class Parser {
             if (fields.containsKey(prefix)) {
                 throw new CakeQueueException("Duplicate field: " + prefix + ". Supply each field once.");
             }
+            //@@author
             previousPrefix = prefix;
             valueStart = matcher.end();
         }
         if (previousPrefix != null) {
             fields.put(previousPrefix, arguments.substring(valueStart).trim());
         }
+        //@@author Eethanzyj
         for (String prefix : PREFIXES) {
             if (!fields.containsKey(prefix) || fields.get(prefix).isBlank()) {
                 throw new CakeQueueException("Missing value for " + prefix
                         + ". Please provide " + FIELD_GUIDANCE.get(prefix) + ".");
             }
         }
+        //@@author
         return fields;
     }
 

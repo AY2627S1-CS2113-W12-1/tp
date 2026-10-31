@@ -1,8 +1,13 @@
+<!-- @@author Eethanzyj -->
+
 # CakeQueue User Guide
 
 CakeQueue helps home bakers record orders, track customer history, check daily workload,
 and follow each cake from baking to collection. The baker is the only user of this CLI;
 customer details are records managed by the baker. There is no customer login or mode.
+
+<!-- @@author -->
+
 
 Successful changes are saved automatically to `data/cakequeue.txt`, relative to the folder you
 launch CakeQueue from. When you reopen CakeQueue from the same folder, saved records are loaded and
@@ -46,11 +51,16 @@ Alternatively, run from the project folder with `.\gradlew.bat run` on Windows o
 * If a command is wrong, CakeQueue shows `Error: ...` and carries on. Nothing is changed.
 * Enter one command per line. The available commands are listed in the Command Summary.
 
+<!-- @@author Eethanzyj -->
+
 ## Adding an Order: `add`
 
 Format: `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING`
 
 All six fields are required and must be non-empty. Duplicate and unknown prefixes are rejected.
+
+<!-- @@author -->
+
 
 | Field | What to enter |
 | --- | --- |
@@ -61,11 +71,16 @@ All six fields are required and must be non-empty. Duplicate and unknown prefixe
 | `f/FLAVOUR` | A non-empty cake flavour, such as `Dark Chocolate`. |
 | `fi/FILLING` | A non-empty cake filling, such as `Strawberry`. |
 
+<!-- @@author Eethanzyj -->
+
 Spaces at the start and end of each value are removed. Spaces inside values are preserved.
 Do not put field prefixes inside values: a separate word such as `n/` starts a new field.
 
 CakeQueue assigns a unique Order ID, sets the order to `QUEUED`, and shows a confirmation
 with all its details. Invalid input does not add an order or use up an Order ID.
+
+<!-- @@author -->
+
 
 After the order is added, CakeQueue also shows the customer's ID. A new phone number gets the next
 unused Customer ID (`C001`, then `C002`, and so on). A phone number that already has an order reuses
@@ -101,6 +116,8 @@ If a save fails after a change, CakeQueue displays
 `Warning: Could not save your data. Your changes are kept for this session only.`
 Keep the app open, check that its data folder is writable, then make another change to retry saving.
 
+<!-- @@author Eethanzyj -->
+
 ## Listing Upcoming Orders: `list`
 
 Format: `list`
@@ -108,6 +125,9 @@ Format: `list`
 Shows active confirmed orders, including overdue orders, with the earliest due date first.
 Cancelled and collected orders, and legacy enquiry/rejected records, are excluded.
 Use `find` or `view` to inspect records outside the active list.
+
+<!-- @@author -->
+
 
 Orders with the same due date keep their original order. List numbers are display positions only;
 use an Order ID such as `O001` in other commands.
@@ -117,7 +137,12 @@ CakeQueue highlights orders with approaching or missed deadlines:
 - `[OVERDUE]` appears when an order's due date is before today.
 - `[DUE SOON]` appears when an order is due today or within the next 3 days.
 
+<!-- @@author Eethanzyj -->
+
 If no orders are available, CakeQueue shows `You have no upcoming orders.`
+
+<!-- @@author -->
+
 
 ## Finding Orders: `find`
 
@@ -201,9 +226,14 @@ Order history for Alice Tan (C001):
 2. O003: Alice Tan (91234567) | Due: 25-12-2030 | Size: 6 inches | Flavour: Vanilla | Filling: Cream [CANCELLED]
 ```
 
+<!-- @@author Eethanzyj -->
+
 ## Editing an Order: `edit`
 
 Format: `edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]`
+
+<!-- @@author -->
+
 
 Provide at least one field. Omitted fields remain unchanged, and the same rules used for `add`
 apply to the fields you give, including no past dates. The Order ID, Customer ID, status and notes
@@ -212,12 +242,17 @@ Changing the name or phone on one order does not update other orders or move it 
 Customer ID. Collected and cancelled orders can also be edited; their status stays unchanged.
 The `update` alias is no longer supported; use `edit`.
 
+<!-- @@author Eethanzyj -->
+
 Examples:
 
 ```text
 edit O001 s/10
 edit O001 d/22-12-2030 f/Vanilla
 ```
+
+<!-- @@author -->
+
 
 If the new due date is over your daily capacity, CakeQueue still saves the change and shows a warning.
 
@@ -252,7 +287,12 @@ Example: `cancel O001`
 
 ## Setting a Daily Capacity: `capacity`
 
+<!-- @@author Eethanzyj -->
+
 Format: `capacity [NUMBER]`
+
+<!-- @@author -->
+
 
 Sets the most orders you can take for one due date, from 1 to 50. The default is 5 orders per day.
 

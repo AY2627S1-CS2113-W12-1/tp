@@ -77,11 +77,15 @@ public class ParserErrorTest {
     public void parseAdd_errorMessages_identifyTheProblem() {
         CakeQueueException unknown = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD + " x/Extra"));
+        //@@author Eethanzyj
         assertEquals("Unknown field: x/. Supported prefixes: n/, p/, d/, s/, f/, fi/.", unknown.getMessage());
+        //@@author
 
         CakeQueueException duplicate = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD + " n/Bob"));
+        //@@author Eethanzyj
         assertEquals("Duplicate field: n/. Supply each field once.", duplicate.getMessage());
+        //@@author
 
         CakeQueueException missing = assertThrows(CakeQueueException.class,
                 () -> Parser.parseAdd(VALID_ADD.replace("fi/Strawberry", "")));
