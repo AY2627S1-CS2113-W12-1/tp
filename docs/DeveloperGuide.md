@@ -33,6 +33,9 @@ source version when publishing these guides.
 
 * This project started from the CS2113 team project template, which is why the code keeps the
   `seedu.duke` package name.
+* Eethanzyj used OpenAI Codex to assist with the Add Order implementation and refactoring,
+  automated tests, and associated documentation and diagrams. Moved customer and capacity
+  logic retains its original author tags.
 * The structure and style of this guide follow the
   [AddressBook-Level3 Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html).
 * Diagrams are drawn with [PlantUML](https://plantuml.com). The `.puml` source of each diagram is in
@@ -61,7 +64,7 @@ CakeQueue is split into a few small parts that each do one job:
 | `Duke` | Starts the app. It loads the saved records and runs the `BakerCli` command loop, giving it a *save* callback that is called after every change. |
 | `BakerCli` | The command loop. It reads a line, picks the command by its first word, runs it, and prints the result or `Error: ...`. |
 | `Parser` | Checks the text of a command and turns it into values such as an ID or a set of fields. |
-| `command` package | Classes such as `FindCommand` and `CapacityCommand` carry out a command and return the text to print. Add Order uses helpers in `BakerCli`. |
+| `command` package | Classes such as `AddOrderCommand`, `FindCommand` and `CapacityCommand` carry out an operation and return the text to print. |
 | `model` package | The data: `OrderList`, `Order`, `Customer`, `Cake`, `OrderStatus`, and the read-only `CustomerList` and `CustomerProfile`. |
 | `Storage` | Saves and loads the order list as a text file. |
 | `CakeQueueException` | The one exception type for errors the user can fix. |
@@ -75,8 +78,8 @@ readable for data compatibility; their creation and management commands are remo
 
 1. The command loop reads the line and looks at the first word to choose the command.
 2. `Parser` checks the rest of the line. If the input is wrong, it throws a `CakeQueueException`.
-3. Most commands create a command object and call `execute(orders)`. Add Order uses
-   `BakerCli.addOrderAndReportCustomer` and `addOrder` helpers to create model objects directly.
+3. For operations on orders, the loop creates a command object and calls `execute(orders)`.
+   Add Order passes the validated `Parser.AddOrderDetails` to `AddOrderCommand`.
 4. The command reads or changes the `OrderList` and returns a message.
 5. The loop prints the message. If the command changed anything, it then runs the save callback.
 
@@ -96,8 +99,7 @@ the former `update` command word is rejected.
 ### Commands
 
 Most commands are built with parsed values and expose `execute(OrderList)`, returning the text
-to print. `HelpCommand.execute()` needs no order list. Add Order uses helpers in `BakerCli`,
-and `bye` ends its loop directly. Command classes do not print or save; the loop prints their
+to print. `HelpCommand.execute()` needs no order list, and `bye` ends the loop directly. Command classes do not print or save; the loop prints their
 result and invokes the save callback after successful record changes.
 
 ### Model
@@ -158,7 +160,8 @@ the customer/history section below explains customer grouping in more detail.
 
 | Component | Responsibility in this flow |
 | --- | --- |
-| `BakerCli` | Receives `add`, creates the objects, adds the order, and prints the result. |
+| `BakerCli` | Parses `add` once, runs `AddOrderCommand`, prints its result and requests saving. |
+| `AddOrderCommand` | Creates and adds the order, logs its ID, and returns the order/customer confirmation and optional warning. |
 | `Parser` | Checks the command and returns an `AddOrderDetails` value object. |
 | `Customer` | Holds the name and phone recorded for this order. |
 | `Cake` | Holds the size, flavour, and filling. |
@@ -176,13 +179,11 @@ allows the customer/history commands to group them without merging the orders.
 #### Validation before changing data
 
 The syntax is `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING`.
-`BakerCli.addOrderAndReportCustomer` validates the input before looking up the
-customer. It then calls `addOrder`, which validates the input again before creating
-the order. Both calls use `Parser.parseAdd`, which delegates to the shared
-six-field parsing helper. The parser identifies prefixes and
-collects their values, then checks
-the required fields and converts the date and size. No order ID is requested
-until parsing has finished successfully.
+`BakerCli` calls `Parser.parseAdd` once and passes the returned immutable
+`AddOrderDetails` to `AddOrderCommand`. The command receives values rather than raw input;
+it does not parse again. Parsing and validation therefore finish before customer lookup,
+ID generation or model changes. The parser identifies prefixes, collects their values,
+checks required fields and converts the date and size.
 
 * All six fields must be present and non-blank. Their order may vary.
 * Prefixes must be lowercase. Unknown or repeated prefixes are rejected.
@@ -206,20 +207,27 @@ The parser returns structured details rather than creating an order itself, so
 validation can be tested without generating IDs or writing files. The same phone
 validation applies to `add` and `edit`: at least eight digits, with spaces, `+` and `-` allowed.
 
+**Why a separate command?** The CLI handles interaction, while `AddOrderCommand` owns
+order creation and confirmation. This matches the existing command classes and allows
+direct tests without console streams or files. The command reuses customer grouping and
+capacity logic; those shared responsibilities remain in their existing classes. Its input
+uses the existing `Parser.AddOrderDetails`, so no second parser or duplicate request class
+is needed. The CLI retains the save callback, keeping the command independent of storage.
+
 #### Creating and saving an order
 
 ![Add Order interaction sequence](images/add-order-sequence.png)
 
-After successful parsing, `BakerCli.addOrder` requests an Order ID from `OrderList`,
+After successful parsing, `AddOrderCommand.execute` requests an Order ID from `OrderList`,
 constructs the customer and cake, and creates an `Order` with status `QUEUED`.
 `OrderList.add` assigns or reuses a Customer ID by phone number before adding the
 record. The existing `Cake` constructor also checks size, flavour, and filling.
-The CLI logs the Order ID rather than the customer's name or phone.
+The command logs the Order ID rather than the customer's name or phone.
 
-The add helper appends a capacity warning when active orders on the due date
+The command appends a capacity warning when active orders on the due date
 exceed the configured limit. It still adds the order. The default limit is 5,
 can be changed to 1–50 using `capacity`, and resets on restart. Enquiries and
-closed records do not count. The wrapper then appends the Customer ID and whether
+closed records do not count. The command then appends the Customer ID and whether
 the customer is new or returning; it does not generate another order.
 
 The ID counter produces values such as `O001` and `O002`. When `Storage.load`
@@ -243,6 +251,7 @@ confirmation before saving, and a separate warning on failure.
 
 | Test class | Behaviour checked |
 | --- | --- |
+| `AddOrderCommandTest` | Complete order creation, returning customers with cancelled orders, restored ID counters, and warning placement. |
 | `AddOrderValidationTest` | Guidance for each missing field, blank names, punctuation, Unicode, and formatted phones. |
 | `AddOrderReliabilityTest` | Rejected commands preserve saved data and IDs; names survive restarting; customer IDs and capacity warnings, and independent name edits work together. |
 | `ParserTest` and `ParserErrorTest` | Existing command syntax, date/size validation, unknown prefixes, and duplicate fields. |
@@ -361,14 +370,15 @@ still saved.
 
 *Warning after a change.*
 
-1. `add` and `edit` run exactly as before. After the order list has changed, `BakerCli` calls
-   `CapacityCommand.warningFor(orders, dueDate)` with the due date of the order that was added
-   or edited. For `edit`, it reads the due date back from the order list, because the command may not have
-   changed it.
+1. After adding an order, `AddOrderCommand` calls
+   `CapacityCommand.warningFor(orders, dueDate)` and includes any warning in its result.
+   After `edit`, `BakerCli` calls the same method with the updated order's due date, because
+   the edit may not have supplied a new date.
 2. `warningFor` returns an empty string if the order has no due date, or if
    `orders.countOrdersDueOn(dueDate)` is not more than `orders.getDailyCapacity()`. Otherwise, it returns
    the warning text with the date and the count.
-3. `BakerCli` appends the warning on a new line after the normal message.
+3. For `add`, the command places the warning between the order and customer lines.
+   For `edit`, the loop appends the warning to the update message.
 
 ![Capacity activity diagram](diagrams/CapacityActivity.png)
 
@@ -438,7 +448,8 @@ regardless of due date or status. Grouping follows insertion order, not due-date
 | `CustomerCommand` | Produces the output of `customer CUSTOMER_ID`. |
 | `HistoryCommand` | Produces the output of `history CUSTOMER_ID`. |
 | `Parser` | `parseCustomer` and `parseHistory` check the input format and return the upper-cased ID. |
-| `BakerCli` | Routes `customer` and `history`, and adds the customer line to the output of `add`. |
+| `BakerCli` | Routes the customer/history commands and prints command results. |
+| `AddOrderCommand` | Reports the Customer ID and new/returning label after creating an order. |
 
 #### Sequence of `customer C001`
 

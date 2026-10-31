@@ -5,9 +5,8 @@ package seedu.duke;
 import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import seedu.duke.command.AddOrderCommand;
 import seedu.duke.command.CancelCommand;
 import seedu.duke.command.CapacityCommand;
 import seedu.duke.command.CustomerCommand;
@@ -19,11 +18,6 @@ import seedu.duke.command.MarkCommand;
 import seedu.duke.command.UpdateOrderCommand;
 import seedu.duke.command.ViewOrderCommand;
 import seedu.duke.exception.CakeQueueException;
-import seedu.duke.model.Cake;
-import seedu.duke.model.Customer;
-import seedu.duke.model.CustomerList;
-import seedu.duke.model.CustomerProfile;
-import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.parser.Parser;
 
@@ -31,10 +25,6 @@ import seedu.duke.parser.Parser;
  * Runs the baker-facing CakeQueue commands.
  */
 public class BakerCli {
-    //@@author Eethanzyj
-    private static final Logger LOGGER = Logger.getLogger(BakerCli.class.getName());
-    //@@author HammerHead-os
-
     /**
      * Handles baker commands until the user exits.
      * {@code afterChange} is run after every successful change so the caller
@@ -94,8 +84,7 @@ public class BakerCli {
                     break;
                 //@@author Eethanzyj
                 case "add":
-                    //@@author anannya-mk
-                    System.out.println(addOrderAndReportCustomer(input, orders));
+                    System.out.println(new AddOrderCommand(Parser.parseAdd(input)).execute(orders));
                     //@@author HammerHead-os
                     afterChange.run();
                     break;
@@ -131,32 +120,7 @@ public class BakerCli {
         }
     }
 
-    //@@author anannya-mk
-    /**
-     * Adds an order, then tells the baker which customer it belongs to and whether they are new.
-     */
-    private String addOrderAndReportCustomer(String input, OrderList orders) {
-        String phone = Parser.parseAdd(input).getPhone();
-        boolean isNewCustomer = CustomerList.fromOrders(orders).findByPhone(phone).isEmpty();
-        String added = addOrder(input, orders);
-        CustomerProfile customer = CustomerList.fromOrders(orders).findByPhone(phone).orElseThrow();
-        return added + System.lineSeparator() + "Customer ID: " + customer.getCustomerId()
-                + (isNewCustomer ? " (new customer)" : " (returning customer)");
-    }
-
-    //@@author Eethanzyj
-    private String addOrder(String input, OrderList orders) {
-        Parser.AddOrderDetails details = Parser.parseAdd(input);
-        Order order = new Order(orders.generateOrderId(),
-                new Customer(details.getCustomerName(), details.getPhone()),
-                new Cake(details.getSize(), details.getFlavour(), details.getFilling()),
-                details.getDueDate());
-        orders.add(order);
-        LOGGER.log(Level.INFO, "Added order {0}.", order.getOrderId());
-        //@@author Kaishhhh
-        return "Added order " + order + capacityWarning(orders, order.getDueDate());
-    }
-
+    //@@author Kaishhhh
     /**
      * Returns a line break and a warning if the date is over capacity, or an empty string.
      */

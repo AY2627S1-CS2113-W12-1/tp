@@ -3,7 +3,7 @@ title Baker adds an order: add n/... p/... d/... s/... f/... fi/...
 
 actor Baker
 participant "BakerCli" as Cli
-participant "Parser" as Parser
+participant "<<class>>\nParser" as Parser
 participant "OrderList" as List
 participant "Order" as Order
 
@@ -14,19 +14,26 @@ note right of Parser
   All six fields required.
   Unknown / duplicate / empty
   fields and invalid date or
-  size are rejected here, before
-  any object is created.
+  phone or size are rejected here,
+  before any order is created.
 end note
 Parser --> Cli : AddOrderDetails
 deactivate Parser
-Cli -> List : generateOrderId()
-List --> Cli : "O001"
-Cli -> Order : new Order(O001, Customer, Cake, dueDate)
-Cli -> List : add(order)
+create participant ":AddOrderCommand" as Add
+Cli -> Add : new AddOrderCommand(details)
+Cli -> Add : execute(orders)
+Add -> List : generateOrderId()
+List --> Add : "O001"
+create Order
+Add -> Order : new Order(O001, Customer, Cake, dueDate)
+Add -> List : add(order)
+ref over Add, List : Build confirmation with capacity warning and Customer ID
+Add --> Cli : complete confirmation
 Cli --> Baker : Added order O001: Alice Tan ...
+ref over Cli, List : Save through the callback supplied by Duke
 note right of Cli
   On invalid input Parser throws
-  IllegalArgumentException; the CLI
+  CakeQueueException; the CLI
   prints "Error: ..." and no order
   is added (list unchanged).
 end note
