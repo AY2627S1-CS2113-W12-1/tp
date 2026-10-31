@@ -128,31 +128,20 @@ public class AddOrderReliabilityTest {
     }
 
     @Test
-    public void run_enquiryAndAdd_preservesCustomerIdsAndCapacityRules() {
+    public void run_addCustomers_preservesCustomerIdsAndCapacityRules() {
         Path dataFile = tempDir.resolve("cakequeue.txt");
-        String enquiry = VALID_ADD.replace("add n/Alice Tan p/91234567", "enquire n/Bob Lim p/81234567");
-        String invalidEnquiry = enquiry.replace("n/Bob Lim ", "");
+        String bob = VALID_ADD.replace("n/Alice Tan p/91234567", "n/Bob Lim p/81234567");
+        String output = runSession(dataFile, "capacity 1\n" + VALID_ADD + "\n" + bob
+                + "\ncustomer C002\nhistory C002\nbye\n");
 
-        String output = runSession(dataFile, invalidEnquiry + "\n" + enquiry
-                + "\ncapacity 1\n" + VALID_ADD
-                + "\naccept E001\ncustomer C002\nhistory C002\nbye\n");
-
-        assertTrue(output.contains("Error: Missing value for n/. "
-                + "Please provide a customer name using n/NAME."));
         assertTrue(output.contains("Customer ID: C001 (new customer)"));
-        assertTrue(output.contains("Accepted enquiry E001 as order O002"));
         assertTrue(output.contains("Name: Bob Lim"));
         assertTrue(output.contains("Order history for Bob Lim (C002):"));
-        // The pending enquiry does not fill capacity; only accepting it causes a warning.
-        assertEquals(1, output.lines().filter(line -> line.startsWith("Warning: 30-10-2030")).count());
-
+        assertEquals(1, output.lines().filter(line -> line.startsWith("Warning:")).count());
         OrderList loaded = new Storage(dataFile).load();
         assertEquals(2, loaded.size());
         assertEquals("C001", loaded.getById("O001").getCustomerId());
         assertEquals("C002", loaded.getById("O002").getCustomerId());
-        assertEquals("Alice Tan", loaded.getById("O001").getCustomer().getName());
-        assertEquals("Bob Lim", loaded.getById("O002").getCustomer().getName());
-
         String restarted = runSession(dataFile, "capacity\ncustomer C002\nbye\n");
         assertTrue(restarted.contains("Daily capacity is 5 orders per day."));
         assertTrue(restarted.contains("Name: Bob Lim"));

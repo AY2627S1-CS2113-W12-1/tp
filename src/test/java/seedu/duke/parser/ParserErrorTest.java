@@ -27,30 +27,13 @@ public class ParserErrorTest {
     // ---------- single-ID commands ----------
 
     @Test
-    public void parseAcceptRejectBakerCancel_valid_returnsCanonicalId() {
-        assertEquals("E001", Parser.parseAccept("accept e001"));
-        assertEquals("E012", Parser.parseReject("REJECT E012"));
-        assertEquals("O001", Parser.parseBakerCancel("cancel o001"));
-        assertEquals("E001", Parser.parseBakerCancel("cancel E001"));
-    }
-
-    @Test
-    public void parseSingleIdCommands_wrongIdTypeOrShape_throwsCakeQueueException() {
-        // accept/reject only take enquiry IDs; baker cancel takes either kind.
-        assertThrows(CakeQueueException.class, () -> Parser.parseAccept("accept O001"));
-        assertThrows(CakeQueueException.class, () -> Parser.parseReject("reject O001"));
-        assertThrows(CakeQueueException.class, () -> Parser.parseAccept("accept E1"));
-        assertThrows(CakeQueueException.class, () -> Parser.parseAccept("accept"));
-        assertThrows(CakeQueueException.class, () -> Parser.parseAccept("accept E001 extra"));
-        assertThrows(CakeQueueException.class, () -> Parser.parseAccept(""));
-        assertThrows(CakeQueueException.class, () -> Parser.parseAccept(null));
-        assertThrows(CakeQueueException.class, () -> Parser.parseReject(null));
+    public void parseBakerCancel_invalidInput_throwsCakeQueueException() {
         assertThrows(CakeQueueException.class, () -> Parser.parseBakerCancel("cancel X001"));
         assertThrows(CakeQueueException.class, () -> Parser.parseBakerCancel(null));
-
+        assertEquals("O001", Parser.parseBakerCancel("cancel o001"));
         CakeQueueException exception = assertThrows(CakeQueueException.class,
-                () -> Parser.parseAccept("accept O001"));
-        assertEquals("Use: accept ENQUIRY_ID", exception.getMessage());
+                () -> Parser.parseBakerCancel("cancel"));
+        assertEquals("Use: cancel ORDER_ID", exception.getMessage());
     }
 
     // ---------- mark / view ----------

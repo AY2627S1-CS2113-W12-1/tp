@@ -16,14 +16,12 @@ public class HelpCommandTest {
 
         assertTrue(help.contains("Baker commands:"));
         assertTrue(help.contains("add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING"));
-        assertTrue(help.contains("enquire n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING"));
-        assertTrue(help.contains("accept ENQUIRY_ID"));
-        assertTrue(help.contains("reject ENQUIRY_ID"));
         assertTrue(help.contains("mark ORDER_ID preparing|ready|collected"));
-        assertTrue(help.contains("stats"));
-        assertTrue(help.contains("delete ORDER_ID|ENQUIRY_ID"));
-        assertTrue(help.contains("note ORDER_ID"));
         assertFalse(help.contains("Customer commands:"));
         assertFalse(help.contains("search"));
+        assertFalse(help.contains("enquire"));
+        assertFalse(help.contains("stats"));
+        assertFalse(help.contains("note "));
+        assertFalse(help.contains("delete "));
     }
 }

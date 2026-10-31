@@ -16,8 +16,7 @@ import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
 
 /**
- * Tests the read-only record access commands {@link ViewOrderCommand} and
- * {@link ListEnquiriesCommand}, including their not-found error paths.
+ * Tests the read-only record access commands {@link ViewOrderCommand}, including their not-found error paths.
  */
 public class RecordAccessCommandTest {
 
@@ -61,23 +60,5 @@ public class RecordAccessCommandTest {
                 () -> new ViewOrderCommand(null).execute(orders));
     }
 
-    // ---------- ListEnquiriesCommand ----------
 
-    @Test
-    public void listEnquiries_onlyPendingEnquiriesListed() {
-        String result = new ListEnquiriesCommand().execute(createOrderList());
-
-        assertTrue(result.contains("Here are your pending enquiries:"));
-        assertTrue(result.contains("E001"));
-        assertTrue(!result.contains("O001"));
-    }
-
-    @Test
-    public void listEnquiries_nonePending_returnsFriendlyMessage() {
-        OrderList orders = createOrderList();
-        orders.getById("E001").setStatus(OrderStatus.REJECTED);
-
-        assertEquals("You have no pending enquiries.", new ListEnquiriesCommand().execute(orders));
-        assertEquals("You have no pending enquiries.", new ListEnquiriesCommand().execute(new OrderList()));
-    }
 }

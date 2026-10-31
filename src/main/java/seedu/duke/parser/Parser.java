@@ -34,13 +34,10 @@ public final class Parser {
     //@@author
     private static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
     private static final String USAGE = "Use: add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
-    private static final String ENQUIRE_USAGE =
-            "Use: enquire n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
-    // The existing update command is also accepted as an alias for edit.
     private static final String UPDATE_USAGE =
             "Use: edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] "
                     + "[s/SIZE] [f/FLAVOUR] [fi/FILLING]";
-    private static final String VIEW_USAGE = "Use: view ORDER_ID|ENQUIRY_ID";
+    private static final String VIEW_USAGE = "Use: view ORDER_ID";
     private static final String MARK_USAGE = "Use: mark ORDER_ID preparing|ready|collected";
     private static final String CAPACITY_USAGE = "Use: capacity [NUMBER]";
     private static final String FIND_USAGE = "Use: find KEYWORD";
@@ -49,62 +46,6 @@ public final class Parser {
             .withResolverStyle(ResolverStyle.STRICT);
 
     private Parser() {
-    }
-
-    /**
-     * Parses and validates an enquire command (same fields as add).
-     * The date must not be in the past, and the phone must have at least 8 digits.
-     */
-    public static AddOrderDetails parseEnquire(String input) {
-        return parseSixFieldCommand(input, "enquire", ENQUIRE_USAGE);
-    }
-
-    /**
-     * Parses {@code delete ORDER_ID|ENQUIRY_ID}.
-     */
-    public static String parseDelete(String input) {
-        return parseSingleIdCommand(input, "delete", "[EeOo][0-9]{3,}",
-                "Use: delete ORDER_ID|ENQUIRY_ID");
-    }
-
-    /**
-     * Parses {@code note ORDER_ID text...} or {@code note ORDER_ID -clear}.
-     * Returns a {@link NoteDetails} carrying the record ID and the note text
-     * (empty string when {@code -clear} was given).
-     */
-    public static NoteDetails parseNote(String input) {
-        if (input == null || input.isBlank()) {
-            throw new CakeQueueException("Use: note ORDER_ID TEXT  (or  note ORDER_ID -clear)");
-        }
-        String[] parts = input.trim().split("\\s+", 3);
-        if (parts.length < 3 || !parts[0].equalsIgnoreCase("note")
-                || !parts[1].matches("[EeOo][0-9]{3,}")) {
-            throw new CakeQueueException("Use: note ORDER_ID TEXT  (or  note ORDER_ID -clear)");
-        }
-        String recordId = parts[1].toUpperCase(Locale.ROOT);
-        String text = parts[2].trim().equals("-clear") ? "" : parts[2].trim();
-        return new NoteDetails(recordId, text);
-    }
-
-    /**
-     * Stores the record ID and note text for a note command.
-     */
-    public static final class NoteDetails {
-        private final String recordId;
-        private final String text;
-
-        private NoteDetails(String recordId, String text) {
-            this.recordId = recordId;
-            this.text = text;
-        }
-
-        public String getRecordId() {
-            return recordId;
-        }
-
-        public String getText() {
-            return text;
-        }
     }
 
     /**
@@ -234,27 +175,11 @@ public final class Parser {
     }
 
     /**
-     * Parses accept ENQUIRY_ID.
-     */
-    public static String parseAccept(String input) {
-        return parseSingleIdCommand(input, "accept", "[Ee][0-9]{3,}",
-                "Use: accept ENQUIRY_ID");
-    }
-
-    /**
-     * Parses reject ENQUIRY_ID.
-     */
-    public static String parseReject(String input) {
-        return parseSingleIdCommand(input, "reject", "[Ee][0-9]{3,}",
-                "Use: reject ENQUIRY_ID");
-    }
-
-    /**
      * Parses cancel ORDER_ID|ENQUIRY_ID.
      */
     public static String parseBakerCancel(String input) {
         return parseSingleIdCommand(input, "cancel", "[EeOo][0-9]{3,}",
-                "Use: cancel ORDER_ID|ENQUIRY_ID");
+                "Use: cancel ORDER_ID");
     }
 
     //@@author anannya-mk
@@ -429,7 +354,7 @@ public final class Parser {
 
     //@@author WillChin484848
     /**
-     * Parses an edit command or its update alias and validates the provided fields.
+     * Parses an edit command and validates the provided fields.
      * Only fields supplied by the user will be updated.
      *
      * @param input The full command entered by the user.
@@ -444,16 +369,16 @@ public final class Parser {
         }
 
         // Split into 3 parts:
-        // parts[0] = "edit" or "update"
+        // parts[0] = "edit"
         // parts[1] = "O001"
         // parts[2] = "n/Bob d/25-10-2026"
         String[] parts = input.trim().split("\\s+", 3);
 
-        // Check that the command is "edit" or "update", the Order ID is valid,
+        // Check that the command is "edit", the Order ID is valid,
         // and at least one field argument is present.
         //@@author Eethanzyj
         if (parts.length != 3
-                || (!parts[0].equalsIgnoreCase("edit") && !parts[0].equalsIgnoreCase("update"))
+                || !parts[0].equalsIgnoreCase("edit")
                 || !parts[1].matches("[Oo][0-9]{3,}")) {
             //@@author WillChin484848
             throw new CakeQueueException(UPDATE_USAGE);

@@ -8,21 +8,14 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import seedu.duke.command.AcceptEnquiryCommand;
 import seedu.duke.command.CancelCommand;
 import seedu.duke.command.CapacityCommand;
 import seedu.duke.command.CustomerCommand;
-import seedu.duke.command.DeleteCommand;
-import seedu.duke.command.EnquireCommand;
 import seedu.duke.command.FindCommand;
 import seedu.duke.command.HelpCommand;
 import seedu.duke.command.HistoryCommand;
 import seedu.duke.command.ListCommand;
-import seedu.duke.command.ListEnquiriesCommand;
 import seedu.duke.command.MarkCommand;
-import seedu.duke.command.NoteCommand;
-import seedu.duke.command.RejectEnquiryCommand;
-import seedu.duke.command.StatsCommand;
 import seedu.duke.command.UpdateOrderCommand;
 import seedu.duke.command.ViewOrderCommand;
 import seedu.duke.exception.CakeQueueException;
@@ -78,17 +71,12 @@ public class BakerCli {
                     System.out.println(new CapacityCommand(Parser.parseCapacity(input)).execute(orders));
                     break;
                 //@@author HammerHead-os
-                case "enquiries":
-                    requireNoArguments(input, "enquiries");
-                    System.out.println(new ListEnquiriesCommand().execute(orders));
-                    break;
                 case "view":
                     String recordId = Parser.parseView(input);
                     System.out.println(new ViewOrderCommand(recordId).execute(orders));
                     break;
                 //@@author Eethanzyj
                 case "edit":
-                case "update":
                     //@@author HammerHead-os
                     Parser.UpdateOrderDetails details = Parser.parseUpdate(input);
                     UpdateOrderCommand command = new UpdateOrderCommand(
@@ -117,17 +105,6 @@ public class BakerCli {
                             .execute(orders));
                     afterChange.run();
                     break;
-                case "accept":
-                    String enquiryId = Parser.parseAccept(input);
-                    LocalDate acceptedDueDate = orders.getById(enquiryId).getDueDate();
-                    System.out.println(new AcceptEnquiryCommand(enquiryId).execute(orders)
-                            + capacityWarning(orders, acceptedDueDate));
-                    afterChange.run();
-                    break;
-                case "reject":
-                    System.out.println(new RejectEnquiryCommand(Parser.parseReject(input)).execute(orders));
-                    afterChange.run();
-                    break;
                 case "cancel":
                     System.out.println(new CancelCommand(Parser.parseBakerCancel(input)).execute(orders));
                     afterChange.run();
@@ -140,30 +117,6 @@ public class BakerCli {
                     System.out.println(new HistoryCommand(Parser.parseHistory(input)).execute(orders));
                     break;
                 //@@author HammerHead-os
-                case "enquire":
-                    Parser.AddOrderDetails enqDetails = Parser.parseEnquire(input);
-                    System.out.println(new EnquireCommand(
-                            enqDetails.getCustomerName(), enqDetails.getPhone(),
-                            enqDetails.getDueDate(), enqDetails.getSize(),
-                            enqDetails.getFlavour(), enqDetails.getFilling()
-                    ).execute(orders));
-                    afterChange.run();
-                    break;
-                case "delete":
-                    System.out.println(new DeleteCommand(Parser.parseDelete(input)).execute(orders));
-                    afterChange.run();
-                    break;
-                case "stats":
-                    requireNoArguments(input, "stats");
-                    System.out.println(new StatsCommand().execute(orders));
-                    break;
-                case "note":
-                    Parser.NoteDetails noteDetails = Parser.parseNote(input);
-                    System.out.println(new NoteCommand(
-                            noteDetails.getRecordId(), noteDetails.getText()
-                    ).execute(orders));
-                    afterChange.run();
-                    break;
                 case "":
                     throw new CakeQueueException("Please enter a command.");
                 default:
