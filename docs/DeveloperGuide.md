@@ -145,6 +145,8 @@ message says what is wrong and, where it helps, shows the correct format, such a
 
 ## Implementation
 
+<!-- @@author Eethanzyj -->
+
 ### Add Order and customer details
 
 This section covers adding an order and recording who it is for (features 1 and 7).
@@ -185,6 +187,9 @@ it does not parse again. Parsing and validation therefore finish before customer
 ID generation or model changes. The parser identifies prefixes, collects their values,
 checks required fields and converts the date and size.
 
+<!-- @@author -->
+
+
 * All six fields must be present and non-blank. Their order may vary.
 * Prefixes must be lowercase. Unknown or repeated prefixes are rejected.
 * Surrounding whitespace is removed from field values. Internal spaces,
@@ -194,6 +199,8 @@ checks required fields and converts the date and size.
 * Dates use strict `dd-MM-uuuu` parsing, so impossible dates are rejected.
   Dates before today are rejected. `edit` applies the same date and phone rules.
 * Cake sizes are limited to 6, 8, or 10 inches.
+
+<!-- @@author Eethanzyj -->
 
 Missing-field messages identify both the field and the syntax needed to fix it.
 For example, a blank name produces
@@ -266,6 +273,9 @@ Diagram sources are in `docs/diagrams/add-order-class.puml` and
 Update both the source and its export when the implementation changes.
 
 ### Order progress and storage
+
+<!-- @@author -->
+
 
 #### Record lifecycle
 
@@ -472,7 +482,8 @@ All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, 
 
 **Alternative 1 (chosen): store the Customer ID on each order and save it with the order.**
 - Pros: an ID always refers to the same customer, even after a phone number is edited and after a restart. No separate customer file to keep in sync. Old save files still load.
-- Cons: changes the data file format (one optional field) and touches `Order`, `OrderList` and `Storage`, which other team members own. Changing the phone number on an order does not move it to another customer.
+- Cons: adds a field to each saved order and requires coordinated changes to the model and storage.
+  Changing the phone number on an order does not move it to another customer.
 
 **Alternative 2: work the IDs out from the order list each time (by order of first appearance of each phone number).**
 - Pros: no change to the data file or other classes.
@@ -504,7 +515,8 @@ accepted by `Parser.parseView` for accessing older records. `BakerCli` passes th
 | `view` with no ID, or a badly formatted ID | `Error: Use: view ORDER_ID` |
 | `view O999` (no such record) | `Error: Order not found: O999` |
 
-Manual test: `add` an order, then `view O001`. Expected: the order's details, ending with a `Customer ID: C001` line. Then `view O999`. Expected: the not-found error.
+The command sequence and invalid-ID checks are in
+[Appendix E](#appendix-e-instructions-for-manual-testing).
 
 ## Appendix A: Product Scope
 

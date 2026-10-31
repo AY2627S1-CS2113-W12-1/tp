@@ -12,7 +12,9 @@ participant "<<class>>\nCapacityCommand" as Cap
 [-> Cli : "add n/Alice ... d/21-12-2030 ..."
 activate Cli
 Cli -> Parser : parseAdd(input)
+activate Parser
 Parser --> Cli : details
+deactivate Parser
 create Add
 Cli -> Add : new AddOrderCommand(details)
 Cli -> Add : execute(orders)
