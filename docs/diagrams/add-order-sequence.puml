@@ -9,18 +9,20 @@ hide footbox
 
 actor Baker
 participant ":BakerCli" as Cli
-participant ":Parser" as Parser
+participant "<<class>>\nParser" as Parser
+participant ":AddOrderCommand" as Add
 participant "orders:OrderList" as Orders
+participant "order:Order" as Order
 participant "saveChanges:Runnable" as Save
 participant ":Storage" as Storage
 
 Baker -> Cli : add n/NAME p/PHONE d/DATE\ns/SIZE f/FLAVOUR fi/FILLING
 activate Cli
-Cli -> Cli : addOrderAndReportCustomer(input, orders)
 Cli -> Parser : parseAdd(input)
 note right of Parser
   Check all required fields,
-  prefixes, date, and cake size.
+  prefixes, phone, date,
+  and cake size.
 end note
 alt invalid input
   Parser --> Cli : throws CakeQueueException
@@ -31,26 +33,30 @@ alt invalid input
   end note
 else valid input
   Parser --> Cli : AddOrderDetails
-  ref over Cli, Orders : Look up whether this phone already has a customer
-  Cli -> Cli : addOrder(input, orders)
-  note right of Parser : The add helper validates the input again.
-  Cli -> Orders : generateOrderId()
-  Orders --> Cli : orderId
-  note right of Cli
+  create Add
+  Cli -> Add : new AddOrderCommand(details)
+  Cli -> Add : execute(orders)
+  activate Add
+  ref over Add, Orders : Look up the existing customer\nby phone number
+  Add -> Orders : generateOrderId()
+  Orders --> Add : orderId
+  note right of Add
     Create Customer(name, phone)
     and Cake(size, flavour, filling).
   end note
-  create participant "order:Order" as Order
-  Cli -> Order : new Order(orderId, customer, cake, dueDate)
+  create Order
+  Add -> Order : new Order(orderId, customer, cake, dueDate)
   note right of Order : Initial status is QUEUED.
-  Cli -> Orders : add(order)
+  Add -> Orders : add(order)
   Orders -> Order : setCustomerId(customerId)
   note right of Order
     Reuse the matching phone's ID,
     or assign the next Customer ID.
   end note
-  ref over Cli, Orders : Check capacity; warn if over the limit
-  ref over Cli, Orders : Look up customer and append ID and new/returning label
+  ref over Add, Orders : Check capacity; warn if over the limit
+  ref over Add, Orders : Append Customer ID\nand new/returning label
+  Add --> Cli : confirmation, optional warning, Customer ID
+  deactivate Add
   Cli --> Baker : Added order, optional capacity warning, and Customer ID
   Cli -> Save : run()
   activate Save

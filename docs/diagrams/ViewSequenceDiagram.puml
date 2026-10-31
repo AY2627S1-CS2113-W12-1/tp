@@ -1,9 +1,9 @@
 @startuml ViewSequenceDiagram
-title Viewing one record: view ORDER_ID|ENQUIRY_ID
+title Viewing one record: view ORDER_ID
 
 actor Baker
 participant "BakerCli" as Cli
-participant "Parser" as Parser
+participant "<<class>>\nParser" as Parser
 participant "ViewOrderCommand" as Cmd
 participant "OrderList" as List
 participant "Order" as Order
@@ -11,22 +11,26 @@ participant "Order" as Order
 Baker -> Cli : view O001
 Cli -> Parser : parseView(input)
 Parser --> Cli : "O001" (upper-cased)
+create Cmd
 Cli -> Cmd : new ViewOrderCommand(O001)
 Cli -> Cmd : execute(orders)
 Cmd -> List : getById("O001")
 alt record exists
   List --> Cmd : matching Order
   Cmd -> Order : toDetailedString()
-  Order --> Cmd : ID, customer, due date,\ncake details, status
+  Order --> Cmd : ID, customer, due date,\ncake details, status, optional legacy notes
+  Cmd -> Order : getCustomerId()
+  Order --> Cmd : customerId
   Cmd --> Cli : detail text
   Cli --> Baker : print details
 else no such record
-  List --> Cmd : throws IllegalArgumentException\n"Order not found: O001"
+  List --> Cmd : throws CakeQueueException\n"Order not found: O001"
   Cli --> Baker : Error: Order not found: O001
 end
 note right of List
   IDs are matched case-insensitively,
   so view o001 and view O001 are
   equivalent.
+  Legacy E-prefixed IDs also remain readable.
 end note
 @enduml

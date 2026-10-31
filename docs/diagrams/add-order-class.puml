@@ -9,15 +9,19 @@ skinparam classAttributeIconSize 0
 hide empty members
 
 class BakerCli {
-  - addOrderAndReportCustomer(input, orders): String
-  - addOrder(input, orders): String
+  + run(scanner: Scanner, orders: OrderList, afterChange: Runnable): void
 }
 class Parser {
-  {static} + parseAdd(input): AddOrderDetails
+  {static} + parseAdd(input: String): AddOrderDetails
 }
 class OrderList {
   + generateOrderId(): String
-  + add(order): void
+  + add(order: Order): void
+}
+class AddOrderCommand {
+  - details: Parser.AddOrderDetails
+  + AddOrderCommand(details: Parser.AddOrderDetails)
+  + execute(orders: OrderList): String
 }
 class Order {
   - orderId: String
@@ -36,8 +40,9 @@ class Cake {
 }
 
 BakerCli ..> Parser : parses
-BakerCli ..> OrderList : uses
-BakerCli ..> Order : creates
+BakerCli ..> AddOrderCommand : creates and runs
+AddOrderCommand ..> OrderList : adds order
+AddOrderCommand ..> Order : creates
 OrderList "1" --> "0..*" Order : stores
 Order "0..*" --> "1" Customer
 Order "0..*" --> "0..1" Cake
@@ -47,5 +52,11 @@ note bottom of Order
   and one Cake. Older constructors also
   support orders without cake details.
   OrderList.add assigns the Customer ID.
+end note
+
+note right of AddOrderCommand
+  Receives validated details; no parsing.
+  Returns the confirmation and warnings.
+  BakerCli prints and requests saving.
 end note
 @enduml

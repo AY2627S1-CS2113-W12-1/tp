@@ -5,15 +5,20 @@ hide footbox
 
 participant ":BakerCli" as Cli
 participant "<<class>>\nParser" as Parser
+participant ":AddOrderCommand" as Add
 participant "orders:OrderList" as Orders
 participant "<<class>>\nCapacityCommand" as Cap
 
-[-> Cli : "add n/Alice ... d/21-12-2026 ..."
+[-> Cli : "add n/Alice ... d/21-12-2030 ..."
 activate Cli
 Cli -> Parser : parseAdd(input)
 Parser --> Cli : details
-Cli -> Orders : add(order)
-Cli -> Cap : warningFor(orders, dueDate)
+create Add
+Cli -> Add : new AddOrderCommand(details)
+Cli -> Add : execute(orders)
+activate Add
+ref over Add, Orders : Create and add the order,\nassigning its Customer ID
+Add -> Cap : warningFor(orders, dueDate)
 activate Cap
 Cap -> Orders : countOrdersDueOn(dueDate)
 activate Orders
@@ -23,16 +28,18 @@ Cap -> Orders : getDailyCapacity()
 activate Orders
 Orders --> Cap : capacity
 deactivate Orders
-Cap --> Cli : warning, or "" if count <= capacity
+Cap --> Add : warning, or "" if count <= capacity
 deactivate Cap
+Add --> Cli : order confirmation, optional warning, customer line
+deactivate Add
 
-Cli -> Cli : print confirmation,\nthen the warning if there is one
+Cli -> Cli : print the complete command result
 [<-- Cli
 deactivate Cli
 
 note right of Cli
-  accept and edit work the same way: they change
-  the order list first, then ask warningFor(...)
-  about the order's due date.
+  After UpdateOrderCommand changes an order,
+  BakerCli calls warningFor(...) directly
+  with the updated due date.
 end note
 @enduml

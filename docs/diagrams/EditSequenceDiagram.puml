@@ -1,5 +1,5 @@
 @startuml EditSequenceDiagram
-title Baker edits an order: edit ORDER_ID [fields...]  (alias: update)
+title Baker edits an order: edit ORDER_ID [fields...]
 
 actor Baker
 participant "BakerCli" as Cli
