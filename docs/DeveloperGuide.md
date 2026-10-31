@@ -1,7 +1,9 @@
 # CakeQueue Developer Guide
 
 CakeQueue is a command-line app that helps home bakers manage custom cake orders. This guide is for
-developers who want to understand how it is built or add to it.
+developers who want to understand how it is built or add to it. This guide describes the
+simplified baker-only command set in the accompanying source. Build the JAR from that same
+source version when publishing these guides.
 
 ## Table of Contents
 
@@ -16,12 +18,11 @@ developers who want to understand how it is built or add to it.
     * [Error handling](#error-handling)
 * [Implementation](#implementation)
     * [Add Order and customer details](#add-order-and-customer-details)
-    * [Enquiries, status marking and storage](#enquiries-status-marking-and-storage)
+    * [Order progress and storage](#order-progress-and-storage)
     * [Find feature](#find-feature)
     * [Daily capacity feature](#daily-capacity-feature)
     * [Customer and history features](#customer-and-history-features)
     * [View feature](#view-feature)
-    * [Notes, delete and stats](#notes-delete-and-stats)
 * [Appendix A: Product Scope](#appendix-a-product-scope)
 * [Appendix B: User Stories](#appendix-b-user-stories)
 * [Appendix C: Non-Functional Requirements](#appendix-c-non-functional-requirements)
@@ -60,20 +61,22 @@ CakeQueue is split into a few small parts that each do one job:
 | `Duke` | Starts the app. It loads the saved records and runs the `BakerCli` command loop, giving it a *save* callback that is called after every change. |
 | `BakerCli` | The command loop. It reads a line, picks the command by its first word, runs it, and prints the result or `Error: ...`. |
 | `Parser` | Checks the text of a command and turns it into values such as an ID or a set of fields. |
-| `command` package | One class per command, such as `FindCommand` and `CapacityCommand`. A command carries out the work and returns the text to print. |
+| `command` package | Classes such as `FindCommand` and `CapacityCommand` carry out a command and return the text to print. Add Order uses helpers in `BakerCli`. |
 | `model` package | The data: `OrderList`, `Order`, `Customer`, `Cake`, `OrderStatus`, and the read-only `CustomerList` and `CustomerProfile`. |
 | `Storage` | Saves and loads the order list as a text file. |
 | `CakeQueueException` | The one exception type for errors the user can fix. |
 
-CakeQueue is used by the baker only. Earlier versions also had a customer mode with its own command loop;
-it was removed in v2.0 so that the baker records enquiries directly with `enquire` (see
-[Enquiries, status marking and storage](#enquiries-status-marking-and-storage)).
+CakeQueue starts directly in the baker interface. Its command surface is `add`, `list`,
+`view`, `edit`, `cancel`, `find`, `customer`, `history`, `capacity`, `mark`, `help` and `bye`.
+The parser rejects the former `update` alias. Earlier enquiry records and notes remain
+readable for data compatibility; their creation and management commands are removed.
 
 **How a command runs.** A command line goes through these steps:
 
 1. The command loop reads the line and looks at the first word to choose the command.
 2. `Parser` checks the rest of the line. If the input is wrong, it throws a `CakeQueueException`.
-3. The loop creates the command object with the parsed values and calls `execute(orders)`.
+3. Most commands create a command object and call `execute(orders)`. Add Order uses
+   `BakerCli.addOrderAndReportCustomer` and `addOrder` helpers to create model objects directly.
 4. The command reads or changes the `OrderList` and returns a message.
 5. The loop prints the message. If the command changed anything, it then runs the save callback.
 
@@ -83,29 +86,34 @@ show this in detail for two commands.
 ### Parser
 
 `Parser` is a utility class with only static methods, one per command shape, such as `parseFind`,
-`parseCapacity`, `parseView` and `parseAdd`. Field-based commands (`add`, `enquire` and `edit`) use shared
+`parseCapacity`, `parseView` and `parseAdd`. Field-based commands (`add` and `edit`) use shared
 routines that find the `n/`, `p/`, `d/`, `s/`, `f/` and `fi/` prefixes, reject unknown or repeated
-prefixes and empty values, and check dates and cake sizes. The parser only checks the *format* of the
-input. Checks that need the data, such as whether an order ID exists, are done by the commands.
+prefixes and empty values, and check dates, phone numbers and cake sizes. The parser checks
+syntax and field rules. Checks that need stored data, such as whether an order ID exists,
+are done by the commands. `parseUpdate` is the internal method name for parsing `edit`;
+the former `update` command word is rejected.
 
 ### Commands
 
-Each command class is small and does one thing. A command is built with its parsed values and has an
-`execute(OrderList)` method that returns the text to print, so commands can be tested without any
-input or output. Commands do not print or save anything themselves. The command loop does that.
+Most commands are built with parsed values and expose `execute(OrderList)`, returning the text
+to print. `HelpCommand.execute()` needs no order list. Add Order uses helpers in `BakerCli`,
+and `bye` ends its loop directly. Command classes do not print or save; the loop prints their
+result and invokes the save callback after successful record changes.
 
 ### Model
 
 ![Model class diagram](diagrams/ModelClassDiagram.png)
 
-* `OrderList` is the single list of all records, both enquiries and confirmed orders. It also hands out
-  new IDs (`O001` for orders, `E001` for enquiries, `C001` for customers) and keeps the daily capacity.
+* `OrderList` holds all orders and any legacy records loaded from storage. It assigns Order and
+  Customer IDs, preserves older IDs and keeps the daily capacity.
 * `Order` holds the customer, the cake, the due date, the status and free-text notes. Apart from the
   status, the customer ID and the notes, its fields are fixed once the order is created. `edit` builds a changed copy with
   `Order#updatedCopy`.
-* `OrderStatus` is `ENQUIRY`, `QUEUED`, `PREPARING`, `READY`, `COLLECTED`, `CANCELLED` or `REJECTED`.
+* New orders use `QUEUED`, `PREPARING`, `READY`, `COLLECTED` and `CANCELLED`.
+  `ENQUIRY` and `REJECTED` remain in `OrderStatus` for older saved records. Legacy notes also
+  remain in the model and storage, but cannot be changed through the CLI.
 * `CustomerList` and `CustomerProfile` are built fresh from the order list when needed. They are never
-  saved, so there is only one copy of the data.
+  saved separately; the order list remains the source of customer information.
 
 ### Storage
 
@@ -114,11 +122,13 @@ input or output. Commands do not print or save anything themselves. The command 
 value and `\|` is an escaped `|` inside a value. The customer ID and notes were added in v2.0; lines with 8 or 9
 fields from older versions still load. A 9-field line normally ends with a customer ID, but some files were saved
 with notes in that position, so a 9th field that does not look like an ID (one letter then digits) is read as
-notes, and the record gets a customer ID when it is loaded. Plain text
+notes. A loaded O-prefixed order without a Customer ID receives one through `OrderList.add`;
+E-prefixed legacy records do not. Backslashes are escaped as `\\`. Plain text
 keeps the file readable, easy to compare in Git, and fixable by hand. Two choices keep the data safe:
 
-* A save writes a temporary file first and then moves it over the real file, so a crash in the middle of
-  a save cannot leave half a file.
+* A save writes a temporary file in the same folder, then replaces the real file. It attempts
+  an atomic move and falls back to a normal replacement if atomic moves are unsupported. This
+  avoids writing directly into the current data file; the fallback has weaker crash guarantees.
 * A line that cannot be read when loading is skipped with a warning, so one bad line does not stop the
   app or lose the other records.
 
@@ -127,8 +137,8 @@ The daily capacity is not part of the saved data yet. See [Daily capacity featur
 ### Error handling
 
 Every error the user can fix is thrown as a `CakeQueueException`, either by the parser (bad input) or by a
-command (for example, an unknown ID or a step that is not allowed). The command loops catch it, print
-`Error: <message>`, and carry on. A mistake never ends the session and never changes the data. The
+command (for example, an unknown ID or a step that is not allowed). The command loop catches it, prints
+`Error: <message>`, and carries on. A mistake never ends the session and never changes the data. The
 message says what is wrong and, where it helps, shows the correct format, such as `Use: find KEYWORD`.
 
 ## Implementation
@@ -169,7 +179,7 @@ The syntax is `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING`.
 `BakerCli.addOrderAndReportCustomer` validates the input before looking up the
 customer. It then calls `addOrder`, which validates the input again before creating
 the order. Both calls use `Parser.parseAdd`, which delegates to the shared
-six-field parser also used by `enquire`. The parser identifies prefixes and
+six-field parsing helper. The parser identifies prefixes and
 collects their values, then checks
 the required fields and converts the date and size. No order ID is requested
 until parsing has finished successfully.
@@ -193,9 +203,8 @@ the in-memory list or the saved file.
 
 Keeping these checks in `Parser` avoids repeating six-field parsing in each CLI.
 The parser returns structured details rather than creating an order itself, so
-validation can be tested without generating IDs or writing files. A stricter
-phone policy would change accepted input and should be agreed by the team before
-being added to this shared parser.
+validation can be tested without generating IDs or writing files. The same phone
+validation applies to `add` and `edit`: at least eight digits, with spaces, `+` and `-` allowed.
 
 #### Creating and saving an order
 
@@ -235,7 +244,7 @@ confirmation before saving, and a separate warning on failure.
 | Test class | Behaviour checked |
 | --- | --- |
 | `AddOrderValidationTest` | Guidance for each missing field, blank names, punctuation, Unicode, and formatted phones. |
-| `AddOrderReliabilityTest` | Rejected commands preserve saved data and IDs; names survive restarting; customer IDs, enquiries, capacity warnings, and independent name edits work together. |
+| `AddOrderReliabilityTest` | Rejected commands preserve saved data and IDs; names survive restarting; customer IDs and capacity warnings, and independent name edits work together. |
 | `ParserTest` and `ParserErrorTest` | Existing command syntax, date/size validation, unknown prefixes, and duplicate fields. |
 
 CLI tests run against JUnit temporary folders. They restore standard input and
@@ -247,45 +256,23 @@ Diagram sources are in `docs/diagrams/add-order-class.puml` and
 `docs/diagrams/add-order-sequence.puml`. Their PNG exports are in `docs/images`.
 Update both the source and its export when the implementation changes.
 
-### Enquiries, status marking and storage
-
-<!-- Adapted from Gitanjali's (HammerHead-os) section after customer mode was removed in v2.0. -->
+### Order progress and storage
 
 #### Record lifecycle
 
 ![Order state diagram](diagrams/OrderStateDiagram.png)
 
-One `Order` class represents both an enquiry (status `ENQUIRY`, ID starting with `E`) and a confirmed order (ID
-starting with `O`). The state diagram shows every status a record can have and the command that moves it on.
-
-#### Enquiry workflow
-
-`enquire` uses the same six-field format and the same parser routine as `add`, so both commands accept and reject
-exactly the same input. `EnquireCommand` creates an `Order` with an `E`-prefixed ID and status `ENQUIRY`. The baker
-reviews pending enquiries with `enquiries`, then either `reject`s one (status `REJECTED`, record kept) or
-`accept`s it:
-
-![Accept enquiry sequence diagram](diagrams/EnquireAcceptSequenceDiagram.png)
-
-`AcceptEnquiryCommand` removes the `E` record and adds a new `O` record in `QUEUED` with the same customer, cake,
-date and notes. `OrderList#add` then gives it a Customer ID, and `BakerCli` checks the daily capacity for its due date.
-
-*Why accept creates a new ID instead of renaming `E001` to `O001`.* IDs are `final` in `Order`. Creating a new ID
-keeps IDs immutable, which `getById` and `Storage` rely on, and the reply ("accepted `E001` as `O001`") makes the
-link clear.
-
-*Why customer mode was removed.* v1 had a separate customer command loop in which customers sent and tracked their
-own enquiries, proving ownership with their phone number. The team removed it in v2.0. A phone number is weak
-proof of identity, and two command loops sharing one terminal did not match how a home baker actually works:
-customers send requests by message, and the baker types them in. Recording enquiries with `enquire` keeps the
-useful part (requests that are not yet agreed do not count as orders or towards capacity) with one command loop.
+New orders start in `QUEUED`, progress through `PREPARING` and `READY` to `COLLECTED`,
+or can be cancelled before collection. Closed orders remain stored for history; the CLI
+does not offer permanent deletion. Legacy `ENQUIRY` and `REJECTED` statuses are retained
+only so older files still load. Legacy pending records can be viewed, found or cancelled.
 
 #### Production status marking (`mark`)
 
 `mark ORDER_ID preparing|ready|collected` moves a confirmed order exactly one step forward. `Parser.parseMark`
 checks the *shape* (an `O` ID and one of the three words), while `MarkCommand` checks the *transition* against the
-order's current status. Skipping a step, repeating one, or marking an enquiry or a closed record is rejected with a
-message naming the allowed path, and the status is left unchanged. `COLLECTED` records disappear from `list`
+order's current status. Skipping a step, repeating one, or marking an enquiry or a closed record produces an
+error explaining the restriction, and the status is left unchanged. `COLLECTED` records disappear from `list`
 because `ListCommand` excludes them.
 
 ![Mark-and-save sequence diagram](diagrams/rendered/MarkAndSaveSequenceDiagram.png)
@@ -296,7 +283,7 @@ the difference between "in the oven" and "waiting for pickup", which is the poin
 #### Saving after every change
 
 `Duke` owns a `Storage` bound to a `Path` (default `data/cakequeue.txt`; tests pass a temporary path). At startup,
-`Duke` loads the file into the `OrderList`. After every successful command that changes data, `BakerCli` runs an
+`Duke` loads the file into the `OrderList`. After every successful command that changes records, `BakerCli` runs an
 `afterChange` callback supplied by `Duke`, which saves. Passing a callback instead of giving `BakerCli` a `Storage`
 keeps the command loop unaware of files, and keeps the "warn the user if saving failed" rule in one place.
 
@@ -310,7 +297,7 @@ an ID that is already in use.
 
 #### What it does
 
-`find KEYWORD` shows every order and enquiry whose customer name, cake flavour or cake filling contains
+`find KEYWORD` shows every record whose customer name, cake flavour or cake filling contains
 the keyword. The match ignores case and may be part of a word.
 
 #### How it works
@@ -345,7 +332,7 @@ the keyword. The match ignores case and may be part of a word.
 * *Alternative 2: match any of the words.* Pros: finds more records. Cons: a longer search finds *more*
   results instead of fewer, which surprises users. It also needs rules for ordering the results.
 
-**Which records to search.** `find` searches all records, including enquiries and orders that are
+**Which records to search.** `find` searches all records, including legacy enquiries and orders that are
 collected or cancelled, and shows each record's status. Pros: it can find an old order, which `list` hides.
 Cons: results can include records the baker no longer cares about, but the status makes them easy to skip.
 
@@ -355,7 +342,7 @@ Cons: results can include records the baker no longer cares about, but the statu
 
 A home baker can only make so many cakes in a day. `capacity NUMBER` sets the most active orders the baker
 can take for one due date (1 to 50, default 5), and `capacity` shows the limit and any due dates already
-over it. When `add`, `accept` or `edit` leaves a due date over the limit, the baker is warned. The change is
+over it. When `add` or `edit` leaves a due date over the limit, the baker is warned. The change is
 still saved.
 
 #### How it works
@@ -374,8 +361,8 @@ still saved.
 
 *Warning after a change.*
 
-1. `add`, `accept` and `edit` run exactly as before. After the order list has changed, `BakerCli` calls
-   `CapacityCommand.warningFor(orders, dueDate)` with the due date of the order that was added, accepted
+1. `add` and `edit` run exactly as before. After the order list has changed, `BakerCli` calls
+   `CapacityCommand.warningFor(orders, dueDate)` with the due date of the order that was added
    or edited. For `edit`, it reads the due date back from the order list, because the command may not have
    changed it.
 2. `warningFor` returns an empty string if the order has no due date, or if
@@ -385,9 +372,8 @@ still saved.
 
 ![Capacity activity diagram](diagrams/CapacityActivity.png)
 
-An *active* order is one with status `QUEUED`, `PREPARING` or `READY`. Enquiries do not count, because the
-baker has not agreed to them yet. Collected orders do not count, because the work is done. Cancelled and
-rejected records do not count, because no work is needed.
+An *active* order is one with status `QUEUED`, `PREPARING` or `READY`. Legacy enquiries,
+collected orders, cancelled orders and rejected records do not count.
 
 #### Design considerations
 
@@ -397,7 +383,7 @@ rejected records do not count, because no work is needed.
   busy day (a family member helps, or an old customer asks), and a hard refusal would force them to raise the
   limit first. Cons: the baker could ignore the warning.
 * *Alternative 2: refuse the order.* Pros: it enforces the limit. Cons: it gets in the way of a normal
-  business decision, and `accept` would leave a customer's enquiry stuck.
+  business decision; the baker would need to raise the limit before adding an order.
 
 **Where to keep the capacity.**
 
@@ -434,11 +420,13 @@ Every confirmed order (ID starting with `O`) carries a **Customer ID** (`C001`, 
 - A new order takes the Customer ID of the most recent order with the same phone number.
 - If no order has that phone number, it takes the next unused ID (`OrderList` keeps a counter, advanced past any ID loaded from disk).
 - Editing an order copies its Customer ID (`Order#updatedCopy`), so editing a name or phone number never changes an ID.
-- Enquiries (IDs starting with `E`) have no Customer ID until the baker accepts them, because accepting creates a new order through `OrderList#add`.
+- Legacy enquiries (IDs starting with `E`) do not receive Customer IDs. They remain readable
+  for compatibility, but cannot be created or converted into orders through the CLI.
 
 The Customer ID is saved as the 9th field in the data file (`-` when absent). `Storage` still reads older 8-field files, and those orders get IDs by phone number when loaded.
 
-`CustomerList.fromOrders(OrderList)` builds a read-only snapshot by grouping the confirmed orders by Customer ID. A customer's name and phone number are those on their most recent order.
+`CustomerList.fromOrders(OrderList)` builds a read-only snapshot by grouping the confirmed orders by Customer ID. A customer's name and phone number are those on their most recently added order,
+regardless of due date or status. Grouping follows insertion order, not due-date order.
 
 | Class | Responsibility |
 |---|---|
@@ -483,57 +471,29 @@ All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, 
 - Pros: IDs would never change.
 - Cons: a second file to load and save, which could disagree with the order file.
 
-**Identifying customers by phone number, not name.** Two customers can share a name, and one customer's name can be spelled differently across orders. The phone number is also what the baker usually has when a customer calls.
+**Customer matching.** Initial grouping uses the exact phone string, not the name. Two people
+can share a name, and one person may use different spellings. The code does not normalise
+phone formatting: `91234567` and `9123-4567` create different customer groups. Later edits
+retain the assigned ID, so changing a phone never reassigns an existing order.
 
 #### Manual testing
 
-1. Start the app in an empty folder.
-2. `add n/Alice Tan p/91234567 d/22-12-2026 s/8 f/Chocolate fi/Strawberry`. Expected: `Customer ID: C001 (new customer)`.
-3. `add n/Bob Lim p/81234567 d/20-12-2026 s/6 f/Vanilla fi/Cream`. Expected: `Customer ID: C002 (new customer)`.
-4. Add Alice again with a different date. Expected: `Customer ID: C001 (returning customer)`.
-5. `customer C001`. Expected: `Orders: 2` and `Repeat customer: Yes`.
-6. `history C001`. Expected: two orders listed for Alice.
-7. `cancel O003`, then `history C001`. Expected: `O003` still listed, marked `[CANCELLED]`.
-8. `edit O001 p/90000000`, then `customer C002`. Expected: still Bob Lim (IDs do not change after a phone edit). Then `customer C001`. Expected: still Alice Tan, but the phone shown is `91234567`, because a customer's phone comes from their newest order (`O003`). `view O001` shows the edited phone `90000000`.
-9. `customer C999`. Expected: `Error: Customer not found: C999`.
-10. `customer` with no ID. Expected: `Error: Use: customer CUSTOMER_ID`.
-11. `bye`, restart the app, then `customer C002`. Expected: Bob's details (IDs are saved).
+The full session in [Appendix E](#appendix-e-instructions-for-manual-testing) covers new and
+returning customers, history, cancellation and restart. After that session, try
+`edit O003 p/90000000`, `view O001`, and `customer C001`. O001 retains its original phone;
+C001 shows `90000000` from its newest order O003. Both orders keep C001 after restarting.
 
 ### View feature
 
-`view ORDER_ID|ENQUIRY_ID` shows the full details of one record. `BakerCli` passes the ID through `Parser.parseView` to `ViewOrderCommand`, which calls `OrderList.getById` and returns `Order.toDetailedString()`. For confirmed orders, it also appends a `Customer ID:` line using `Order#getCustomerId`.
+`view ORDER_ID` shows the full details of one order. Legacy E-prefixed IDs are also
+accepted by `Parser.parseView` for accessing older records. `BakerCli` passes the ID through `Parser.parseView` to `ViewOrderCommand`, which calls `OrderList.getById` and returns `Order.toDetailedString()`. For confirmed orders, it also appends a `Customer ID:` line using `Order#getCustomerId`.
 
 | Input | Result |
 |---|---|
-| `view` with no ID, or a badly formatted ID | `Error: Use: view ORDER_ID|ENQUIRY_ID` |
+| `view` with no ID, or a badly formatted ID | `Error: Use: view ORDER_ID` |
 | `view O999` (no such record) | `Error: Order not found: O999` |
 
 Manual test: `add` an order, then `view O001`. Expected: the order's details, ending with a `Customer ID: C001` line. Then `view O999`. Expected: the not-found error.
-
-### Notes, delete and stats
-
-<!-- Commands added by Gitanjali (HammerHead-os) in v2.0. -->
-
-These three baker commands each have one command class and one parser method, following the same pattern as the
-other commands.
-
-| Command | Class | How it works |
-| --- | --- | --- |
-| `note ID TEXT` / `note ID -clear` | `NoteCommand` | Looks the record up with `getById` and calls `Order#setNotes`. `-clear` sets an empty string. `Order#updatedCopy` copies the notes, so `edit` keeps them. |
-| `delete ID` | `DeleteCommand` | Allows deleting only `CANCELLED`, `REJECTED` or `COLLECTED` records, then calls `OrderList#removeById`. |
-| `stats` | `StatsCommand` | Counts records by status and finds the earliest due date among active orders. Read-only. |
-
-**Design considerations.**
-
-* *Notes are stored on `Order` as a plain string, saved as the last field in the data file.* Pros: no new class,
-  and older data files without notes still load (they get an empty note). Cons: one note per record; a history of
-  notes would need a list.
-* *`delete` only removes closed records.* An active order cannot be lost by one mistyped command; the baker must
-  `cancel` it first. Cancelled records otherwise stay in `history`, which is why deleting is offered at all.
-
-**Known limitation.** After a restart, `OrderList` continues IDs from the highest ID it loads. If the newest record
-was deleted, its ID can be given out again. *Proposed fix:* save the next-ID counters in the data file, the same way
-as the [proposed capacity setting](#daily-capacity-feature).
 
 ## Appendix A: Product Scope
 
@@ -547,8 +507,8 @@ as the [proposed capacity setting](#daily-capacity-feature).
 **Value proposition**
 
 CakeQueue keeps track of upcoming custom orders and what each one involves, so the baker knows what is due
-when and does not accept more work for a day than they can actually deliver. Enquiries are kept apart from confirmed
-orders, so the baker does not have to manage everything in separate chat threads.
+when, can track production progress, and receives a warning when a due date exceeds the daily capacity.
+Customer details and order history help the baker handle returning customers.
 
 **Out of scope.** CakeQueue does not handle payments, ingredient stock, recipes or online ordering by customers.
 
@@ -566,25 +526,19 @@ Priorities: High (must have), Medium (nice to have), Low (unlikely to have).
 | v2.0 | High | baker | set a daily capacity and be warned when a date goes over it | avoid accepting more cakes than I can deliver in a day |
 | v2.0 | Medium | baker | see which dates are over capacity | ask customers to move their dates or arrange extra help |
 | v2.0 | High | baker | mark an order as preparing, ready or collected | know which cakes are in progress and which are done |
-| v2.0 | Medium | baker | cancel an order or enquiry and keep the record | keep my list accurate and still look back at it |
+| v2.0 | Medium | baker | cancel an order and keep the record | keep my list accurate and still look back at it |
 | v2.0 | Medium | baker | find orders by customer name, flavour or filling | locate an order without going through the whole list |
-| v2.0 | High | baker | record a customer's enquiry before agreeing to it | keep requests I have not accepted yet apart from real orders |
-| v2.0 | High | baker | accept or reject an enquiry | turn it into an order or turn it down |
-| v2.0 | Medium | baker | add notes such as allergies to an order | remember special requests when I bake |
-| v2.0 | Low | baker | delete records that are closed | keep my data file tidy |
-| v2.0 | Low | baker | see a summary of my queue | know at a glance how busy I am |
 | v2.0 | Medium | baker | see a customer's order history | recognise a returning customer and recall their past cakes |
 | v2.0 | High | baker | have my orders saved automatically | close the app without losing orders |
-| v2.1 | Low | baker | have my daily capacity remembered between sessions | avoid setting it again each time I start the app |
+| Future (not implemented) | Low | baker | have my daily capacity remembered between sessions | avoid setting it again each time I start the app |
 
 ## Appendix C: Non-Functional Requirements
 
 1. **Platform.** CakeQueue should work on Windows, macOS and Linux when Java 25 is the only Java version installed.
 2. **Performance.** With up to 1,000 orders, each command should respond within 1 second on an ordinary laptop.
-   A check with 1,000 orders (including saving after every change) finished in under 2 seconds for the whole session.
-3. **Data safety.** After any command that changes data, the change should already be on disk, so closing the app or
-   a crash does not lose it. A damaged line in the data file should not stop the app from starting, and should not
-   affect the other records.
+3. **Data safety.** Successful record changes trigger an immediate save attempt. A save failure
+   produces a warning and leaves the change in memory. A malformed saved line should not prevent
+   valid lines from loading; a warning identifies the skipped line.
 4. **Readable data.** The data file should be plain text that a user can open, read and fix in a text editor.
 5. **Error messages.** Every invalid command should show a message that says what is wrong, and should not end the
    session or change any data.
@@ -595,8 +549,8 @@ Priorities: High (must have), Medium (nice to have), Low (unlikely to have).
 ## Appendix D: Glossary
 
 * **Baker** - The person who makes the cakes and uses CakeQueue.
-* **Customer** - A person who orders cakes. The baker records their orders and enquiries.
-* **Enquiry** - A cake request from a customer that the baker has not answered yet. Its ID starts with `E`.
+* **Customer** - A person who orders cakes. The baker records their orders.
+* **Legacy enquiry** - An older request with an `E` ID, retained for save-file compatibility.
 * **Order** - A confirmed cake request. Its ID starts with `O`.
 * **Active order** - An order that is `QUEUED`, `PREPARING` or `READY`. Only these count towards the daily capacity.
 * **Daily capacity** - The most active orders the baker is willing to take for one due date.
@@ -605,98 +559,54 @@ Priorities: High (must have), Medium (nice to have), Low (unlikely to have).
 
 ## Appendix E: Instructions for Manual Testing
 
-These steps give a path through the main features. The user guide describes each command in detail, so this appendix
-only lists inputs to copy and what to expect. The steps use dates in December 2026. If you run them after those dates,
-use later dates, because the app rejects due dates in the past.
+Build with Java 25 using `./gradlew check shadowJar` (Windows: `.\gradlew.bat check shadowJar`).
+Use a fresh empty folder containing `cakequeue.jar`, then run `java -ea -jar cakequeue.jar`.
+The baker interface starts without a mode prompt. Enter these commands in order:
 
-**Before you start.** Build the JAR with `./gradlew shadowJar`. Copy `build/libs/cakequeue.jar` into a new empty
-folder, open a terminal there and run `java -ea -jar cakequeue.jar`. A `data` folder appears in that folder after the
-first change.
+```text
+help
+capacity 1
+add n/Alice Tan p/91234567 d/20-12-2030 s/8 f/Chocolate fi/Strawberry
+add n/Bob Lim p/81234567 d/20-12-2030 s/6 f/Vanilla fi/Cream
+add n/Alice Tan p/91234567 d/21-12-2030 s/8 f/Chocolate fi/Cream
+list
+view O001
+edit O001 s/10
+find chocolate
+customer C001
+history C001
+cancel O002
+mark O001 preparing
+mark O001 ready
+mark O001 collected
+list
+bye
+```
 
-### Add Order and customer details
+The second add warns that its date exceeds capacity; the order is still added. Alice's
+two orders share C001, so `customer C001` reports two orders and a repeat customer.
+Editing changes only the selected size. Cancellation retains Bob's history. The final
+active list contains O003; O001 is collected and O002 is cancelled.
 
-Use a fresh folder containing `cakequeue.jar` to avoid changing existing data.
-Run `java -ea -jar cakequeue.jar`.
-The IDs below assume this folder has no saved records.
+Restart from the same folder. Expect three saved records, unchanged Customer IDs/statuses,
+and a default capacity of five. Verify with `view O001`, `view O002`, `history C001`, and `capacity`.
+After restarting, try these invalid inputs. Each must leave records unchanged and allow
+the next valid command to run:
 
-1. Add a complete order:
-   `add n/Alice Tan p/91234567 d/30-12-2026 s/8 f/Chocolate fi/Strawberry`.
-   Expect a confirmation for `O001`, including all six values, `QUEUED`, and
-   `Customer ID: C001 (new customer)`.
-2. Enter `add p/91234567 d/30-12-2026 s/8 f/Chocolate fi/Strawberry`.
-   Expect `Error: Missing value for n/. Please provide a customer name using n/NAME.`
-   Enter `view O001`; the original order must remain unchanged.
-3. Try an impossible date (`d/31-02-2026`) or unsupported size (`s/7`) in the
-   complete command. Expect a date or size error, with no new order added.
-4. Add another complete order with `n/Élodie O'Connor-Tan` and
-   `p/+65 9123-4567`. Expect `O002`; the name and phone must be preserved.
-5. Enter `bye` and relaunch from the same folder.
-   Use `view O001` and `view O002` to check the saved details. Add one more
-   valid order and check that its ID is `O003`.
-6. Add two orders with the same name and phone. Edit the name of just one with
-   `edit ORDER_ID n/Alicia Tan`, using its actual ID. View both records and
-   restart again. Only the selected order should show the new name.
-7. Enter `capacity 1`, then add another order with the same due date as an active
-   order. Expect a warning and a successful add. Use `view` to confirm the record
-   exists, then use `customer C001` and `history C001` to check Alice's grouping.
-   Restarting should preserve the records and Customer IDs while resetting
-   capacity to 5.
+| Input | Expected result |
+| --- | --- |
+| `add` | Usage guidance; no order or Customer ID is created. |
+| `edit O003 d/31-02-2030` | Invalid-date error. |
+| `edit O003 d/01-01-2000` | Past-date error. |
+| `edit O003 p/abc` | Phone validation error. |
+| `edit O003 s/7` | Cake-size error. |
+| `view O999` | Order-not-found error. |
+| `mark O003 collected` | A skipped-step error; O003 stays QUEUED. |
+| `update O003 s/10` | Unknown-command error; use `edit`. |
 
-If a save warning appears, the changed records are only guaranteed for the
-current session. Keep the application open while checking the destination
-folder's write permissions, then make a successful change to retry saving.
+Run `view O003` afterwards: its size remains 8 and status remains QUEUED.
 
-### Starting the app
-
-1. Start the app. Expected: `Hello! I'm CakeQueue.` and `Baker mode. Type help to see commands.`
-2. Type `hello`. Expected: `Error: Unknown baker command: hello. Type help to see baker commands.`
-
-### Orders, capacity and progress
-
-1. `add n/Alice Tan p/91234567 d/21-12-2026 s/8 f/Chocolate fi/Strawberry`
-   Expected: `Added order O001: ...` followed by `Customer ID: C001 (new customer)`, and no warning.
-2. `capacity 1`. Expected: `Daily capacity set to 1 order per day.`
-3. `add n/Bob Lim p/81234567 d/21-12-2026 s/6 f/Vanilla fi/Cream`
-   Expected: `Warning: 21-12-2026 now has 2 orders, over your daily capacity of 1.` The order is still added.
-4. `capacity`. Expected: the capacity, then `These dates are over capacity:` with `21-12-2026: 2 orders`.
-5. `mark O001 collected`. Expected: `Error: Cannot change order O001 from QUEUED to COLLECTED. ...`
-6. `mark O001 preparing`, then `mark O001 ready`, then `mark O001 collected`. Expected: each reply ends with the new status.
-7. `capacity`. Expected: no list of over-capacity dates, because the collected order no longer counts.
-8. `capacity 0`, then `capacity abc`. Expected: `Error: Daily capacity must be a whole number from 1 to 50.`, and the capacity stays at 1.
-
-### Enquiries
-
-1. `enquire n/Cara p/92222222 d/22-12-2026 s/10 f/Mocha fi/Cream`.
-   Expected: `Submitted enquiry E001: ...`
-2. `enquire n/Dan p/9222 d/22-12-2026 s/10 f/Mocha fi/Cream`. Expected: an error saying the phone needs at
-   least 8 digits, and no enquiry is added.
-3. `enquiries`. Expected: E001 is listed. `capacity` still lists no over-capacity dates for 22-12-2026,
-   because enquiries do not count.
-4. `accept E001`. Expected: `Accepted enquiry E001 as order O003: ...`, and no `E001` in `enquiries` afterwards.
-
-### Notes, delete and stats
-
-1. `note O003 No nuts`, then `view O003`. Expected: the details end with `Notes: No nuts` and `Customer ID: C003`.
-2. `delete O003`. Expected: an error, because only cancelled, rejected or collected records can be deleted.
-3. `stats`. Expected: a summary with 2 active orders and 1 collected order.
-
-### Searching and customers
-
-1. `find CHOC`. Expected: `Orders matching "CHOC":` with O001 (matches the flavour, ignoring case).
-2. `find cara`. Expected: O003 only.
-3. `find zzz`. Expected: `No orders found matching "zzz".`
-4. `find`. Expected: `Error: Use: find KEYWORD`
-5. `customer C001`. Expected: Alice Tan, `Orders: 1`, `Repeat customer: No`.
-6. `history C001`. Expected: O001 with `[COLLECTED]`.
-7. `cancel O002`, then `list`. Expected: O002 is cancelled and no longer in `list`, but `find bob` still shows it with `[CANCELLED]`.
-8. `delete O002`. Expected: `Deleted O002 (CANCELLED).`, and `find bob` no longer shows it.
-
-### Saving and loading
-
-1. Type `bye`, then start the app again in the same folder.
-   Expected: `Loaded 2 saved record(s).` With `list`, O003 is still there with its note.
-2. Type `capacity`. Expected: `Daily capacity is 5 orders per day.` (the capacity is not saved; see
-   [Daily capacity feature](#daily-capacity-feature)).
-3. Type `bye`. Add the line `this line is garbage` at the end of `data/cakequeue.txt` and start the app again.
-   Expected: a warning that line 3 is skipped, and `Loaded 2 saved record(s).` The valid records are unaffected.
-4. Delete the `data` folder and start the app again. Expected: no error, and `list` shows `You have no upcoming orders.`
+`ReducedCommandsCliTest` verifies that all retired commands are rejected, and that older
+enquiry/rejected records and notes survive loading, editing, saving and restarting.
+Storage keeps the existing ten-field format; removing CLI features does not migrate away
+or erase legacy fields. `NotesAndCustomerIdStorageTest` retains format-compatibility checks.

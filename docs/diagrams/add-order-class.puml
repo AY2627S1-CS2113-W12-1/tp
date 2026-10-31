@@ -9,15 +9,15 @@ skinparam classAttributeIconSize 0
 hide empty members
 
 class BakerCli {
-  - addOrderAndReportCustomer(input, orders): String
-  - addOrder(input, orders): String
+  - addOrderAndReportCustomer(input: String, orders: OrderList): String
+  - addOrder(input: String, orders: OrderList): String
 }
 class Parser {
-  {static} + parseAdd(input): AddOrderDetails
+  {static} + parseAdd(input: String): AddOrderDetails
 }
 class OrderList {
   + generateOrderId(): String
-  + add(order): void
+  + add(order: Order): void
 }
 class Order {
   - orderId: String

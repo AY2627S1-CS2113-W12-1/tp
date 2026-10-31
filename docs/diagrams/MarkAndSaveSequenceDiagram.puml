@@ -3,30 +3,37 @@ title v2.0: baker marks an order, change is saved immediately
 
 actor Baker
 participant "BakerCli" as Cli
-participant "Parser" as Parser
-participant "MarkCommand" as Mark
+participant "<<class>>\nParser" as Parser
 participant "OrderList" as List
-participant "Duke\n(saveChanges)" as Duke
+participant "order:Order" as Order
+participant "saveChanges:Runnable" as Save
 participant "Storage" as Storage
 database "data/cakequeue.txt" as File
 
 Baker -> Cli : mark O001 preparing
 Cli -> Parser : parseMark(input)
 Parser --> Cli : MarkDetails(O001, PREPARING)
+create participant ":MarkCommand" as Mark
 Cli -> Mark : new MarkCommand(O001, PREPARING)
 Cli -> Mark : execute(orders)
 Mark -> List : getById("O001")
-List --> Mark : Order, status QUEUED
+List --> Mark : order
+Mark -> Order : getStatus()
+Order --> Mark : current status
 alt requested step is the next step\n(QUEUED -> PREPARING -> READY -> COLLECTED)
-  Mark -> Mark : setStatus(PREPARING)
+  Mark -> Order : setStatus(PREPARING)
   Mark --> Cli : Updated order O001 ... [PREPARING]
   Cli --> Baker : print confirmation
-  Cli -> Duke : saveChanges.run()
-  Duke -> Storage : save(orders)
+  Cli -> Save : run()
+  note right of Save : Callback supplied by Duke.
+  Save -> Storage : save(orders)
   Storage -> File : write temp file, then move\nover data file
-  Storage --> Duke : true
+  Storage --> Save : saved: boolean
+  opt save failed
+    Save --> Baker : print save warning
+  end
 else step skipped, repeated, or record not a confirmed order
-  Mark --> Cli : throws IllegalArgumentException\n(e.g. Cannot change ... QUEUED to COLLECTED)
+  Mark --> Cli : throws CakeQueueException\n(e.g. Cannot change ... QUEUED to COLLECTED)
   Cli --> Baker : Error: ...
   note right of Cli
     No save happens: nothing changed,

@@ -9,7 +9,7 @@ hide footbox
 
 actor Baker
 participant ":BakerCli" as Cli
-participant ":Parser" as Parser
+participant "<<class>>\nParser" as Parser
 participant "orders:OrderList" as Orders
 participant "saveChanges:Runnable" as Save
 participant ":Storage" as Storage
