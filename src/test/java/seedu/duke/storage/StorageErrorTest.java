@@ -112,9 +112,9 @@ public class StorageErrorTest {
     @Test
     public void save_recordWithoutId_isSkippedNotSaved() {
         OrderList orders = new OrderList();
-        // Legacy constructor leaves the ID null; such records cannot be reloaded.
-        orders.add(new Order(new Customer("Alice Tan", "91234567"),
-                new Cake(8, "Chocolate", "Strawberry"), 1));
+        // Records without an ID cannot be reloaded and must not be persisted.
+        orders.add(new Order(null, new Customer("Alice Tan", "91234567"),
+                new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20)));
         Storage storage = new Storage(dataFile());
 
         assertTrue(storage.save(orders));

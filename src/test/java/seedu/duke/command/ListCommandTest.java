@@ -16,7 +16,7 @@ import seedu.duke.model.OrderStatus;
 
 class ListCommandTest {
     private static final String NO_ORDERS = "You have no upcoming orders.";
-    private final Cake cake = new Cake("Chocolate", "chocolate", 25.00);
+    private final Cake cake = new Cake(8, "Chocolate", "Cream");
 
     @Test
     void execute_emptyList_showsNoOrdersMessage() {
@@ -26,7 +26,7 @@ class ListCommandTest {
     @Test
     void execute_collectedOrderOnly_showsNoOrdersMessage() {
         OrderList orders = new OrderList();
-        Order collected = new Order(new Customer("Alex", "91234567"), cake, 1);
+        Order collected = new Order("O001", new Customer("Alex", "91234567"), cake, null);
         collected.setStatus(OrderStatus.COLLECTED);
         orders.add(collected);
 
@@ -36,13 +36,13 @@ class ListCommandTest {
     @Test
     void execute_mixedOrders_numbersDisplayedOrders() {
         OrderList orders = new OrderList();
-        Order first = new Order(new Customer("Alex", "91234567"), cake, 1);
+        Order first = new Order("O001", new Customer("Alex", "91234567"), cake, null);
         first.setStatus(OrderStatus.COLLECTED);
         orders.add(first);
-        orders.add(new Order(new Customer("Bella", "98765432"), cake, 2));
+        orders.add(new Order("O002", new Customer("Bella", "98765432"), cake, null));
 
         String result = new ListCommand().execute(orders);
-        assertTrue(result.contains("1. Bella"));
+        assertTrue(result.contains("1. O002: Bella"));
         assertFalse(result.contains("Alex"));
     }
 
@@ -82,13 +82,13 @@ class ListCommandTest {
     @Test
     void execute_legacyOrderWithoutDate_listsItLast() {
         OrderList orders = new OrderList();
-        orders.add(new Order(new Customer("Alex", "91234567"), cake, 1));
+        orders.add(new Order("O002", new Customer("Alex", "91234567"), cake, null));
         orders.add(new Order("O001", new Customer("Bella"), cake, LocalDate.of(2026, 10, 20)));
 
         String result = new ListCommand().execute(orders);
 
         assertTrue(result.contains("1. O001"));
-        assertTrue(result.contains("2. Alex"));
+        assertTrue(result.contains("2. O002: Alex"));
     }
     //@@author
 

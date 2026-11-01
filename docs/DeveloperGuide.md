@@ -34,7 +34,7 @@ source version when publishing these guides.
 * This project started from the CS2113 team project template, which is why the code keeps the
   `seedu.duke` package name.
 * Eethanzyj used OpenAI Codex to assist with the Add Order implementation and refactoring,
-  automated tests, and associated documentation and diagrams. Moved customer and capacity
+  unused model cleanup, automated tests, and associated documentation and diagrams. Moved customer and capacity
   logic retains its original author tags.
 * The structure and style of this guide follow the
   [AddressBook-Level3 Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html).
@@ -113,6 +113,7 @@ result and invokes the save callback after successful record changes.
 * `Order` holds the customer, the cake, the due date, the status and free-text notes. Apart from the
   status, the customer ID and the notes, its fields are fixed once the order is created. `edit` builds a changed copy with
   `Order#updatedCopy`.
+* `Cake` holds the requested size, flavour and filling. Each order records one cake.
 * New orders use `QUEUED`, `PREPARING`, `READY`, `COLLECTED` and `CANCELLED`.
   `ENQUIRY` and `REJECTED` remain in `OrderStatus` for older saved records. Legacy notes also
   remain in the model and storage, but cannot be changed through the CLI.
