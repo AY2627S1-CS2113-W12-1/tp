@@ -7,8 +7,7 @@ package seedu.duke.exception;
  *
  * <p>This is the single exception type thrown for errors the user can fix
  * by changing their input. Command parsers and commands throw it, and the
- * command-line interfaces ({@code BakerCli}, {@code CustomerCli} and the
- * mode-selection loop in {@code Duke}) catch it to show
+ * baker command loop in {@code BakerCli} catches it to show
  * {@code Error: <message>} and continue running instead of crashing.</p>
  *
  * <p>It extends {@link IllegalArgumentException} deliberately: errors were
