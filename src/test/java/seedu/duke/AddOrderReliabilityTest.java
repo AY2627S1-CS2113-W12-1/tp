@@ -21,6 +21,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.duke.model.Cake;
+import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
@@ -35,6 +37,39 @@ public class AddOrderReliabilityTest {
 
     @TempDir
     private Path tempDir;
+
+    @Test
+    public void run_orderIdCrossesThreeDigits_remainsUsableAfterRestart() {
+        Path dataFile = tempDir.resolve("cakequeue.txt");
+        Storage storage = new Storage(dataFile);
+        OrderList existing = new OrderList();
+        existing.add(new Order("O999", new Customer("Bob Lim", "81234567"),
+                new Cake(6, "Vanilla", "Cream"), LocalDate.of(2030, 10, 30)));
+        assertTrue(storage.save(existing));
+
+        String output = runSession(dataFile,
+                VALID_ADD + "\nview O1000\nedit O1000 s/10\nbye\n");
+
+        assertFalse(output.contains("Error:"));
+        assertTrue(output.contains("Added order O1000:"));
+        assertTrue(output.contains("Order ID: O1000"));
+        OrderList saved = storage.load();
+        assertEquals(2, saved.size());
+        assertEquals(10, saved.getById("O1000").getCake().getSize());
+        assertEquals(6, saved.getById("O999").getCake().getSize());
+
+        String restarted = runSession(dataFile,
+                "view O1000\n" + VALID_ADD + "\nview O1001\nbye\n");
+
+        assertFalse(restarted.contains("Error:"));
+        assertTrue(restarted.contains("Order ID: O1000"));
+        assertTrue(restarted.contains("Added order O1001:"));
+        assertTrue(restarted.contains("Order ID: O1001"));
+        OrderList restored = storage.load();
+        assertEquals(3, restored.size());
+        assertEquals(10, restored.getById("O1000").getCake().getSize());
+        assertEquals(8, restored.getById("O1001").getCake().getSize());
+    }
 
     @Test
     public void run_invalidAdds_preservesSavedDataAndNextId() throws IOException {
