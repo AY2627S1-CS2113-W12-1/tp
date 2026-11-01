@@ -1,0 +1,54 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide footbox
+
+participant ":Duke" as Duke
+participant "settings:SettingsStorage" as Settings
+participant "orders:OrderList" as Orders
+participant ":BakerCli" as Cli
+participant ":CapacityCommand" as Cap
+
+== Startup, before any command is read ==
+activate Duke
+Duke -> Settings : loadDailyCapacity()
+activate Settings
+Settings --> Duke : setting (capacity, warning)
+deactivate Settings
+opt warning is not null
+  Duke -> Duke : print warning
+end
+Duke -> Orders : setDailyCapacity(setting.capacity)
+Duke -> Cli : run(scanner, orders, saveChanges)
+deactivate Duke
+activate Cli
+
+== capacity 3 ==
+create Cap
+Cli -> Cap : new CapacityCommand(3)
+Cli -> Cap : execute(orders)
+activate Cap
+Cap -> Orders : setDailyCapacity(3)
+Cap --> Cli : "Daily capacity set to 3 orders per day."
+deactivate Cap
+Cli -> Duke : saveChanges.run()
+activate Duke
+Duke -> Duke : save orders
+opt capacity differs from the saved one
+  Duke -> Settings : saveDailyCapacity(3)
+  activate Settings
+  Settings --> Duke : saved?
+  deactivate Settings
+  opt not saved
+    Duke -> Duke : print "Could not save the daily capacity"
+  end
+end
+deactivate Duke
+deactivate Cli
+
+note right of Settings
+  data/settings.txt holds one line,
+  dailyCapacity=3. The format of
+  data/cakequeue.txt does not change.
+end note
+@enduml

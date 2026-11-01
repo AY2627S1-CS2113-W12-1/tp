@@ -154,7 +154,10 @@ public class AddOrderReliabilityTest {
         assertEquals("Bob Lim", loaded.getById("O002").getCustomer().getName());
 
         String restarted = runSession(dataFile, "capacity\ncustomer C002\nbye\n");
-        assertTrue(restarted.contains("Daily capacity is 5 orders per day."));
+        //@@author Kaishhhh
+        // The capacity set earlier in this test is now saved between sessions.
+        assertTrue(restarted.contains("Daily capacity is 1 order per day."));
+        //@@author Eethanzyj
         assertTrue(restarted.contains("Name: Bob Lim"));
     }
 
