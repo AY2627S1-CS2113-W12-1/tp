@@ -22,6 +22,12 @@ public class HelpCommand {
                 "  customer CUSTOMER_ID",
                 "  history CUSTOMER_ID",
                 "  help",
-                "  bye");
+                "  bye",
+                //@@author Eethanzyj
+                "",
+                "Add Order example:",
+                "  add n/Alice Tan p/91234567 d/30-10-2030 s/8 f/Chocolate fi/Strawberry",
+                "Use today or a future due date in DD-MM-YYYY format.");
+        //@@author
     }
 }
