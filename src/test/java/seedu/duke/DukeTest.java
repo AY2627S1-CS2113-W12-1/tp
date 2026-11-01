@@ -15,11 +15,6 @@ import seedu.duke.model.OrderList;
 
 class DukeTest {
     @Test
-    public void sampleTest() {
-        assertTrue(true);
-    }
-
-    @Test
     public void deleteOrder_removesTheChosenOrder() {
         Customer alex = new Customer("Alex", "91234567");
         OrderList orders = new OrderList();
