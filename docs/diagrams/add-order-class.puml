@@ -14,6 +14,9 @@ class BakerCli {
 class Parser {
   {static} + parseAdd(input: String): AddOrderDetails
 }
+class AddOrderParser {
+  {static} + parse(input: String): Parser.AddOrderDetails
+}
 class OrderList {
   + generateOrderId(): String
   + add(order: Order): void
@@ -40,6 +43,7 @@ class Cake {
 }
 
 BakerCli ..> Parser : parses
+Parser ..> AddOrderParser : delegates add validation
 BakerCli ..> AddOrderCommand : creates and runs
 AddOrderCommand ..> OrderList : adds order
 AddOrderCommand ..> Order : creates
@@ -58,5 +62,11 @@ note right of AddOrderCommand
   Receives validated details; no parsing.
   Returns the confirmation and warnings.
   BakerCli prints and requests saving.
+end note
+
+note right of AddOrderParser
+  Validates the six required fields.
+  Reuses the parser package's shared
+  prefix, date, phone and size rules.
 end note
 @enduml

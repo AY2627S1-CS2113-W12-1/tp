@@ -10,6 +10,7 @@ hide footbox
 actor Baker
 participant ":BakerCli" as Cli
 participant "<<class>>\nParser" as Parser
+participant "<<class>>\nAddOrderParser" as AddParser
 participant ":AddOrderCommand" as Add
 participant "orders:OrderList" as Orders
 participant "order:Order" as Order
@@ -19,12 +20,16 @@ participant ":Storage" as Storage
 Baker -> Cli : add n/NAME p/PHONE d/DATE\ns/SIZE f/FLAVOUR fi/FILLING
 activate Cli
 Cli -> Parser : parseAdd(input)
-note right of Parser
+activate Parser
+Parser -> AddParser : parse(input)
+activate AddParser
+note right of AddParser
   Check all required fields,
   prefixes, phone, date,
   and cake size.
 end note
 alt invalid input
+  AddParser --> Parser : throws CakeQueueException
   Parser --> Cli : throws CakeQueueException
   Cli --> Baker : Error with field guidance
   note over Orders, Storage
@@ -32,7 +37,12 @@ alt invalid input
     and no save is attempted.
   end note
 else valid input
+  AddParser --> Parser : AddOrderDetails
   Parser --> Cli : AddOrderDetails
+end
+deactivate AddParser
+deactivate Parser
+opt valid input
   create Add
   Cli -> Add : new AddOrderCommand(details)
   Cli -> Add : execute(orders)

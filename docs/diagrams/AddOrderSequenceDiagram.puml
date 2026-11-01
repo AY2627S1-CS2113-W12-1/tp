@@ -4,19 +4,24 @@ title Baker adds an order: add n/... p/... d/... s/... f/... fi/...
 actor Baker
 participant "BakerCli" as Cli
 participant "<<class>>\nParser" as Parser
+participant "<<class>>\nAddOrderParser" as AddParser
 participant "OrderList" as List
 participant "Order" as Order
 
 Baker -> Cli : add n/Alice Tan p/91234567 ...
 Cli -> Parser : parseAdd(input)
 activate Parser
-note right of Parser
+Parser -> AddParser : parse(input)
+activate AddParser
+note right of AddParser
   All six fields required.
   Unknown / duplicate / empty
   fields and invalid date or
   phone or size are rejected here,
   before any order is created.
 end note
+AddParser --> Parser : AddOrderDetails
+deactivate AddParser
 Parser --> Cli : AddOrderDetails
 deactivate Parser
 create participant ":AddOrderCommand" as Add

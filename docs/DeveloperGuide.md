@@ -89,8 +89,10 @@ show this in detail for two commands.
 ### Parser
 
 `Parser` is a utility class with only static methods, one per command shape, such as `parseFind`,
-`parseCapacity`, `parseView` and `parseAdd`. Field-based commands (`add` and `edit`) use shared
-routines that find the `n/`, `p/`, `d/`, `s/`, `f/` and `fi/` prefixes, reject unknown or repeated
+`parseCapacity`, `parseView` and `parseAdd`. `parseAdd` delegates to `AddOrderParser`, which
+extracts and validates the six required fields. Add and edit share the prefix definitions,
+strict date formatter, phone validator and cake-size validator in `Parser`; these helpers
+are accessible only within the parser package. The parsers reject unknown or repeated
 prefixes and empty values, and check dates, phone numbers and cake sizes. The parser checks
 syntax and field rules. Checks that need stored data, such as whether an order ID exists,
 are done by the commands. `parseUpdate` is the internal method name for parsing `edit`;
@@ -164,7 +166,8 @@ the customer/history section below explains customer grouping in more detail.
 | --- | --- |
 | `BakerCli` | Parses `add` once, runs `AddOrderCommand`, prints its result and requests saving. |
 | `AddOrderCommand` | Creates and adds the order, logs its ID, and returns the order/customer confirmation and optional warning. |
-| `Parser` | Checks the command and returns an `AddOrderDetails` value object. |
+| `Parser` | Keeps the `parseAdd` entry point and delegates to `AddOrderParser`. |
+| `AddOrderParser` | Checks the six required fields and returns a `Parser.AddOrderDetails` value object. |
 | `Customer` | Holds the name and phone recorded for this order. |
 | `Cake` | Holds the size, flavour, and filling. |
 | `Order` | Combines these details with an ID, due date, and status. |
@@ -182,7 +185,8 @@ allows the customer/history commands to group them without merging the orders.
 
 The syntax is `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING`.
 `BakerCli` calls `Parser.parseAdd` once and passes the returned immutable
-`AddOrderDetails` to `AddOrderCommand`. The command receives values rather than raw input;
+`AddOrderDetails` to `AddOrderCommand`. `Parser.parseAdd` delegates validation to
+`AddOrderParser.parse`. The command receives values rather than raw input;
 it does not parse again. Parsing and validation therefore finish before customer lookup,
 ID generation or model changes. The parser identifies prefixes, collects their values,
 checks required fields and converts the date and size.
@@ -209,7 +213,7 @@ For example, a blank name produces
 continues accepting commands. A failed parse neither consumes an ID nor changes
 the in-memory list or the saved file.
 
-Keeping these checks in `Parser` avoids repeating six-field parsing in each CLI.
+Keeping these checks in `AddOrderParser` separates Add Order validation from other commands.
 The parser returns structured details rather than creating an order itself, so
 validation can be tested without generating IDs or writing files. The same phone
 validation applies to `add` and `edit`: at least eight digits, with spaces, `+` and `-` allowed.
@@ -218,8 +222,10 @@ validation applies to `add` and `edit`: at least eight digits, with spaces, `+` 
 order creation and confirmation. This matches the existing command classes and allows
 direct tests without console streams or files. The command reuses customer grouping and
 capacity logic; those shared responsibilities remain in their existing classes. Its input
-uses the existing `Parser.AddOrderDetails`, so no second parser or duplicate request class
-is needed. The CLI retains the save callback, keeping the command independent of storage.
+uses the existing `Parser.AddOrderDetails`, so the extraction does not require changes to
+command callers or another request class. `Parser.parseAdd` remains the entry point, and
+only `AddOrderParser` handles the six required fields. The CLI retains the save callback,
+keeping the command independent of storage.
 
 #### Creating and saving an order
 
@@ -240,7 +246,9 @@ the customer is new or returning; it does not generate another order.
 The ID counter produces values such as `O001` and `O002`. When `Storage.load`
 restores existing records, `OrderList.add` advances the counters past their IDs.
 Consequently, the next add continues after the restored IDs instead of starting
-again at `O001`. Rejected command input does not advance the counter because
+again at `O001`. Three digits are a minimum width: `O999` is followed by `O1000`,
+which remains usable by view and edit commands and after restarting.
+Rejected command input does not advance the counter because
 parsing precedes ID generation.
 
 `BakerCli.run` prints the confirmation and invokes its `afterChange` callback.
@@ -260,7 +268,8 @@ confirmation before saving, and a separate warning on failure.
 | --- | --- |
 | `AddOrderCommandTest` | Complete order creation, returning customers with cancelled orders, restored ID counters, and warning placement. |
 | `AddOrderValidationTest` | Guidance for each missing field, blank names, punctuation, Unicode, and formatted phones. |
-| `AddOrderReliabilityTest` | Rejected commands preserve saved data and IDs; names survive restarting; customer IDs and capacity warnings, and independent name edits work together. |
+| `AddOrderReliabilityTest` | Rejected commands preserve saved data and IDs; names survive restarting; customer IDs and capacity warnings, and independent name edits work together. Four-digit IDs can be added, viewed, edited, saved and restored. |
+| `OrderListTest` | Basic order storage and sequential IDs, including the transition from `O999` to `O1000`. |
 | `ParserTest` and `ParserErrorTest` | Existing command syntax, date/size validation, unknown prefixes, and duplicate fields. |
 
 CLI tests run against JUnit temporary folders. They restore standard input and

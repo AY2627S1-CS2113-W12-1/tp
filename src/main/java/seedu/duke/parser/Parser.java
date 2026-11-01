@@ -19,21 +19,12 @@ import seedu.duke.model.OrderStatus;
  * Parses and validates CakeQueue command input for baker mode.
  */
 public final class Parser {
-    private static final List<String> PREFIXES = List.of("n/", "p/", "d/", "s/", "f/", "fi/");
-    //@@author Eethanzyj
-    /**
-     * Gives a field's purpose and syntax when a required value is missing.
-     */
-    private static final Map<String, String> FIELD_GUIDANCE = Map.of(
-            "n/", "a customer name using n/NAME",
-            "p/", "a phone number using p/PHONE",
-            "d/", "a due date using d/DD-MM-YYYY",
-            "s/", "a cake size using s/6, s/8, or s/10",
-            "f/", "a cake flavour using f/FLAVOUR",
-            "fi/", "a cake filling using fi/FILLING");
-    //@@author
-    private static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
-    private static final String USAGE = "Use: add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING";
+    // Package-private syntax and validators are shared by Add Order and Edit Order parsing.
+    static final List<String> PREFIXES = List.of("n/", "p/", "d/", "s/", "f/", "fi/");
+    static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
+    static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
+            .ofPattern("dd-MM-uuuu")
+            .withResolverStyle(ResolverStyle.STRICT);
     private static final String UPDATE_USAGE =
             "Use: edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] "
                     + "[s/SIZE] [f/FLAVOUR] [fi/FILLING]";
@@ -41,9 +32,6 @@ public final class Parser {
     private static final String MARK_USAGE = "Use: mark ORDER_ID preparing|ready|collected";
     private static final String CAPACITY_USAGE = "Use: capacity [NUMBER]";
     private static final String FIND_USAGE = "Use: find KEYWORD";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
-            .ofPattern("dd-MM-uuuu")
-            .withResolverStyle(ResolverStyle.STRICT);
 
     private Parser() {
     }
@@ -166,14 +154,19 @@ public final class Parser {
         }
     }
 
-    //@@author HammerHead-os
+    //@@author Eethanzyj
     /**
-     * Parses and validates a baker add command.
+     * Delegates Add Order validation to its dedicated parser.
+     *
+     * @param input The complete command entered by the baker.
+     * @return The validated details used by AddOrderCommand.
+     * @throws CakeQueueException If the command or any required field is invalid.
      */
     public static AddOrderDetails parseAdd(String input) {
-        return parseSixFieldCommand(input, "add", USAGE);
+        return AddOrderParser.parse(input);
     }
 
+    //@@author HammerHead-os
     /**
      * Parses cancel ORDER_ID|ENQUIRY_ID.
      */
@@ -200,42 +193,12 @@ public final class Parser {
     }
 
     //@@author HammerHead-os
-    private static AddOrderDetails parseSixFieldCommand(String input, String commandWord,
-                                                        String usage) {
-        if (input == null || input.isBlank()) {
-            throw new CakeQueueException(usage);
-        }
-        //@@author Eethanzyj
-        String[] command = input.trim().split("\\s+", 2);
-        //@@author HammerHead-os
-        if (!command[0].equalsIgnoreCase(commandWord) || command.length != 2) {
-            throw new CakeQueueException(usage);
-        }
-        Map<String, String> fields = parseFields(command[1], usage);
-        //@@author Eethanzyj
-        LocalDate dueDate;
-        try {
-            dueDate = LocalDate.parse(fields.get("d/"), DATE_FORMATTER);
-        } catch (DateTimeParseException exception) {
-            //@@author HammerHead-os
-            throw new CakeQueueException("Date must use DD-MM-YYYY and be valid.", exception);
-        }
-        // Reject dates in the past — a baker cannot bake for yesterday.
-        if (dueDate.isBefore(LocalDate.now())) {
-            throw new CakeQueueException("Due date cannot be in the past.");
-        }
-        validatePhone(fields.get("p/"));
-        int size = parseCakeSize(fields.get("s/"));
-        return new AddOrderDetails(fields.get("n/"), fields.get("p/"), dueDate,
-                size, fields.get("f/"), fields.get("fi/"));
-    }
-
     /**
      * Validates that a phone number has at least 8 digits and otherwise only spaces, {@code +} or {@code -}.
      * This catches obvious typos (letters, symbols) while still accepting formatted numbers such as
      * {@code +65 9123-4567}, without enforcing a specific country format.
      */
-    private static void validatePhone(String phone) {
+    static void validatePhone(String phone) {
         boolean hasAllowedCharacters = phone.matches("[0-9+\\- ]+");
         long digitCount = phone.chars().filter(Character::isDigit).count();
         if (!hasAllowedCharacters || digitCount < 8) {
@@ -258,7 +221,7 @@ public final class Parser {
     }
 
     //@@author
-    private static int parseCakeSize(String sizeText) {
+    static int parseCakeSize(String sizeText) {
         int size;
         try {
             size = Integer.parseInt(sizeText);
@@ -269,48 +232,6 @@ public final class Parser {
             throw new CakeQueueException("Cake size must be 6, 8, or 10 inches.");
         }
         return size;
-    }
-
-    /**
-     * Extracts field values between prefixes and rejects missing or repeated fields.
-     */
-    private static Map<String, String> parseFields(String arguments, String usage) {
-        Map<String, String> fields = new LinkedHashMap<>();
-        Matcher matcher = FIELD_PREFIX.matcher(arguments);
-        String previousPrefix = null;
-        int valueStart = 0;
-        while (matcher.find()) {
-            if (previousPrefix == null && !arguments.substring(0, matcher.start()).isBlank()) {
-                throw new CakeQueueException(usage);
-            }
-            if (previousPrefix != null) {
-                fields.put(previousPrefix, arguments.substring(valueStart, matcher.start()).trim());
-            }
-            String prefix = matcher.group(1);
-            //@@author Eethanzyj
-            if (!PREFIXES.contains(prefix)) {
-                throw new CakeQueueException("Unknown field: " + prefix
-                        + ". Supported prefixes: " + String.join(", ", PREFIXES) + ".");
-            }
-            if (fields.containsKey(prefix)) {
-                throw new CakeQueueException("Duplicate field: " + prefix + ". Supply each field once.");
-            }
-            //@@author
-            previousPrefix = prefix;
-            valueStart = matcher.end();
-        }
-        if (previousPrefix != null) {
-            fields.put(previousPrefix, arguments.substring(valueStart).trim());
-        }
-        //@@author Eethanzyj
-        for (String prefix : PREFIXES) {
-            if (!fields.containsKey(prefix) || fields.get(prefix).isBlank()) {
-                throw new CakeQueueException("Missing value for " + prefix
-                        + ". Please provide " + FIELD_GUIDANCE.get(prefix) + ".");
-            }
-        }
-        //@@author
-        return fields;
     }
 
     /**
@@ -325,8 +246,9 @@ public final class Parser {
         private final String flavour;
         private final String filling;
 
-        private AddOrderDetails(String customerName, String phone, LocalDate dueDate,
-                                int size, String flavour, String filling) {
+        // Package-private so AddOrderParser can construct details after validating all fields.
+        AddOrderDetails(String customerName, String phone, LocalDate dueDate,
+                        int size, String flavour, String filling) {
             this.customerName = customerName;
             this.phone = phone;
             this.dueDate = dueDate;
