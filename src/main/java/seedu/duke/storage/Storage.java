@@ -53,7 +53,7 @@ public class Storage {
     private final Path dataFile;
     //@@author WillChin484848
     private boolean unsafeToSave;
-//@@author HammerHead-os
+    //@@author HammerHead-os
 
     /**
      * Creates a storage handler for the given file. The file (and its parent
@@ -90,7 +90,7 @@ public class Storage {
             //@@author WillChin484848
             unsafeToSave = true;
             throw new IllegalStateException("Cannot read CakeQueue data file: " + dataFile, exception);
-        //@@author HammerHead-os
+            //@@author HammerHead-os
         }
         //@@author WillChin484848
         List<Order> parsedOrders = new ArrayList<>();
@@ -120,7 +120,7 @@ public class Storage {
                 //@@author HammerHead-os
                 LOGGER.log(Level.WARNING, "Skipping corrupted line " + lineNumber
                         + " in " + dataFile + ": " + exception.getMessage());
-            //@@author WillChin484848
+                //@@author WillChin484848
             }
         }
         // Reserve all restored IDs before allocating IDs for legacy records.
@@ -138,7 +138,7 @@ public class Storage {
             } catch (IllegalArgumentException exception) {
                 unsafeToSave = true;
                 LOGGER.log(Level.WARNING, "Skipping invalid or duplicate record", exception);
-            //@@author HammerHead-os
+                //@@author HammerHead-os
             }
         }
         return orders;
@@ -169,7 +169,7 @@ public class Storage {
                     return false;
                 }
                 lines.add(toLine(order));
-            //@@author HammerHead-os
+                //@@author HammerHead-os
             }
             //@@author WillChin484848
             assert lines.size() == orders.size() + 1 : "Every record must be serialized";

@@ -108,7 +108,7 @@ public class NotesAndCustomerIdStorageTest {
         String line = Files.readAllLines(file).stream()
                 .filter(savedLine -> !savedLine.startsWith("# dailyCapacity="))
                 .findFirst().orElseThrow();
-//@@author Kaishhhh
+        //@@author Kaishhhh
 
         assertTrue(line.endsWith("| C001 | -"), line);
     }
