@@ -19,6 +19,8 @@ end note
 activate Cli
 create Add
 Cli -> Add : new AddOrderCommand(details)
+activate Add
+deactivate Add
 Cli -> Add : execute(orders)
 activate Add
 Add -> Orders : generateOrderId()

@@ -33,9 +33,6 @@ source version when publishing these guides.
 
 * This project started from the CS2113 team project template, which is why the code keeps the
   `seedu.duke` package name.
-* Eethanzyj used OpenAI Codex to assist with the Add Order implementation and refactoring,
-  unused model cleanup, automated tests, and associated documentation and diagrams. Moved customer and capacity
-  logic retains its original author tags.
 * The structure and style of this guide follow the
   [AddressBook-Level3 Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html).
 * Diagrams are drawn with [PlantUML](https://plantuml.com). The `.puml` source of each diagram is in
@@ -377,6 +374,13 @@ because `ListCommand` excludes them.
 
 ![Mark-and-save sequence diagram](diagrams/rendered/MarkAndSaveSequenceDiagram.png)
 
+<!-- @@author Eethanzyj -->
+The diagram shows a successful `QUEUED` to `PREPARING` transition. Activation boxes
+show each method's execution, including constructors and nested calls. Invalid
+transitions return an error without changing the order or requesting a save.
+The final reference uses the shared saving flow below to avoid repeating file operations.
+<!-- @@author -->
+
 *Alternative considered:* a `done` command that jumps straight to `COLLECTED` is simpler, but the baker would lose
 the difference between "in the oven" and "waiting for pickup", which is the point of tracking status.
 
@@ -386,6 +390,13 @@ the difference between "in the oven" and "waiting for pickup", which is the poin
 `Duke` loads the file into the `OrderList`. After every successful command that changes records, `BakerCli` runs an
 `afterChange` callback supplied by `Duke`, which saves. Passing a callback instead of giving `BakerCli` a `Storage`
 keeps the command loop unaware of files, and keeps the "warn the user if saving failed" rule in one place.
+
+<!-- @@author Eethanzyj -->
+The [saving sequence](#creating-and-saving-an-order) above also applies after successful
+`edit`, `cancel` and `mark` commands. Its precondition is a successful in-memory
+change; only the confirmation text differs. A save failure leaves that change in
+memory and prints a warning. Each activation ends when its method completes.
+<!-- @@author -->
 
 *Alternative considered:* saving only on `bye` means less file writing, but any crash or closed terminal would lose
 the whole session.
@@ -505,6 +516,34 @@ start. The user guide lists this under Current Limitations.
 *Proposed implementation.* Write the capacity as a first line such as `#capacity 3` in the data file. Make
 `Storage.load` read that line and call `setDailyCapacity`, and make it skip other lines that start with `#`
 instead of treating them as corrupted. Older files without the line keep working with the default of 5.
+
+<!-- @@author Eethanzyj -->
+#### Capacity persistence: pending storage integration
+
+The following diagrams describe [PR #42](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/42),
+which is pending integration. They do not describe the current master implementation.
+After that PR is merged, the current limitation and proposal above must be replaced
+with the implemented behavior below.
+
+![Capacity restoration sequence](diagrams/CapacityRestoreSequence.png)
+
+`Storage.load()` creates an `OrderList` with the default capacity of 5. A valid
+`# dailyCapacity=NUMBER` line restores the saved value through `setDailyCapacity`.
+Older files without this header retain the default. Invalid records, invalid capacity
+settings or unreadable data stop startup before commands can modify the records.
+
+![Capacity saving sequence](diagrams/CapacitySaveSequence.png)
+
+After a successful `capacity NUMBER`, `BakerCli` runs the same save callback used
+for record changes. `Storage.save()` writes the capacity header and records to a
+temporary file before replacing the save file. Bare `capacity` and invalid commands
+do not request saving. The callback reports a save failure and keeps the changed
+capacity for the current session only.
+
+Sources: [restoration](diagrams/CapacityRestoreSequence.puml) and
+[saving](diagrams/CapacitySaveSequence.puml). Update these diagrams and the related
+documentation together when the storage implementation is integrated.
+<!-- @@author -->
 
 ### Customer and history features
 

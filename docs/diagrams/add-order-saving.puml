@@ -31,6 +31,7 @@ deactivate Storage
 opt saved == false
   Save --> Baker : Warning: Could not save your data.\nYour changes are kept for this session only.
 end
+Save --> Cli : callback complete
 deactivate Save
 deactivate Cli
 @enduml

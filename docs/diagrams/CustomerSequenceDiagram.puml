@@ -1,4 +1,6 @@
 @startuml CustomerSequenceDiagram
+' Original diagram: Kaishhhh; customer implementation: anannya-mk.
+' Diagram integration, activation and constructor revisions: Eethanzyj.
 skinparam shadowing false
 skinparam defaultFontSize 14
 hide footbox
@@ -17,18 +19,24 @@ Parser --> Cli : "C001"
 deactivate Parser
 create Cmd
 Cli -> Cmd : new CustomerCommand("C001")
+activate Cmd
+deactivate Cmd
 Cli -> Cmd : execute(orders)
 activate Cmd
 Cmd -> Factory : fromOrders(orders)
 activate Factory
 Factory -> Orders : getAll()
+activate Orders
 Orders --> Factory : records
+deactivate Orders
 note right of Factory
   Group confirmed orders by Customer ID.
   Build profiles and the phone-to-ID map.
 end note
 create Customers
 Factory -> Customers : new CustomerList(profiles, customerIdByPhone)
+activate Customers
+deactivate Customers
 Factory --> Cmd : customers
 deactivate Factory
 Cmd -> Customers : getById("C001")
