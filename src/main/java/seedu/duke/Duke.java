@@ -4,6 +4,10 @@ package seedu.duke;
 
 import java.nio.file.Path;
 import java.util.Scanner;
+//@@author Kaishhhh
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+//@@author HammerHead-os
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,6 +85,14 @@ public class Duke {
      */
     //@@author Eethanzyj
     public static void main(String[] args) {
+        //@@author Kaishhhh
+        // Developer logs stay off the console; normal warnings are printed separately.
+        for (Handler handler : Logger.getLogger("").getHandlers()) {
+            if (handler instanceof ConsoleHandler) {
+                handler.setLevel(Level.OFF);
+            }
+        }
+        //@@author Eethanzyj
         new Duke().run();
         //@@author HammerHead-os
     }
