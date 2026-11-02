@@ -71,6 +71,7 @@ public class StorageErrorTest {
     }
 
     @Test
+    //@@author WillChin484848
     public void load_pathIsDirectory_abortsToProtectData() {
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
                 () -> new Storage(tempDir).load());
@@ -110,6 +111,7 @@ public class StorageErrorTest {
     }
 
     @Test
+    //@@author WillChin484848
     public void save_recordWithoutId_isRejectedWithoutOverwriting() {
         OrderList orders = new OrderList();
         // Records without an ID cannot be reloaded and must not be persisted.
@@ -117,6 +119,7 @@ public class StorageErrorTest {
                 new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20)));
         Storage storage = new Storage(dataFile());
 
+        //@@author WillChin484848
         assertFalse(storage.save(orders));
         assertFalse(Files.exists(dataFile()));
     }

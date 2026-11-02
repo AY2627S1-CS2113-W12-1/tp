@@ -44,6 +44,7 @@ public class Duke {
     public void run() {
         Scanner scanner = new Scanner(System.in);
         Storage storage = new Storage(dataFile);
+        //@@author WillChin484848
         OrderList orders;
         try {
             orders = storage.load();
@@ -52,6 +53,7 @@ public class Duke {
             LOGGER.log(Level.SEVERE, "Startup aborted to protect saved data", exception);
             return;
         }
+        //@@author HammerHead-os
         if (orders.size() > 0) {
             System.out.println("Loaded " + orders.size() + " saved record(s).");
         }

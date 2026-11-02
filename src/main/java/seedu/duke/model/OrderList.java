@@ -38,9 +38,11 @@ public class OrderList {
      * Returns the next order ID in the format O001.
      */
     public String generateOrderId() {
+        //@@author WillChin484848
         if (nextOrderNumber <= 0) {
             throw new CakeQueueException("Order ID limit reached.");
         }
+        //@@author Eethanzyj
         return String.format(Locale.ROOT, "O%03d", nextOrderNumber++);
     }
     //@@author
@@ -50,9 +52,11 @@ public class OrderList {
      */
     public String generateEnquiryId() {
         //@@author Eethanzyj
+        //@@author WillChin484848
         if (nextEnquiryNumber <= 0) {
             throw new CakeQueueException("Enquiry ID limit reached.");
         }
+        //@@author Eethanzyj
         return String.format(Locale.ROOT, "E%03d", nextEnquiryNumber++);
         //@@author
     }
@@ -67,6 +71,7 @@ public class OrderList {
         //@@author Eethanzyj
         assert order != null : "Order must not be null";
         //@@author
+        //@@author WillChin484848
         if (order == null) {
             throw new CakeQueueException("Cannot add a null record.");
         }
@@ -79,9 +84,12 @@ public class OrderList {
             }
             validateRecordNumber(recordId);
         }
+        //@@author
         assignCustomerId(order);
         orders.add(order);
+        //@@author WillChin484848
         advanceCountersPast(recordId);
+    //@@author
     }
 
     //@@author anannya-mk
@@ -99,7 +107,9 @@ public class OrderList {
         String existingId = order.getCustomerId();
         if (existingId != null) {
             if (existingId.matches("C[0-9]+")) {
+                //@@author WillChin484848
                 nextCustomerNumber = Math.max(nextCustomerNumber, safeNextNumber(existingId.substring(1)));
+            //@@author anannya-mk
             }
             return;
         }
@@ -113,9 +123,11 @@ public class OrderList {
         }
         //@@author Eethanzyj
         // IDs must keep ASCII digits so commands and saved files can recognise them in every locale.
+        //@@author WillChin484848
         if (nextCustomerNumber <= 0) {
             throw new CakeQueueException("Customer ID limit reached.");
         }
+        //@@author Eethanzyj
         order.setCustomerId(String.format(Locale.ROOT, "C%03d", nextCustomerNumber++));
         //@@author anannya-mk
     }
@@ -125,10 +137,15 @@ public class OrderList {
         if (recordId == null || !recordId.matches("[OE][0-9]+")) {
             return;
         }
+        //@@author WillChin484848
         int nextNumber = safeNextNumber(recordId.substring(1));
+        //@@author
         if (recordId.startsWith("O")) {
+            //@@author WillChin484848
             nextOrderNumber = Math.max(nextOrderNumber, nextNumber);
+        //@@author
         } else {
+            //@@author WillChin484848
             nextEnquiryNumber = Math.max(nextEnquiryNumber, nextNumber);
         }
     }
@@ -156,6 +173,7 @@ public class OrderList {
             return number + 1;
         } catch (NumberFormatException exception) {
             throw new CakeQueueException("Record ID is too large.");
+        //@@author
         }
     }
 
@@ -211,11 +229,15 @@ public class OrderList {
      * @throws CakeQueueException If the order ID does not exist.
      */
     public void update(Order updatedOrder) {
+        //@@author WillChin484848
         if (updatedOrder == null || updatedOrder.getOrderId() == null) {
             throw new CakeQueueException("Cannot update a record without an ID.");
         }
+        //@@author
         for (int i = 0; i < orders.size(); i++) {
+            //@@author WillChin484848
             if (updatedOrder.getOrderId().equalsIgnoreCase(orders.get(i).getOrderId())) {
+                //@@author
                 orders.set(i, updatedOrder);
                 return;
             }
@@ -305,9 +327,11 @@ public class OrderList {
      * Enquiries and collected, cancelled or rejected records are not counted.
      */
     public int countOrdersDueOn(LocalDate date) {
+        //@@author WillChin484848
         if (date == null) {
             return 0;
         }
+        //@@author
         int count = 0;
         for (Order order : orders) {
             if (isActive(order) && date.equals(order.getDueDate())) {

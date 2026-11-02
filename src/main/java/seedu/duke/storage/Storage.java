@@ -9,7 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+//@@author WillChin484848
 import java.time.DateTimeException;
+//@@author HammerHead-os
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -44,10 +46,14 @@ public class Storage {
     //@@author HammerHead-os
     private static final int FIELD_COUNT_WITH_NOTES = 10;
 
+    //@@author WillChin484848
     private static final String CAPACITY_PREFIX = "# dailyCapacity=";
 
+    //@@author HammerHead-os
     private final Path dataFile;
+    //@@author WillChin484848
     private boolean unsafeToSave;
+//@@author HammerHead-os
 
     /**
      * Creates a storage handler for the given file. The file (and its parent
@@ -68,7 +74,9 @@ public class Storage {
      * @return The loaded records, or an empty list if the file does not exist.
      */
     public OrderList load() {
+        //@@author WillChin484848
         unsafeToSave = false;
+        //@@author HammerHead-os
         OrderList orders = new OrderList();
         if (!Files.exists(dataFile)) {
             LOGGER.log(Level.INFO, "No data file at {0}; starting with no records.", dataFile);
@@ -79,16 +87,21 @@ public class Storage {
             lines = Files.readAllLines(dataFile, StandardCharsets.UTF_8);
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Could not read data file " + dataFile, exception);
+            //@@author WillChin484848
             unsafeToSave = true;
             throw new IllegalStateException("Cannot read CakeQueue data file: " + dataFile, exception);
+        //@@author HammerHead-os
         }
+        //@@author WillChin484848
         List<Order> parsedOrders = new ArrayList<>();
+        //@@author HammerHead-os
         int lineNumber = 0;
         for (String line : lines) {
             lineNumber++;
             if (line.isBlank()) {
                 continue;
             }
+            //@@author WillChin484848
             if (line.startsWith(CAPACITY_PREFIX)) {
                 try {
                     orders.setDailyCapacity(Integer.parseInt(line.substring(CAPACITY_PREFIX.length())));
@@ -98,12 +111,16 @@ public class Storage {
                 }
                 continue;
             }
+            //@@author HammerHead-os
             try {
+                //@@author WillChin484848
                 parsedOrders.add(parseLine(line));
             } catch (IllegalArgumentException | DateTimeException exception) {
                 unsafeToSave = true;
+                //@@author HammerHead-os
                 LOGGER.log(Level.WARNING, "Skipping corrupted line " + lineNumber
                         + " in " + dataFile + ": " + exception.getMessage());
+            //@@author WillChin484848
             }
         }
         // Reserve all restored IDs before allocating IDs for legacy records.
@@ -121,6 +138,7 @@ public class Storage {
             } catch (IllegalArgumentException exception) {
                 unsafeToSave = true;
                 LOGGER.log(Level.WARNING, "Skipping invalid or duplicate record", exception);
+            //@@author HammerHead-os
             }
         }
         return orders;
@@ -136,6 +154,7 @@ public class Storage {
      */
     public boolean save(OrderList orders) {
         assert orders != null : "Order list to save must not be null";
+        //@@author WillChin484848
         if (unsafeToSave) {
             LOGGER.log(Level.SEVERE, "Refusing to overwrite data after a failed or partial load: {0}", dataFile);
             return false;
@@ -150,11 +169,16 @@ public class Storage {
                     return false;
                 }
                 lines.add(toLine(order));
+            //@@author HammerHead-os
             }
+            //@@author WillChin484848
             assert lines.size() == orders.size() + 1 : "Every record must be serialized";
+            //@@author HammerHead-os
             Path parent = dataFile.toAbsolutePath().getParent();
             Files.createDirectories(parent);
+            //@@author WillChin484848
             temporary = Files.createTempFile(parent, dataFile.getFileName().toString() + ".", ".tmp");
+            //@@author HammerHead-os
             Files.write(temporary, lines, StandardCharsets.UTF_8);
             try {
                 Files.move(temporary, dataFile,
@@ -163,8 +187,11 @@ public class Storage {
                 Files.move(temporary, dataFile, StandardCopyOption.REPLACE_EXISTING);
             }
             return true;
+        //@@author WillChin484848
         } catch (IOException | RuntimeException exception) {
+            //@@author HammerHead-os
             LOGGER.log(Level.SEVERE, "Could not save data file " + dataFile, exception);
+            //@@author WillChin484848
             if (temporary != null) {
                 try {
                     Files.deleteIfExists(temporary);
@@ -172,6 +199,7 @@ public class Storage {
                     LOGGER.log(Level.WARNING, "Could not remove temporary file", cleanupException);
                 }
             }
+            //@@author HammerHead-os
             return false;
         }
     }

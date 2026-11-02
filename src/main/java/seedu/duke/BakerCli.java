@@ -58,11 +58,13 @@ public class BakerCli {
                     System.out.println(new FindCommand(Parser.parseFind(input)).execute(orders));
                     break;
                 case "capacity":
+                    //@@author WillChin484848
                     Integer newCapacity = Parser.parseCapacity(input);
                     System.out.println(new CapacityCommand(newCapacity).execute(orders));
                     if (newCapacity != null) {
                         afterChange.run();
                     }
+                    //@@author Kaishhhh
                     break;
                 //@@author HammerHead-os
                 case "view":

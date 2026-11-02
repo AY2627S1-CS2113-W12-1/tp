@@ -56,8 +56,10 @@ public class AddOrderCommand {
         String added = "Added order " + order
                 + (warning.isEmpty() ? "" : System.lineSeparator() + warning);
         //@@author anannya-mk
+        //@@author WillChin484848
         assert order.getCustomerId() != null : "Added order must have a customer ID";
         return added + System.lineSeparator() + "Customer ID: " + order.getCustomerId()
+                //@@author anannya-mk
                 + (isNewCustomer ? " (new customer)" : " (returning customer)");
         //@@author Eethanzyj
     }
