@@ -1,36 +1,50 @@
-
 # Will Chin - Project Portfolio Page
 
-## Project: CakeQueue
+## Overview
 
-CakeQueue is a command-line application that helps bakers manage
-cake orders, customer information, and upcoming deadlines.
+CakeQueue is a command-line application that helps bakers manage cake orders, customer information, and upcoming deadlines.
 
-## Summary of Contributions
+### Summary of Contributions
 
-### 1. Update Order Feature
+#### Code contributed
 
-- Implemented the `edit` command to update existing cake orders.
-- Supported editing customer names, phone numbers, due dates,
-  cake sizes, flavours, and fillings.
-- Ensured unspecified fields remain unchanged during updates.
-- Added validation and error handling for invalid updates.
-- Wrote JUnit tests to verify the update functionality.
+[RepoSense link](https://nus-cs2113-ay2627s1.github.io/tp-dashboard/?search=WillChin484848&breakdown=true)
 
-### 2. Cake Details Improvements
+#### Enhancements implemented
 
-- Added model-level validation for supported cake sizes.
-- Improved validation of cake flavours and fillings.
-- Improved exception handling when updating cake details.
-- Added handling for orders without due dates.
+* **Update orders (`edit`).** Implemented the command to modify customer names, phone numbers, due dates, cake sizes, flavours, and fillings while preserving unchanged fields. Added input validation, error handling, and JUnit tests.
 
-### 3. Due-Date Warnings
+* **Cake details validation.** Added model-level validation for supported cake sizes, flavours, and fillings. Improved exception handling and support for orders without due dates.
 
-- Implemented `[OVERDUE]` warnings for orders past their due dates.
-- Implemented `[DUE SOON]` warnings for orders due within 3 days.
-- Added JUnit tests covering overdue orders and warning boundaries.
+* **Due-date warnings.** Implemented `[OVERDUE]` and `[DUE SOON]` indicators for overdue orders and orders due within three days. Added JUnit tests for warning boundaries.
 
-### 4. Documentation
+* **Storage reliability.** Fixed a data-loss risk where unreadable save files could be treated as empty databases. Improved corrupted-file protection, save error handling, temporary-file management, and daily capacity persistence.
 
-- Updated the User Guide to explain cake validation and
-  due-date warning behaviour.
+* **Order and customer reliability.** Added duplicate and malformed order-ID checks, improved customer-ID allocation, overflow protection, null validation, and consistent ID matching.
+
+* **Code quality and testing.** Removed redundant customer lookups, added Java assertions for internal invariants, and added regression tests for storage safety and validation.
+
+* **Storage recovery improvements.** Improved handling of invalid capacity headers so CakeQueue warns users and falls back to the default capacity of 5 while preserving valid orders.
+
+* **Corrupted data protection.** Ensured corrupted order records and unreadable storage files prevent startup, protecting existing data from accidental overwriting.
+
+* **Storage regression testing.** Added tests for malformed capacity headers, corrupted records, startup failure, and data preservation.
+
+#### Contributions to the User Guide
+
+* Updated documentation for cake validation and due-date warning behaviour.
+
+#### Contributions to the Developer Guide
+
+* Documented the implementation of the `edit` command and its validation logic.
+* Updated storage-related explanations to reflect improved data protection and persistence behaviour.
+* Updated storage documentation to distinguish recoverable capacity errors from fatal order corruption and explain capacity persistence.
+
+#### Contributions to team-based tasks
+
+* Improved the reliability of shared CakeQueue components while preserving existing command functionality.
+* Tested changes against the project's existing JUnit test suite.
+
+#### Review/mentoring contributions
+
+* Reviewed teammates' code and provided feedback on implementation and testing.

@@ -2,7 +2,7 @@
 ' Diagram author: Eethanzyj.
 ' Depicted storage persistence implementation: WillChin484848 (PR #42).
 ' Original capacity feature: Kaishhhh.
-title Capacity restoration: pending storage integration (PR #42)
+title Capacity restoration
 skinparam shadowing false
 skinparam defaultFontSize 14
 hide footbox
@@ -13,7 +13,6 @@ participant "orders:OrderList" as Orders
 
 note over Duke, Orders
   Successful startup with an existing, valid save file.
-  This flow describes PR #42, not the current master.
 end note
 activate Duke
 Duke -> Storage : load()
@@ -31,12 +30,21 @@ opt file contains # dailyCapacity=3
   activate Orders
   deactivate Orders
 end
+opt invalid capacity setting
+  Storage -> Orders : setDailyCapacity(5)
+  activate Orders
+  deactivate Orders
+  Storage -> Storage : warn user; retain valid orders
+  activate Storage
+  deactivate Storage
+end
 ref over Storage, Orders : Restore records and their IDs.
 Storage --> Duke : orders
 deactivate Storage
 note over Duke, Storage
-  Invalid or unreadable data throws IllegalStateException.
-  Duke reports the error and stops before the CLI runs.
+  Corrupted orders or unreadable files throw IllegalStateException.
+  Duke then reports the failure and stops before the CLI runs.
+  Invalid capacity alone warns and uses 5.
 end note
 deactivate Duke
 @enduml

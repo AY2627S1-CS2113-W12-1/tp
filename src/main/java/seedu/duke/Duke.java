@@ -48,7 +48,18 @@ public class Duke {
         Scanner scanner = new Scanner(System.in);
         //@@author HammerHead-os
         Storage storage = new Storage(dataFile);
-        OrderList orders = storage.load();
+        //@@author WillChin484848
+        OrderList orders;
+        try {
+            orders = storage.load();
+        } catch (IllegalStateException exception) {
+            System.out.println("Error: Saved data could not be loaded safely. CakeQueue will exit "
+                    + "without changing the file. Back up data/cakequeue.txt, repair the "
+                    + "invalid records or restore a valid backup, then restart.");
+            LOGGER.log(Level.SEVERE, "Startup aborted to protect saved data", exception);
+            return;
+        }
+        //@@author HammerHead-os
         if (orders.size() > 0) {
             System.out.println("Loaded " + orders.size() + " saved record(s).");
         }

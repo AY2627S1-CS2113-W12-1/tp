@@ -79,7 +79,7 @@ public class StorageTest {
     }
 
     @Test
-    public void load_corruptedLines_skipsThemAndKeepsValidRecords() throws Exception {
+    public void load_corruptedLines_abortsLoading() throws Exception {
         Storage storage = new Storage(dataFile());
         assertTrue(storage.save(sampleOrders()));
         Files.write(dataFile(),
@@ -87,8 +87,6 @@ public class StorageTest {
                 java.nio.charset.StandardCharsets.UTF_8,
                 java.nio.file.StandardOpenOption.APPEND);
 
-        OrderList loaded = storage.load();
-
-        assertEquals(2, loaded.size());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, storage::load);
     }
 }

@@ -75,6 +75,11 @@ public class Order {
     }
 
     public void setStatus(OrderStatus status) {
+        //@@author WillChin484848
+        if (status == null) {
+            throw new IllegalArgumentException("Order status cannot be null.");
+        }
+        //@@author
         this.status = status;
     }
 

@@ -9,8 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+//@@author WillChin484848
+import java.time.DateTimeException;
+//@@author HammerHead-os
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +48,14 @@ public class Storage {
     //@@author HammerHead-os
     private static final int FIELD_COUNT_WITH_NOTES = 10;
 
+    //@@author WillChin484848
+    private static final String CAPACITY_PREFIX = "# dailyCapacity=";
+
+    //@@author HammerHead-os
     private final Path dataFile;
+    //@@author WillChin484848
+    private boolean unsafeToSave;
+    //@@author HammerHead-os
 
     /**
      * Creates a storage handler for the given file. The file (and its parent
@@ -59,12 +70,18 @@ public class Storage {
      * Loads all records from the data file.
      *
      * <p>Defensive choices: a missing file is not an error (first run of the
-     * app), and a corrupted line is skipped with a warning instead of crashing
-     * the whole application, so one bad line cannot destroy every order.</p>
+     * app). Corrupted data aborts loading to prevent a later save from
+     * overwriting valid records in a partially readable file.</p>
      *
      * @return The loaded records, or an empty list if the file does not exist.
      */
     public OrderList load() {
+        //@@author WillChin484848
+        // A previous failed load must not be silently cleared by retrying.
+        if (unsafeToSave) {
+            throw new IllegalStateException("Storage is unsafe after an earlier failed load: " + dataFile);
+        }
+        //@@author HammerHead-os
         OrderList orders = new OrderList();
         if (!Files.exists(dataFile)) {
             LOGGER.log(Level.INFO, "No data file at {0}; starting with no records.", dataFile);
@@ -75,20 +92,83 @@ public class Storage {
             lines = Files.readAllLines(dataFile, StandardCharsets.UTF_8);
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Could not read data file " + dataFile, exception);
-            return orders;
+            //@@author WillChin484848
+            unsafeToSave = true;
+            throw new IllegalStateException("Cannot read CakeQueue data file: " + dataFile, exception);
+            //@@author HammerHead-os
         }
+        //@@author WillChin484848
+        List<Order> parsedOrders = new ArrayList<>();
+        //@@author HammerHead-os
         int lineNumber = 0;
         for (String line : lines) {
             lineNumber++;
             if (line.isBlank()) {
                 continue;
             }
-            try {
-                orders.add(parseLine(line));
-            } catch (IllegalArgumentException | DateTimeParseException exception) {
-                LOGGER.log(Level.WARNING, "Skipping corrupted line " + lineNumber
-                        + " in " + dataFile + ": " + exception.getMessage());
+            //@@author WillChin484848
+            if (line.matches("#\\s*dailyCapacity\\b.*")) {
+                try {
+                    if (!line.startsWith(CAPACITY_PREFIX)) {
+                        throw new IllegalArgumentException("Malformed capacity header");
+                    }
+                    orders.setDailyCapacity(Integer.parseInt(line.substring(CAPACITY_PREFIX.length()).trim()));
+                } catch (IllegalArgumentException exception) {
+                    // A damaged setting is recoverable; order records remain authoritative.
+                    orders.setDailyCapacity(OrderList.DEFAULT_DAILY_CAPACITY);
+                    String warning = "Invalid capacity setting on line " + lineNumber
+                            + "; using default capacity " + OrderList.DEFAULT_DAILY_CAPACITY + ".";
+                    LOGGER.log(Level.WARNING, warning, exception);
+                    System.err.println("Warning: " + warning);
+                }
+                continue;
             }
+            //@@author HammerHead-os
+            try {
+                //@@author WillChin484848
+                parsedOrders.add(parseLine(line));
+            } catch (IllegalArgumentException | DateTimeException exception) {
+                unsafeToSave = true;
+                //@@author HammerHead-os
+                LOGGER.log(Level.WARNING, "Corrupted record on line " + lineNumber
+                        + " in " + dataFile + ": " + exception.getMessage());
+                //@@author WillChin484848
+            }
+        }
+        // Match legacy orders to explicit customer IDs even if the explicit record appears later.
+        Map<String, String> customerIdsByPhone = new HashMap<>();
+        for (Order order : parsedOrders) {
+            if (order.getOrderId().startsWith("O") && order.getCustomerId() != null) {
+                customerIdsByPhone.putIfAbsent(order.getCustomer().getPhone(), order.getCustomerId());
+            }
+        }
+        // Reserve all restored IDs before allocating IDs for legacy records.
+        for (Order order : parsedOrders) {
+            try {
+                orders.reserveCustomerId(order.getCustomerId());
+            } catch (IllegalArgumentException exception) {
+                unsafeToSave = true;
+                LOGGER.log(Level.WARNING, "Invalid restored customer ID; startup will abort", exception);
+            }
+        }
+        for (Order order : parsedOrders) {
+            try {
+                if (order.getOrderId().startsWith("O") && order.getCustomerId() == null) {
+                    String savedId = customerIdsByPhone.get(order.getCustomer().getPhone());
+                    if (savedId != null) {
+                        order.setCustomerId(savedId);
+                    }
+                }
+                orders.add(order);
+            } catch (IllegalArgumentException exception) {
+                unsafeToSave = true;
+                LOGGER.log(Level.WARNING, "Invalid or duplicate saved record; startup will abort", exception);
+                //@@author HammerHead-os
+            }
+        }
+        // Do not expose partially loaded data for editing when it cannot be saved safely.
+        if (unsafeToSave) {
+            throw new IllegalStateException("Saved data contains invalid records: " + dataFile);
         }
         return orders;
     }
@@ -103,19 +183,31 @@ public class Storage {
      */
     public boolean save(OrderList orders) {
         assert orders != null : "Order list to save must not be null";
-        ArrayList<String> lines = new ArrayList<>();
-        for (Order order : orders.getAll()) {
-            if (order.getOrderId() == null) {
-                // Legacy in-memory orders without an ID cannot be reloaded, so they are not persisted.
-                LOGGER.log(Level.WARNING, "Skipping record without an ID while saving.");
-                continue;
-            }
-            lines.add(toLine(order));
+        //@@author WillChin484848
+        if (unsafeToSave) {
+            LOGGER.log(Level.SEVERE, "Refusing to overwrite data after a failed or partial load: {0}", dataFile);
+            return false;
         }
+        Path temporary = null;
         try {
+            ArrayList<String> lines = new ArrayList<>();
+            lines.add(CAPACITY_PREFIX + orders.getDailyCapacity());
+            for (Order order : orders.getAll()) {
+                if (order == null || order.getOrderId() == null) {
+                    LOGGER.log(Level.SEVERE, "Cannot save a record without an ID.");
+                    return false;
+                }
+                lines.add(toLine(order));
+                //@@author HammerHead-os
+            }
+            //@@author WillChin484848
+            assert lines.size() == orders.size() + 1 : "Every record must be serialized";
+            //@@author HammerHead-os
             Path parent = dataFile.toAbsolutePath().getParent();
             Files.createDirectories(parent);
-            Path temporary = parent.resolve(dataFile.getFileName() + ".tmp");
+            //@@author WillChin484848
+            temporary = Files.createTempFile(parent, dataFile.getFileName().toString() + ".", ".tmp");
+            //@@author HammerHead-os
             Files.write(temporary, lines, StandardCharsets.UTF_8);
             try {
                 Files.move(temporary, dataFile,
@@ -124,8 +216,19 @@ public class Storage {
                 Files.move(temporary, dataFile, StandardCopyOption.REPLACE_EXISTING);
             }
             return true;
-        } catch (IOException exception) {
+        //@@author WillChin484848
+        } catch (IOException | RuntimeException exception) {
+            //@@author HammerHead-os
             LOGGER.log(Level.SEVERE, "Could not save data file " + dataFile, exception);
+            //@@author WillChin484848
+            if (temporary != null) {
+                try {
+                    Files.deleteIfExists(temporary);
+                } catch (IOException cleanupException) {
+                    LOGGER.log(Level.WARNING, "Could not remove temporary file", cleanupException);
+                }
+            }
+            //@@author HammerHead-os
             return false;
         }
     }
@@ -232,7 +335,7 @@ public class Storage {
             }
         }
         if (isEscaped) {
-            current.append('\\');
+            throw new CakeQueueException("Incomplete escape sequence in saved record.");
         }
         fields.add(current.toString().trim());
         return fields;

@@ -2,6 +2,7 @@ package seedu.duke.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -12,17 +13,15 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
-import seedu.duke.model.OrderStatus;
 
 /**
- * Error-handling tests for {@link Storage}: corrupted data must never crash
- * the application or lose valid records. Bad lines are skipped, unreadable
- * files load as empty, and failed saves report {@code false} instead of
- * throwing.
+ * Tests storage failure handling. Corrupted records and unreadable files must
+ * abort loading, while failed saves return false without overwriting data.
  */
 public class StorageErrorTest {
     @TempDir
@@ -37,7 +36,7 @@ public class StorageErrorTest {
     }
 
     @Test
-    public void load_eachKindOfCorruptedLine_skipsOnlyThatLine() throws Exception {
+    public void load_corruptedRecord_abortsLoading() throws Exception {
         Files.createDirectories(dataFile().getParent());
         Files.write(dataFile(), List.of(
                 validLine(),
@@ -49,11 +48,7 @@ public class StorageErrorTest {
                 "",                                                              // blank line
                 "E002 | ENQUIRY | Bob Lim | 81111111 | 2026-10-21 | 6 | Vanilla | Cream"));
 
-        OrderList loaded = new Storage(dataFile()).load();
-
-        assertEquals(2, loaded.size());
-        assertEquals("Alice Tan", loaded.getById("O001").getCustomer().getName());
-        assertEquals(OrderStatus.ENQUIRY, loaded.getById("E002").getStatus());
+        assertThrows(IllegalStateException.class, () -> new Storage(dataFile()).load());
     }
 
     @Test
@@ -71,9 +66,10 @@ public class StorageErrorTest {
     }
 
     @Test
-    public void load_pathIsDirectory_returnsEmptyListInsteadOfCrashing() {
-        // readAllLines on a directory throws IOException, which load() must absorb.
-        assertEquals(0, new Storage(tempDir).load().size());
+    //@@author WillChin484848
+    public void load_pathIsDirectory_abortsToProtectData() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> new Storage(tempDir).load());
     }
 
     @Test
@@ -110,11 +106,13 @@ public class StorageErrorTest {
     }
 
     @Test
-    public void save_recordWithoutId_isSkippedNotSaved() {
+    //@@author WillChin484848
+    public void add_recordWithoutId_isRejectedBeforeSaving() {
         OrderList orders = new OrderList();
-        // Records without an ID cannot be reloaded and must not be persisted.
-        orders.add(new Order(null, new Customer("Alice Tan", "91234567"),
-                new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20)));
+        // Reject an invalid record before it can enter the list or reach disk.
+        assertThrows(CakeQueueException.class, () -> orders.add(
+                new Order(null, new Customer("Alice Tan", "91234567"),
+                        new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20))));
         Storage storage = new Storage(dataFile());
 
         assertTrue(storage.save(orders));

@@ -2,7 +2,7 @@
 ' Diagram author: Eethanzyj.
 ' Depicted storage persistence implementation: WillChin484848 (PR #42).
 ' Original capacity feature: Kaishhhh.
-title Capacity saving: pending storage integration (PR #42)
+title Capacity saving
 skinparam shadowing false
 skinparam defaultFontSize 14
 hide footbox
@@ -35,7 +35,7 @@ activate Cli
 deactivate Cli
 ref over Cli, Orders : Run saveChanges callback;\nsee "Saving after every change".
 note over Cli, Orders
-  PR #42 saves # dailyCapacity=3 with the records.
+  Storage saves # dailyCapacity=3 with the records.
   Bare capacity and invalid input do not request saving.
 end note
 [<-- Cli

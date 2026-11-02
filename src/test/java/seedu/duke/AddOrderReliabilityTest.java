@@ -225,7 +225,9 @@ public class AddOrderReliabilityTest {
         //@@author Kaishhhh
         String restarted = runSession(dataFile, "capacity\ncustomer C002\nbye\n");
         //@@author Eethanzyj
-        assertTrue(restarted.contains("Daily capacity is 5 orders per day."));
+        //@@author WillChin484848
+        assertTrue(restarted.contains("Daily capacity is 1 order per day."));
+        //@@author Eethanzyj
         assertTrue(restarted.contains("Name: Bob Lim"));
     }
 

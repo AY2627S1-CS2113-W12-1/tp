@@ -11,7 +11,13 @@ customer details are records managed by the baker. There is no customer login or
 
 Successful changes are saved automatically to `data/cakequeue.txt`, relative to the folder you
 launch CakeQueue from. When you reopen CakeQueue from the same folder, saved records are loaded and
-new IDs continue after the existing ones.
+new IDs continue after the existing ones. Daily capacity is also saved between sessions.
+
+If a saved capacity setting is invalid, CakeQueue warns you and uses the default capacity of **5**
+while retaining valid orders. Older files without a capacity setting also use 5.
+If an order record is corrupted or the storage file cannot be read, CakeQueue stops startup before
+accepting commands and leaves the original file unchanged. Keep a backup and repair or restore the
+file before restarting.
 
 * [Quick Start](#quick-start)
 * [Command Format](#command-format)
@@ -357,7 +363,8 @@ Sets the most orders you can take for one due date, from 1 to 50. The default is
 * When `add` or `edit` leaves a due date over the limit, CakeQueue still saves the change
   and shows a warning, for example:
   `Warning: 21-12-2030 now has 4 orders, over your daily capacity of 3.`
-* The limit is not saved when you exit. It returns to 5 the next time you start CakeQueue.
+* The limit is saved automatically and restored on restart. Invalid saved capacity settings warn
+  and use 5; corrupted orders or unreadable files stop startup.
 
 Examples:
 
@@ -423,7 +430,6 @@ extra to save on exit. Check for save warnings before exiting.
 
 ## Current Limitations
 
-* The daily capacity limit is not saved between sessions. It returns to 5 each time CakeQueue starts.
 * A Customer ID is given out when an order is first added and never changes. If a phone number is
   edited, the order keeps its original Customer ID.
 * `find` searches name, flavour and filling, but not phone numbers or dates. To look up a customer's
