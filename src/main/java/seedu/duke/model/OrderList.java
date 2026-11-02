@@ -2,6 +2,7 @@ package seedu.duke.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.TreeMap;
 import java.util.Objects;
 
@@ -37,7 +38,7 @@ public class OrderList {
      * Returns the next order ID in the format O001.
      */
     public String generateOrderId() {
-        return String.format("O%03d", nextOrderNumber++);
+        return String.format(Locale.ROOT, "O%03d", nextOrderNumber++);
     }
     //@@author
 
@@ -45,7 +46,9 @@ public class OrderList {
      * Returns the next enquiry ID in the format E001.
      */
     public String generateEnquiryId() {
-        return String.format("E%03d", nextEnquiryNumber++);
+        //@@author Eethanzyj
+        return String.format(Locale.ROOT, "E%03d", nextEnquiryNumber++);
+        //@@author
     }
 
     /**
@@ -90,7 +93,10 @@ public class OrderList {
                 return;
             }
         }
-        order.setCustomerId(String.format("C%03d", nextCustomerNumber++));
+        //@@author Eethanzyj
+        // IDs must keep ASCII digits so commands and saved files can recognise them in every locale.
+        order.setCustomerId(String.format(Locale.ROOT, "C%03d", nextCustomerNumber++));
+        //@@author anannya-mk
     }
     //@@author
 

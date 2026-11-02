@@ -2,8 +2,10 @@ package seedu.duke.parser;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
+import java.time.temporal.ChronoField;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -22,9 +24,14 @@ public final class Parser {
     // Package-private syntax and validators are shared by Add Order and Edit Order parsing.
     static final List<String> PREFIXES = List.of("n/", "p/", "d/", "s/", "f/", "fi/");
     static final Pattern FIELD_PREFIX = Pattern.compile("(?<!\\S)([^\\s/]+/)");
-    static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
-            .ofPattern("dd-MM-uuuu")
+    //@@author Eethanzyj
+    /** Requires exactly four unsigned year digits as well as a real calendar date. */
+    static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
+            .appendPattern("dd-MM-")
+            .appendValue(ChronoField.YEAR, 4)
+            .toFormatter()
             .withResolverStyle(ResolverStyle.STRICT);
+    //@@author
     private static final String UPDATE_USAGE =
             "Use: edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] "
                     + "[s/SIZE] [f/FLAVOUR] [fi/FILLING]";
