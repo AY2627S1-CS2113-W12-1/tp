@@ -37,16 +37,18 @@ public final class AddOrderParser {
      * @throws CakeQueueException If the command or any required field is invalid.
      */
     public static Parser.AddOrderDetails parse(String input) {
-        //@@author HammerHead-os
         if (input == null || input.isBlank()) {
+            //@@author HammerHead-os
             throw new CakeQueueException(USAGE);
+            //@@author Eethanzyj
         }
-        //@@author Eethanzyj
         String[] command = input.trim().split("\\s+", 2);
-        //@@author HammerHead-os
         if (!command[0].equalsIgnoreCase("add") || command.length != 2) {
+            //@@author HammerHead-os
             throw new CakeQueueException(USAGE);
+            //@@author Eethanzyj
         }
+        //@@author HammerHead-os
         Map<String, String> fields = parseFields(command[1], USAGE);
         //@@author Eethanzyj
         LocalDate dueDate;
@@ -61,12 +63,12 @@ public final class AddOrderParser {
             throw new CakeQueueException("Due date cannot be in the past.");
         }
         Parser.validatePhone(fields.get("p/"));
+        //@@author Eethanzyj
         int size = Parser.parseCakeSize(fields.get("s/"));
         return new Parser.AddOrderDetails(fields.get("n/"), fields.get("p/"), dueDate,
                 size, fields.get("f/"), fields.get("fi/"));
     }
 
-    //@@author Eethanzyj
     /**
      * Extracts field values between prefixes and rejects missing or repeated fields.
      */

@@ -91,7 +91,6 @@ public final class Parser {
         }
     }
 
-    //@@author
     /**
      * Parses a view command and returns the order or enquiry ID.
      *
@@ -130,7 +129,6 @@ public final class Parser {
         return parts[1].trim();
     }
 
-    //@@author Kaishhhh
     /**
      * Parses a capacity command.
      *
@@ -199,7 +197,7 @@ public final class Parser {
                 "Use: history CUSTOMER_ID");
     }
 
-    //@@author HammerHead-os
+    //@@author Kaishhhh
     /**
      * Validates that a phone number has at least 8 digits and otherwise only spaces, {@code +} or {@code -}.
      * This catches obvious typos (letters, symbols) while still accepting formatted numbers such as
@@ -214,6 +212,7 @@ public final class Parser {
         }
     }
 
+    //@@author HammerHead-os
     private static String parseSingleIdCommand(String input, String commandWord,
                                                String idPattern, String usage) {
         if (input == null || input.isBlank()) {
@@ -302,7 +301,9 @@ public final class Parser {
 
         // Reject null or empty input.
         if (input == null || input.isBlank()) {
+            //@@author HammerHead-os
             throw new CakeQueueException(UPDATE_USAGE);
+            //@@author WillChin484848
         }
 
         // Split into 3 parts:
@@ -317,13 +318,16 @@ public final class Parser {
         if (parts.length != 3
                 || !parts[0].equalsIgnoreCase("edit")
                 || !parts[1].matches("[Oo][0-9]{3,}")) {
-            //@@author WillChin484848
+            //@@author HammerHead-os
             throw new CakeQueueException(UPDATE_USAGE);
+            //@@author WillChin484848
         }
 
         // Extract the fields the user wants to update.
+        //@@author HammerHead-os
         Map<String, String> fields = parseUpdateFields(parts[2], UPDATE_USAGE);
 
+        //@@author WillChin484848
         // A null value means the user did not request a date change.
         LocalDate dueDate = null;
 
@@ -332,8 +336,10 @@ public final class Parser {
             try {
                 dueDate = LocalDate.parse(fields.get("d/"), DATE_FORMATTER);
             } catch (DateTimeParseException exception) {
+                //@@author HammerHead-os
                 throw new CakeQueueException(
                         "Date must use DD-MM-YYYY and be valid.", exception);
+                //@@author WillChin484848
             }
             //@@author Kaishhhh
             // Apply the same rules as add, so an edit cannot move an order into the past.
@@ -347,14 +353,16 @@ public final class Parser {
         if (fields.containsKey("p/")) {
             validatePhone(fields.get("p/"));
         }
-        //@@author WillChin484848
 
+        //@@author WillChin484848
         // A null value means the user did not request a size change.
         Integer size = null;
 
         // Validate the cake size only if the user supplied s/.
         if (fields.containsKey("s/")) {
+            //@@author HammerHead-os
             size = parseCakeSize(fields.get("s/"));
+            //@@author WillChin484848
         }
 
         // Store the validated values in an UpdateOrderDetails object.
@@ -380,8 +388,10 @@ public final class Parser {
      * @param usage Usage message for malformed input.
      * @return A map containing only the supplied fields.
      */
+    //@@author HammerHead-os
     private static Map<String, String> parseUpdateFields(String arguments, String usage) {
 
+        //@@author WillChin484848
         // Store each prefix and its corresponding value.
         // Example: "n/Bob s/8" becomes {"n/"="Bob", "s/"="8"}.
         Map<String, String> fields = new LinkedHashMap<>();
@@ -389,8 +399,8 @@ public final class Parser {
         //@@author Eethanzyj
         // Find field prefixes outside quoted values, keeping their original positions.
         Matcher matcher = FieldTokenizer.prefixesIn(arguments);
-        //@@author WillChin484848
 
+        //@@author WillChin484848
         // Track the previous prefix so we know where its value ends.
         String previousPrefix = null;
         int valueStart = 0;
@@ -400,7 +410,9 @@ public final class Parser {
             // Reject unexpected text before the first field prefix.
             if (previousPrefix == null
                     && !arguments.substring(0, matcher.start()).isBlank()) {
+                //@@author HammerHead-os
                 throw new CakeQueueException(usage);
+                //@@author WillChin484848
             }
 
             // Save the value belonging to the previous prefix.
@@ -416,12 +428,16 @@ public final class Parser {
 
             // Reject prefixes not supported by CakeQueue.
             if (!PREFIXES.contains(prefix)) {
+                //@@author HammerHead-os
                 throw new CakeQueueException("Unknown field: " + prefix);
+                //@@author WillChin484848
             }
 
             // Reject repeated prefixes, such as n/Bob n/Alice.
             if (fields.containsKey(prefix) || prefix.equals(previousPrefix)) {
+                //@@author HammerHead-os
                 throw new CakeQueueException("Duplicate field: " + prefix);
+                //@@author WillChin484848
             }
 
             // Remember this prefix and where its value starts.
@@ -438,14 +454,18 @@ public final class Parser {
 
         // An update command must contain at least one field.
         if (fields.isEmpty()) {
+            //@@author HammerHead-os
             throw new CakeQueueException(usage);
+            //@@author WillChin484848
         }
 
         // Reject fields without values, such as n/ or s/.
         for (Map.Entry<String, String> entry : fields.entrySet()) {
             if (entry.getValue().isBlank()) {
+                //@@author HammerHead-os
                 throw new CakeQueueException(
                         "Missing value for " + entry.getKey());
+                //@@author WillChin484848
             }
         }
 

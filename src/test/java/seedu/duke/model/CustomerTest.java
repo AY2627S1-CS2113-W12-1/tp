@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
  * Checks customer details independently of the retired cake-menu model.
  */
 public class CustomerTest {
-    //@@author HammerHead-os
+    //@@author Eethanzyj
     @Test
     public void customer_nameOnlyConstructor_hasEmptyPhone() {
         Customer customer = new Customer("Alice Tan");
