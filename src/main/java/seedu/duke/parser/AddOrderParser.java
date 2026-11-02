@@ -74,7 +74,7 @@ public final class AddOrderParser {
     private static Map<String, String> parseFields(String arguments, String usage) {
         //@@author Eethanzyj
         Map<String, String> fields = new LinkedHashMap<>();
-        Matcher matcher = Parser.FIELD_PREFIX.matcher(arguments);
+        Matcher matcher = FieldTokenizer.prefixesIn(arguments);
         String previousPrefix = null;
         int valueStart = 0;
         while (matcher.find()) {
@@ -84,7 +84,7 @@ public final class AddOrderParser {
                 //@@author Eethanzyj
             }
             if (previousPrefix != null) {
-                fields.put(previousPrefix, arguments.substring(valueStart, matcher.start()).trim());
+                fields.put(previousPrefix, FieldTokenizer.valueOf(arguments.substring(valueStart, matcher.start())));
             }
             String prefix = matcher.group(1);
             if (!Parser.PREFIXES.contains(prefix)) {
@@ -98,7 +98,7 @@ public final class AddOrderParser {
             valueStart = matcher.end();
         }
         if (previousPrefix != null) {
-            fields.put(previousPrefix, arguments.substring(valueStart).trim());
+            fields.put(previousPrefix, FieldTokenizer.valueOf(arguments.substring(valueStart)));
         }
         for (String prefix : Parser.PREFIXES) {
             if (!fields.containsKey(prefix) || fields.get(prefix).isBlank()) {

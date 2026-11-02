@@ -386,8 +386,10 @@ public final class Parser {
         // Example: "n/Bob s/8" becomes {"n/"="Bob", "s/"="8"}.
         Map<String, String> fields = new LinkedHashMap<>();
 
-        // Find field prefixes such as n/, p/, d/, s/, f/, fi/.
-        Matcher matcher = FIELD_PREFIX.matcher(arguments);
+        //@@author Eethanzyj
+        // Find field prefixes outside quoted values, keeping their original positions.
+        Matcher matcher = FieldTokenizer.prefixesIn(arguments);
+        //@@author WillChin484848
 
         // Track the previous prefix so we know where its value ends.
         String previousPrefix = null;
@@ -403,8 +405,10 @@ public final class Parser {
 
             // Save the value belonging to the previous prefix.
             if (previousPrefix != null) {
+                //@@author Eethanzyj
                 fields.put(previousPrefix,
-                        arguments.substring(valueStart, matcher.start()).trim());
+                        FieldTokenizer.valueOf(arguments.substring(valueStart, matcher.start())));
+                //@@author WillChin484848
             }
 
             // Read the current prefix.
@@ -427,7 +431,9 @@ public final class Parser {
 
         // Save the value of the final field.
         if (previousPrefix != null) {
-            fields.put(previousPrefix, arguments.substring(valueStart).trim());
+            //@@author Eethanzyj
+            fields.put(previousPrefix, FieldTokenizer.valueOf(arguments.substring(valueStart)));
+            //@@author WillChin484848
         }
 
         // An update command must contain at least one field.

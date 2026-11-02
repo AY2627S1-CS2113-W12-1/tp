@@ -98,6 +98,9 @@ syntax and field rules. Checks that need stored data, such as whether an order I
 are done by the commands. `parseUpdate` is the internal method name for parsing `edit`;
 the former `update` command word is rejected.
 
+`FieldTokenizer` supplies shared quoted-value handling for add and edit. Their field parsers
+retain their own required/optional-field rules and error wording.
+
 ### Commands
 
 Most commands are built with parsed values and expose `execute(OrderList)`, returning the text
@@ -200,6 +203,7 @@ the customer/history section below explains customer grouping in more detail.
 | `AddOrderCommand` | Creates and adds the order, logs its ID, and returns the order/customer confirmation and optional warning. |
 | `Parser` | Keeps the `parseAdd` entry point and delegates to `AddOrderParser`. |
 | `AddOrderParser` | Checks the six required fields and returns a `Parser.AddOrderDetails` value object. |
+| `FieldTokenizer` | Finds prefixes outside whole quoted values and removes quotes and supported escapes. It is shared with edit parsing. |
 | `Customer` | Holds the name and phone recorded for this order. |
 | `Cake` | Holds the size, flavour, and filling. |
 | `Order` | Combines these details with an ID, due date, and status. |
@@ -231,11 +235,19 @@ it does not parse again. Parsing and validation therefore finish before customer
 ID generation or model changes. The parser identifies prefixes, collects their values,
 checks required fields and converts the date and size.
 
+`FieldTokenizer.prefixesIn` masks quoted spans with non-whitespace characters while
+preserving their original positions. The existing field-extraction loops therefore find
+only prefixes outside quoted values and still take values from the original input.
+`valueOf` removes whole-value quotes, decodes escaped quotes and backslashes, and trims
+the result before normal validation. Quotes start a quoted value only at the beginning
+of that field's value; embedded quotes in unquoted text retain their previous meaning.
+Unclosed quotes or text after a closing quote raise `CakeQueueException` before any model change.
+
 <!-- @@author -->
 
 
 * All six fields must be present and non-blank. Their order may vary.
-* Prefixes must be lowercase. Unknown or repeated prefixes are rejected.
+* Prefixes must be lowercase. Unknown or repeated prefixes outside quoted values are rejected.
 * Surrounding whitespace is removed from field values. Internal spaces,
   punctuation, and Unicode characters in customer names are preserved.
 * Phone numbers must have at least 8 digits, and may also contain spaces, `+`
@@ -254,6 +266,10 @@ For example, a blank name produces
 continues accepting commands. A failed parse neither consumes an ID nor changes
 the in-memory list or the saved file.
 
+For example, `n/"John s/o Doe"` keeps `s/o` inside the name while a separate `s/8`
+still supplies the cake size. Quoting changes field extraction, not the validation rules:
+quoted empty names, invalid phones, impossible dates and unsupported sizes are still rejected.
+
 Keeping these checks in `AddOrderParser` separates Add Order validation from other commands.
 The parser returns structured details rather than creating an order itself, so
 validation can be tested without generating IDs or writing files. The same phone
@@ -264,6 +280,7 @@ validation applies to `add` and `edit`: at least eight digits, with spaces, `+` 
 | Decision | Reason | Trade-off |
 | --- | --- | --- |
 | Keep `Parser.parseAdd` and delegate to `AddOrderParser`. | Existing callers keep the same API, while the six required fields have one focused parser. Shared phone, date and size rules still apply to both add and edit. | There is one extra delegation step, and `AddOrderDetails` remains nested in `Parser`. |
+| Share quote handling in package-private `FieldTokenizer`. | Add and edit interpret quoted text identically while retaining their existing validators and required/optional-field rules. | The field-extraction loops remain separate; users must quote values containing prefix-like text. |
 | Pass validated, immutable details to `AddOrderCommand`. | The command creates the order without parsing again. Parser tests need no model changes; command tests need no console or files. | Callers must use the parser before constructing the command. The command relies on that validation contract. |
 | Create a separate `Customer` object for each order. | Editing one order's recorded name does not alter another order. Customer IDs provide the shared grouping for history. | Customer details are repeated across records, and editing one record does not update all of a customer's orders. |
 | Keep saving in the callback supplied by `Duke`. | The command handles order creation and confirmation while `Storage` handles files. Existing customer and capacity components are reused. | Confirmation means the order is in memory. A failed save needs a separate warning; the add is not rolled back. |
@@ -323,6 +340,8 @@ confirmation before saving, and a separate warning on failure.
 | `OrderListTest` | Basic order storage and sequential IDs, including the transition from `O999` to `O1000`. |
 | `ParserTest` and `ParserErrorTest` | Existing command syntax, date/size validation, unknown prefixes, and duplicate fields. |
 | `ParserEditValidationTest` | Editing uses the shared date and phone rules, including rejection of extended years. |
+| `QuotedFieldParserTest` | Quoted names and cake details, escapes, unchanged unquoted text, malformed quotes, and validation of quoted values. |
+| `QuotedOrderCliTest` | Quoted names survive add/edit and restarting. Invalid quoted commands preserve saved records and the next Order ID. |
 
 CLI tests run against JUnit temporary folders. They restore standard input and
 output after each session and never use the baker's real data file. Persistence

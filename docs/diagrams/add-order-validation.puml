@@ -19,6 +19,7 @@ activate Parser
 Parser -> AddParser : parse(input)
 activate AddParser
 note over Parser, AddParser
+  Use FieldTokenizer for quoted values.
   Check prefixes, six non-blank fields,
   phone, strict date and cake size.
 end note

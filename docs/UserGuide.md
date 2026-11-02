@@ -43,6 +43,8 @@ Alternatively, run from the project folder with `.\gradlew.bat run` on Windows o
 * Commands and IDs are case-insensitive: `view o001` also works.
 * Use lowercase field prefixes (`n/`, `p/`, `d/`, `s/`, `f/`, and `fi/`).
 * Fields may appear in any order, with whitespace between fields. Values may contain spaces.
+* In `add` and `edit`, quote the whole value when it contains field-prefix text:
+  `n/"John s/o Doe"`. Quoted and unquoted fields can be mixed.
 * `ORDER_ID` is an ID such as `O001`, and `CUSTOMER_ID` is an ID such as `C001`.
   CakeQueue assigns these IDs automatically.
 * When adding an order or editing its due date, enter a real date in `DD-MM-YYYY` format,
@@ -74,9 +76,23 @@ All six fields are required and must be non-empty. Duplicate and unknown prefixe
 <!-- @@author Eethanzyj -->
 
 Spaces at the start and end of each value are removed. Spaces inside values are preserved.
-Do not put field prefixes inside values: a separate word such as `n/` starts a new field.
-Any word followed by `/` after whitespace is treated as a prefix, including an unknown
-one. For a flavour such as `Dark Chocolate / Coffee`, leave spaces around the slash.
+To include text that looks like a field prefix, put the **entire value in straight double
+quotes**. Prefixes inside the quotes are treated as text, and the surrounding quotes are
+removed before storing the value. For example:
+
+```text
+add n/"John s/o Doe" p/91234567 d/30-10-2030 s/8 f/"Dark Chocolate/Vanilla" fi/Cream
+```
+
+This stores `John s/o Doe` as the name and `Dark Chocolate/Vanilla` as the flavour.
+An unquoted `s/o` inside a name would be interpreted as the size prefix `s/`, so quote
+names containing `s/o` or `d/o`. Unknown or duplicate prefixes outside quotes are still rejected.
+
+Inside a quoted value, use `\"` for a literal double quote and `\\` for a literal backslash.
+Other backslashes remain literal. Spaces at the edges of a quoted value are also trimmed.
+A quoted value must close on the same command line; do not add text after its closing
+quote except whitespace and the next field. Unfinished quotes or trailing text produce an error
+without changing orders or using an Order ID.
 
 CakeQueue assigns a unique Order ID, sets the order to `QUEUED`, and shows a confirmation
 with all its details. Invalid input does not add an order or use up an Order ID.
@@ -285,7 +301,10 @@ Examples:
 ```text
 edit O001 s/10
 edit O001 d/22-12-2030 f/Vanilla
+edit O001 n/"Mary d/o Jane" f/"Dark Chocolate/Vanilla"
 ```
+
+The same whole-value quoting and escaping rules as `add` apply to edited fields.
 
 <!-- @@author -->
 
