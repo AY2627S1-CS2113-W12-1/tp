@@ -75,6 +75,8 @@ All six fields are required and must be non-empty. Duplicate and unknown prefixe
 
 Spaces at the start and end of each value are removed. Spaces inside values are preserved.
 Do not put field prefixes inside values: a separate word such as `n/` starts a new field.
+Any word followed by `/` after whitespace is treated as a prefix, including an unknown
+one. For a flavour such as `Dark Chocolate / Coffee`, leave spaces around the slash.
 
 CakeQueue assigns a unique Order ID, sets the order to `QUEUED`, and shows a confirmation
 with all its details. Invalid input does not add an order or use up an Order ID.

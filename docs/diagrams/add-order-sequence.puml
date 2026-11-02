@@ -1,90 +1,59 @@
 @startuml
 ' Author: Eethanzyj
-title Add Order: validate, create, confirm, and save
+title Add Order: create an order after validation
 skinparam backgroundColor white
 skinparam defaultFontName SansSerif
-skinparam defaultFontSize 14
+skinparam defaultFontSize 16
 skinparam sequenceMessageAlign center
 hide footbox
 
-actor Baker
 participant ":BakerCli" as Cli
-participant "<<class>>\nParser" as Parser
-participant "<<class>>\nAddOrderParser" as AddParser
 participant ":AddOrderCommand" as Add
 participant "orders:OrderList" as Orders
 participant "order:Order" as Order
-participant "saveChanges:Runnable" as Save
-participant ":Storage" as Storage
 
-Baker -> Cli : add n/NAME p/PHONE d/DATE\ns/SIZE f/FLAVOUR fi/FILLING
-activate Cli
-Cli -> Parser : parseAdd(input)
-activate Parser
-Parser -> AddParser : parse(input)
-activate AddParser
-note right of AddParser
-  Check all required fields,
-  prefixes, phone, date,
-  and cake size.
+note over Cli, Orders
+  Precondition: Parser.parseAdd has returned validated details.
+  Customer lookup and capacity checks are omitted here.
 end note
-alt invalid input
-  AddParser --> Parser : throws CakeQueueException
-  Parser --> Cli : throws CakeQueueException
-  Cli --> Baker : Error with field guidance
-  note over Orders, Storage
-    No ID is generated, no order is added,
-    and no save is attempted.
-  end note
-else valid input
-  AddParser --> Parser : AddOrderDetails
-  Parser --> Cli : AddOrderDetails
-end
-deactivate AddParser
-deactivate Parser
-opt valid input
-  create Add
-  Cli -> Add : new AddOrderCommand(details)
-  Cli -> Add : execute(orders)
-  activate Add
-  ref over Add, Orders : Look up the existing customer\nby phone number
-  Add -> Orders : generateOrderId()
-  Orders --> Add : orderId
-  note right of Add
-    Create Customer(name, phone)
-    and Cake(size, flavour, filling).
-  end note
-  create Order
-  Add -> Order : new Order(orderId, customer, cake, dueDate)
-  note right of Order : Initial status is QUEUED.
-  Add -> Orders : add(order)
-  Orders -> Order : setCustomerId(customerId)
-  note right of Order
-    Reuse the matching phone's ID,
-    or assign the next Customer ID.
-  end note
-  ref over Add, Orders : Check capacity; warn if over the limit
-  ref over Add, Orders : Append Customer ID\nand new/returning label
-  Add --> Cli : confirmation, optional warning, Customer ID
-  deactivate Add
-  Cli --> Baker : Added order, optional capacity warning, and Customer ID
-  Cli -> Save : run()
-  activate Save
-  note right of Save
-    Callback supplied by Duke;
-    BakerCli does not access files directly.
-  end note
-  Save -> Storage : save(orders)
-  activate Storage
-  Storage -> Orders : getAll()
-  Orders --> Storage : current records
-  note right of Storage : Write through a temporary data file.
-  Storage --> Save : saved: boolean
-  deactivate Storage
-  opt save failed
-    Save --> Baker : Warning: changes kept for this session only
-  end
-  deactivate Save
-end
+activate Cli
+create Add
+Cli -> Add : new AddOrderCommand(details)
+Cli -> Add : execute(orders)
+activate Add
+Add -> Orders : generateOrderId()
+activate Orders
+Orders --> Add : orderId
+deactivate Orders
+note over Add, Orders
+  Create one Customer and one Cake from the details.
+  Their construction is omitted for clarity.
+end note
+create Order
+Add -> Order : new Order(orderId, customer,\ncake, dueDate)
+activate Order
+note over Orders, Order : Initial status: QUEUED
+deactivate Order
+Add -> Orders : add(order)
+activate Orders
+Orders -> Order : setCustomerId(customerId)
+activate Order
+deactivate Order
+note over Orders, Order
+  Reuse a matching phone's Customer ID,
+  or allocate the next one, then store the order.
+end note
+Orders --> Add
+deactivate Orders
+note over Add, Orders
+  Build the confirmation, including any capacity
+  warning and the new/returning customer label.
+end note
+Add --> Cli : result: String
+deactivate Add
+note over Cli, Add
+  Next: display the result and request saving
+  (separate diagram).
+end note
 deactivate Cli
 @enduml

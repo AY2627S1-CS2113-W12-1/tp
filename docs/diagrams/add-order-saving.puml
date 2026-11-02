@@ -1,0 +1,36 @@
+@startuml
+' Author: Eethanzyj
+title Add Order: display the result, then save
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 16
+skinparam sequenceMessageAlign center
+hide footbox
+
+actor Baker
+participant ":BakerCli" as Cli
+participant "saveChanges:Runnable" as Save
+participant "storage:Storage" as Storage
+
+note over Cli, Save
+  Precondition: AddOrderCommand.execute has returned.
+  Duke supplied the saveChanges callback to BakerCli.run.
+end note
+activate Cli
+Cli --> Baker : confirmation (and any capacity warning)
+Cli -> Save : run()
+activate Save
+Save -> Storage : save(orders)
+activate Storage
+note over Save, Storage
+  Write the current records to a temporary file;
+  replace the data file after writing succeeds.
+end note
+Storage --> Save : saved: boolean
+deactivate Storage
+opt saved == false
+  Save --> Baker : Warning: Could not save your data.\nYour changes are kept for this session only.
+end
+deactivate Save
+deactivate Cli
+@enduml

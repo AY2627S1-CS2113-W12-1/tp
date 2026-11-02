@@ -181,8 +181,16 @@ one `Customer` and one `Cake`. Each add creates its own customer object, even if
 another order has the same name or phone. These per-order objects keep name edits
 independent. Orders with matching phone numbers can share a Customer ID, which
 allows the customer/history commands to group them without merging the orders.
+Dashed arrows represent dependencies; solid arrows represent stored references.
+Storage is outside this diagram because the command returns a result without saving it.
 
 #### Validation before changing data
+
+![Add Order validation sequence](images/add-order-validation.png)
+
+The interaction is split into validation, creation, and saving diagrams so each
+can be read at normal page width. Each diagram states where it starts; together
+they describe one command, rather than three independent operations.
 
 The syntax is `add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING`.
 `BakerCli` calls `Parser.parseAdd` once and passes the returned immutable
@@ -201,7 +209,8 @@ checks required fields and converts the date and size.
   punctuation, and Unicode characters in customer names are preserved.
 * Phone numbers must have at least 8 digits, and may also contain spaces, `+`
   and `-`, so formatted numbers such as `+65 9123-4567` are retained.
-* Dates use strict `dd-MM-uuuu` parsing, so impossible dates are rejected.
+* Dates require exactly two day digits, two month digits and four unsigned year digits,
+  with strict calendar validation, so impossible dates and signed or extended years are rejected.
   Dates before today are rejected. `edit` applies the same date and phone rules.
 * Cake sizes are limited to 6, 8, or 10 inches.
 
@@ -219,18 +228,23 @@ The parser returns structured details rather than creating an order itself, so
 validation can be tested without generating IDs or writing files. The same phone
 validation applies to `add` and `edit`: at least eight digits, with spaces, `+` and `-` allowed.
 
-**Why a separate command?** The CLI handles interaction, while `AddOrderCommand` owns
-order creation and confirmation. This matches the existing command classes and allows
-direct tests without console streams or files. The command reuses customer grouping and
-capacity logic; those shared responsibilities remain in their existing classes. Its input
-uses the existing `Parser.AddOrderDetails`, so the extraction does not require changes to
-command callers or another request class. `Parser.parseAdd` remains the entry point, and
-only `AddOrderParser` handles the six required fields. The CLI retains the save callback,
-keeping the command independent of storage.
+#### Design decisions and trade-offs
+
+| Decision | Reason | Trade-off |
+| --- | --- | --- |
+| Keep `Parser.parseAdd` and delegate to `AddOrderParser`. | Existing callers keep the same API, while the six required fields have one focused parser. Shared phone, date and size rules still apply to both add and edit. | There is one extra delegation step, and `AddOrderDetails` remains nested in `Parser`. |
+| Pass validated, immutable details to `AddOrderCommand`. | The command creates the order without parsing again. Parser tests need no model changes; command tests need no console or files. | Callers must use the parser before constructing the command. The command relies on that validation contract. |
+| Create a separate `Customer` object for each order. | Editing one order's recorded name does not alter another order. Customer IDs provide the shared grouping for history. | Customer details are repeated across records, and editing one record does not update all of a customer's orders. |
+| Keep saving in the callback supplied by `Duke`. | The command handles order creation and confirmation while `Storage` handles files. Existing customer and capacity components are reused. | Confirmation means the order is in memory. A failed save needs a separate warning; the add is not rolled back. |
 
 #### Creating and saving an order
 
-![Add Order interaction sequence](images/add-order-sequence.png)
+![Add Order creation sequence](images/add-order-sequence.png)
+
+This diagram starts after validation succeeds. Customer lookup, capacity checks,
+and the `Customer` and `Cake` constructor calls are omitted to keep the order
+creation and Customer ID assignment readable. The responsibilities table and
+customer/history section describe those shared components.
 
 After successful parsing, `AddOrderCommand.execute` requests an Order ID from `OrderList`,
 constructs the customer and cake, and creates an `Order` with status `QUEUED`.
@@ -249,8 +263,13 @@ restores existing records, `OrderList.add` advances the counters past their IDs.
 Consequently, the next add continues after the restored IDs instead of starting
 again at `O001`. Three digits are a minimum width: `O999` is followed by `O1000`,
 which remains usable by view and edit commands and after restarting.
+ID formatting uses `Locale.ROOT`, keeping the digits `0`–`9` even when the system's
+regional settings use other numeral symbols. Commands and storage therefore
+recognise generated IDs consistently.
 Rejected command input does not advance the counter because
 parsing precedes ID generation.
+
+![Add Order saving sequence](images/add-order-saving.png)
 
 `BakerCli.run` prints the confirmation and invokes its `afterChange` callback.
 `Duke` supplies this callback, keeping file handling outside the CLI. `Storage`
@@ -260,7 +279,7 @@ default path is `data/cakequeue.txt`, relative to the application's launch folde
 A successful in-memory add and a successful disk save are separate outcomes.
 If saving fails, the order remains available during the current session and
 `Duke` displays a warning that the changes are kept for this session only.
-The application does not roll back the add. The sequence diagram therefore shows
+The application does not roll back the add. The saving diagram therefore shows
 confirmation before saving, and a separate warning on failure.
 
 #### Regression tests
@@ -268,18 +287,20 @@ confirmation before saving, and a separate warning on failure.
 | Test class | Behaviour checked |
 | --- | --- |
 | `AddOrderCommandTest` | Complete order creation, returning customers with cancelled orders, restored ID counters, and warning placement. |
-| `AddOrderValidationTest` | Guidance for each missing field, blank names, punctuation, Unicode, and formatted phones. |
-| `AddOrderReliabilityTest` | Rejected commands preserve saved data and IDs; names survive restarting; customer IDs and capacity warnings, and independent name edits work together. Four-digit IDs can be added, viewed, edited, saved and restored. |
+| `AddOrderValidationTest` | Guidance for each missing field, blank names, punctuation, Unicode, and formatted phones. Today and tomorrow are accepted; yesterday and years outside the four-digit format are rejected. |
+| `AddOrderReliabilityTest` | Rejected commands preserve saved data and IDs; names survive restarting; customer IDs and capacity warnings, and independent name edits work together. IDs remain usable across regional settings and the `O999` to `O1000` boundary. |
 | `OrderListTest` | Basic order storage and sequential IDs, including the transition from `O999` to `O1000`. |
 | `ParserTest` and `ParserErrorTest` | Existing command syntax, date/size validation, unknown prefixes, and duplicate fields. |
+| `ParserEditValidationTest` | Editing uses the shared date and phone rules, including rejection of extended years. |
 
 CLI tests run against JUnit temporary folders. They restore standard input and
 output after each session and never use the baker's real data file. Persistence
 tests inspect restored model values as well as CLI messages, so a correct-looking
 confirmation alone is not enough to pass.
 
-Diagram sources are in `docs/diagrams/add-order-class.puml` and
-`docs/diagrams/add-order-sequence.puml`. Their PNG exports are in `docs/images`.
+Diagram sources are [the class overview](diagrams/add-order-class.puml),
+[validation](diagrams/add-order-validation.puml), [creation](diagrams/add-order-sequence.puml),
+and [saving](diagrams/add-order-saving.puml). Their PNG exports are in `docs/images`.
 Update both the source and its export when the implementation changes.
 
 ### Order progress and storage
