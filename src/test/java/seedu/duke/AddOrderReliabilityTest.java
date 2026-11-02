@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -72,6 +73,31 @@ public class AddOrderReliabilityTest {
     }
 
     @Test
+    public void run_nonLatinNumberLocale_keepsIdsUsableAfterRestart() {
+        Locale originalLocale = Locale.getDefault(Locale.Category.FORMAT);
+        Path dataFile = tempDir.resolve("cakequeue.txt");
+        try {
+            Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("ar-EG"));
+            String added = runSession(dataFile, VALID_ADD + "\nview O001\ncustomer C001\nbye\n");
+
+            assertFalse(added.contains("Error:"));
+            assertTrue(added.contains("Added order O001:"));
+            assertTrue(added.contains("Customer ID: C001 (new customer)"));
+
+            String restarted = runSession(dataFile, "view O001\nhistory C001\n" + VALID_ADD + "\nbye\n");
+            assertFalse(restarted.contains("Error:"));
+            assertTrue(restarted.contains("Order ID: O001"));
+            assertTrue(restarted.contains("Order history for Alice Tan (C001):"));
+            assertTrue(restarted.contains("Added order O002:"));
+            OrderList restored = new Storage(dataFile).load();
+            assertEquals(2, restored.size());
+            assertEquals("C001", restored.getById("O002").getCustomerId());
+        } finally {
+            Locale.setDefault(Locale.Category.FORMAT, originalLocale);
+        }
+    }
+
+    @Test
     public void run_invalidAdds_preservesSavedDataAndNextId() throws IOException {
         Path dataFile = tempDir.resolve("cakequeue.txt");
         runSession(dataFile, VALID_ADD + "\nbye\n");
@@ -81,6 +107,7 @@ public class AddOrderReliabilityTest {
                 VALID_ADD.replace("n/Alice Tan", "n/   "),
                 VALID_ADD.replace("p/91234567", "p/   "),
                 VALID_ADD.replace("30-10-2030", "31-02-2030"),
+                VALID_ADD.replace("30-10-2030", "30-10-+10000"),
                 VALID_ADD.replace("s/8", "s/7"),
                 VALID_ADD + " n/Bob",
                 VALID_ADD + " x/Extra");

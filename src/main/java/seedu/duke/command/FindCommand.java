@@ -8,6 +8,9 @@ import java.util.Locale;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
+//@@author Eethanzyj
+import seedu.duke.ui.OrderFormatter;
+//@@author Kaishhhh
 
 /**
  * Finds orders and enquiries whose customer name, cake flavour or cake filling
@@ -42,12 +45,14 @@ public class FindCommand {
         StringBuilder listing = new StringBuilder("Orders matching \"" + keyword + "\":");
         listing.append(System.lineSeparator());
         for (int i = 0; i < matches.size(); i++) {
-            listing.append(i + 1)
-                    .append(". ")
-                    .append(matches.get(i))
+            //@@author Eethanzyj
+            listing.append(OrderFormatter.format(matches.get(i), i + 1, ""))
+                    //@@author Kaishhhh
                     .append(System.lineSeparator());
         }
-        return listing.toString();
+        //@@author Eethanzyj
+        return listing.append(OrderFormatter.SEPARATOR).toString();
+        //@@author Kaishhhh
     }
 
     private boolean matches(Order order, String lowerKeyword) {

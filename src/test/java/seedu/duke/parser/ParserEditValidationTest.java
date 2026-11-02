@@ -27,6 +27,15 @@ public class ParserEditValidationTest {
         assertThrows(CakeQueueException.class, () -> Parser.parseUpdate("edit O001 p/1234567"));
     }
 
+    //@@author Eethanzyj
+    @Test
+    public void parseUpdate_extendedYear_rejectsDateLikeAdd() {
+        CakeQueueException exception = assertThrows(CakeQueueException.class,
+                () -> Parser.parseUpdate("edit O001 d/30-10-+10000"));
+        assertEquals("Date must use DD-MM-YYYY and be valid.", exception.getMessage());
+    }
+
+    //@@author Kaishhhh
     @Test
     public void parseUpdate_formattedPhone_isAccepted() {
         assertEquals("+65 9123-4567", Parser.parseUpdate("edit O001 p/+65 9123-4567").getPhone());

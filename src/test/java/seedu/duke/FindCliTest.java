@@ -32,7 +32,9 @@ public class FindCliTest {
                         + "bye\n");
 
         assertTrue(result.contains("Orders matching \"alice\":"));
-        assertTrue(result.contains("1. O001: Alice Tan"));
+        //@@author Eethanzyj
+        assertTrue(result.contains("1. O001 [QUEUED]" + System.lineSeparator() + "   Customer: Alice Tan"));
+        //@@author Kaishhhh
         assertFalse(result.contains("1. O002"));
     }
 
