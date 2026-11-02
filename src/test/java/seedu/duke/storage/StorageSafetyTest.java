@@ -35,6 +35,61 @@ public class StorageSafetyTest {
     }
 
     @Test
+    public void invalidCapacity_loadsOrdersAndUsesDefaultFive() throws Exception {
+        Path file = tempDir.resolve("invalid-capacity.txt");
+        OrderList orders = new OrderList();
+        orders.add(new Order("O001", new Customer("Alice", "91234567"), null));
+        assertTrue(new Storage(file).save(orders));
+        String saved = Files.readString(file).replace("# dailyCapacity=5", "# dailyCapacity=abc");
+        Files.writeString(file, saved);
+
+        Storage storage = new Storage(file);
+        OrderList loaded = storage.load();
+        assertEquals(5, loaded.getDailyCapacity());
+        assertEquals(1, loaded.size());
+        assertEquals("Alice", loaded.getById("O001").getCustomer().getName());
+        assertTrue(storage.save(loaded));
+        assertTrue(Files.readString(file).startsWith("# dailyCapacity=5"));
+    }
+
+    @Test
+    public void malformedCapacityHeader_preservesValidOrdersAndUsesDefault() throws Exception {
+        Path file = tempDir.resolve("malformed-capacity.txt");
+        OrderList orders = new OrderList();
+        orders.add(new Order("O001", new Customer("Alice", "91234567"), null));
+        assertTrue(new Storage(file).save(orders));
+        String saved = Files.readString(file).replace("# dailyCapacity=5", "# dailyCapacity =abc");
+        Files.writeString(file, saved);
+
+        OrderList loaded = new Storage(file).load();
+        assertEquals(OrderList.DEFAULT_DAILY_CAPACITY, loaded.getDailyCapacity());
+        assertEquals(1, loaded.size());
+        assertEquals("Alice", loaded.getById("O001").getCustomer().getName());
+    }
+
+    @Test
+    public void malformedCapacityHeaderWithCorruptOrder_stillAborts() throws Exception {
+        Path file = tempDir.resolve("malformed-and-corrupt.txt");
+        Files.writeString(file, "# dailyCapacity =abc\ncorrupted order\n");
+        Storage storage = new Storage(file);
+
+        assertThrows(IllegalStateException.class, storage::load);
+        assertFalse(storage.save(new OrderList()));
+    }
+
+    @Test
+    public void invalidCapacityWithCorruptedOrder_stillBlocksSaving() throws Exception {
+        Path file = tempDir.resolve("mixed-corruption.txt");
+        String original = "# dailyCapacity=invalid\ncorrupted order\n";
+        Files.writeString(file, original);
+        Storage storage = new Storage(file);
+
+        assertThrows(IllegalStateException.class, storage::load);
+        assertFalse(storage.save(new OrderList()));
+        assertEquals(original, Files.readString(file));
+    }
+
+    @Test
     public void corruptedLoad_doesNotOverwriteOriginalFile() throws Exception {
         Path file = tempDir.resolve("orders.txt");
         Files.writeString(file, "invalid record\n");

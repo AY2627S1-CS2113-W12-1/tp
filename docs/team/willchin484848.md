@@ -24,6 +24,12 @@ CakeQueue is a command-line application that helps bakers manage cake orders, cu
 
 * **Code quality and testing.** Removed redundant customer lookups, added Java assertions for internal invariants, and added regression tests for storage safety and validation.
 
+* **Storage recovery improvements.** Improved handling of invalid capacity headers so CakeQueue warns users and falls back to the default capacity of 5 while preserving valid orders.
+
+* **Corrupted data protection.** Ensured corrupted order records and unreadable storage files prevent startup, protecting existing data from accidental overwriting.
+
+* **Storage regression testing.** Added tests for malformed capacity headers, corrupted records, startup failure, and data preservation.
+
 #### Contributions to the User Guide
 
 * Updated documentation for cake validation and due-date warning behaviour.
@@ -32,6 +38,7 @@ CakeQueue is a command-line application that helps bakers manage cake orders, cu
 
 * Documented the implementation of the `edit` command and its validation logic.
 * Updated storage-related explanations to reflect improved data protection and persistence behaviour.
+* Updated storage documentation to distinguish recoverable capacity errors from fatal order corruption and explain capacity persistence.
 
 #### Contributions to team-based tasks
 

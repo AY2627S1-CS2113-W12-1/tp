@@ -80,7 +80,7 @@ public class CustomerIdStorageTest {
     }
 
     @Test
-    public void load_badCustomerId_skipsLine() throws IOException {
+    public void load_badCustomerId_abortsLoading() throws IOException {
         Path file = tempDir.resolve("cakequeue.txt");
         Files.write(file, List.of(
                 "O001 | QUEUED | Alice | 91111111 | 2026-12-01 | 8 | Chocolate | Cream | X1"));

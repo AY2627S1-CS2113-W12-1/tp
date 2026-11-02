@@ -107,12 +107,19 @@ public class Storage {
                 continue;
             }
             //@@author WillChin484848
-            if (line.startsWith(CAPACITY_PREFIX)) {
+            if (line.matches("#\\s*dailyCapacity\\b.*")) {
                 try {
-                    orders.setDailyCapacity(Integer.parseInt(line.substring(CAPACITY_PREFIX.length())));
+                    if (!line.startsWith(CAPACITY_PREFIX)) {
+                        throw new IllegalArgumentException("Malformed capacity header");
+                    }
+                    orders.setDailyCapacity(Integer.parseInt(line.substring(CAPACITY_PREFIX.length()).trim()));
                 } catch (IllegalArgumentException exception) {
-                    unsafeToSave = true;
-                    LOGGER.log(Level.WARNING, "Invalid capacity setting on line " + lineNumber, exception);
+                    // A damaged setting is recoverable; order records remain authoritative.
+                    orders.setDailyCapacity(OrderList.DEFAULT_DAILY_CAPACITY);
+                    String warning = "Invalid capacity setting on line " + lineNumber
+                            + "; using default capacity " + OrderList.DEFAULT_DAILY_CAPACITY + ".";
+                    LOGGER.log(Level.WARNING, warning, exception);
+                    System.err.println("Warning: " + warning);
                 }
                 continue;
             }
@@ -123,7 +130,7 @@ public class Storage {
             } catch (IllegalArgumentException | DateTimeException exception) {
                 unsafeToSave = true;
                 //@@author HammerHead-os
-                LOGGER.log(Level.WARNING, "Skipping corrupted line " + lineNumber
+                LOGGER.log(Level.WARNING, "Corrupted record on line " + lineNumber
                         + " in " + dataFile + ": " + exception.getMessage());
                 //@@author WillChin484848
             }
@@ -141,7 +148,7 @@ public class Storage {
                 orders.reserveCustomerId(order.getCustomerId());
             } catch (IllegalArgumentException exception) {
                 unsafeToSave = true;
-                LOGGER.log(Level.WARNING, "Invalid restored customer ID", exception);
+                LOGGER.log(Level.WARNING, "Invalid restored customer ID; startup will abort", exception);
             }
         }
         for (Order order : parsedOrders) {
@@ -155,7 +162,7 @@ public class Storage {
                 orders.add(order);
             } catch (IllegalArgumentException exception) {
                 unsafeToSave = true;
-                LOGGER.log(Level.WARNING, "Skipping invalid or duplicate record", exception);
+                LOGGER.log(Level.WARNING, "Invalid or duplicate saved record; startup will abort", exception);
                 //@@author HammerHead-os
             }
         }

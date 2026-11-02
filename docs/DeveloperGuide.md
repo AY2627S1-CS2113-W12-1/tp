@@ -129,15 +129,14 @@ fields from older versions still load. A 9-field line normally ends with a custo
 with notes in that position, so a 9th field that does not look like an ID (one letter then digits) is read as
 notes. A loaded O-prefixed order without a Customer ID receives one through `OrderList.add`;
 E-prefixed legacy records do not. Backslashes are escaped as `\\`. Plain text
-keeps the file readable, easy to compare in Git, and fixable by hand. Two choices keep the data safe:
+keeps the file readable, easy to compare in Git, and fixable by hand. Three measures help protect the saved data:
 
 * A save writes a temporary file in the same folder, then replaces the real file. It attempts
   an atomic move and falls back to a normal replacement if atomic moves are unsupported. This
   avoids writing directly into the current data file; the fallback has weaker crash guarantees.
-* A line that cannot be read when loading is skipped with a warning, so one bad line does not stop the
-  app or lose the other records.
+* If a saved order record is corrupted, loading fails and the application stops startup rather than silently skipping the record. This prevents incomplete data from being loaded and subsequently saved over the original file. Unreadable storage files also prevent startup.
 
-The daily capacity is not part of the saved data yet. See [Daily capacity feature](#daily-capacity-feature).
+* The daily capacity is persisted in the data file using a `# dailyCapacity=NUMBER` header. Older files without this header use the default capacity of 5. If the capacity header is invalid but the order records are valid, the application warns the user and continues with capacity 5.
 
 ### Error handling
 
@@ -253,8 +252,7 @@ record. The existing `Cake` constructor also checks size, flavour, and filling.
 The command logs the Order ID rather than the customer's name or phone.
 
 The command appends a capacity warning when active orders on the due date
-exceed the configured limit. It still adds the order. The default limit is 5,
-can be changed to 1–50 using `capacity`, and resets on restart. Enquiries and
+exceed the configured limit. It still adds the order. The default limit is 5, can be changed to 1–50 using 'capacity', and is saved between sessions. Enquiries and
 closed records do not count. The command then appends the Customer ID and whether
 the customer is new or returning; it does not generate another order.
 
@@ -448,13 +446,7 @@ collected orders, cancelled orders and rejected records do not count.
 understand and to set, with no need to estimate the time of each cake. Cons: a wedding cake and a cupcake
 count the same.
 
-**Not saved between runs (current limitation).** `Storage` writes one order per line, so saving the capacity
-would change the file format, which the whole team depends on. The capacity therefore goes back to 5 on each
-start. The user guide lists this under Current Limitations.
-
-*Proposed implementation.* Write the capacity as a first line such as `#capacity 3` in the data file. Make
-`Storage.load` read that line and call `setDailyCapacity`, and make it skip other lines that start with `#`
-instead of treating them as corrupted. Older files without the line keep working with the default of 5.
+**Capacity persistence.** The daily capacity is saved in the data file using a # dailyCapacity=NUMBER header and restored when CakeQueue starts. Older files without this header use the default capacity of 5. If the header is invalid, CakeQueue warns the user and uses capacity 5 while retaining valid orders. Corrupted order records still prevent startup to protect saved data.
 
 ### Customer and history features
 
@@ -505,7 +497,7 @@ regardless of due date or status. Grouping follows insertion order, not due-date
 | `customer` or `customer X1` | `Error: Use: customer CUSTOMER_ID` |
 | `history` or `history X1` | `Error: Use: history CUSTOMER_ID` |
 | `customer C999` (no such customer) | `Error: Customer not found: C999` |
-| A data file line with a malformed Customer ID | The line is skipped with a warning, like any other corrupted line. |
+| A data file line with a malformed Customer ID | Startup fails with an error to prevent corrupted records from being silently discarded. |
 
 All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, so the program keeps running.
 
@@ -584,15 +576,14 @@ Priorities: High (must have), Medium (nice to have), Low (unlikely to have).
 | v2.0 | Medium | baker | find orders by customer name, flavour or filling | locate an order without going through the whole list |
 | v2.0 | Medium | baker | see a customer's order history | recognise a returning customer and recall their past cakes |
 | v2.0 | High | baker | have my orders saved automatically | close the app without losing orders |
-| Future (not implemented) | Low | baker | have my daily capacity remembered between sessions | avoid setting it again each time I start the app |
+| v2.0 | Low | baker | have my daily capacity remembered between sessions | avoid setting it again each time I start the app |
 
 ## Appendix C: Non-Functional Requirements
 
 1. **Platform.** CakeQueue should work on Windows, macOS and Linux when Java 25 is the only Java version installed.
 2. **Performance.** With up to 1,000 orders, each command should respond within 1 second on an ordinary laptop.
 3. **Data safety.** Successful record changes trigger an immediate save attempt. A save failure
-   produces a warning and leaves the change in memory. A malformed saved line should not prevent
-   valid lines from loading; a warning identifies the skipped line.
+   produces a warning and leaves the change in memory. Corrupted order records and unreadable storage files must prevent startup to avoid accidental data loss. An invalid capacity setting alone must produce a warning and restore the default capacity of 5 without preventing valid orders from loading.
 4. **Readable data.** The data file should be plain text that a user can open, read and fix in a text editor.
 5. **Error messages.** Every invalid command should show a message that says what is wrong, and should not end the
    session or change any data.
@@ -642,8 +633,7 @@ two orders share C001, so `customer C001` reports two orders and a repeat custom
 Editing changes only the selected size. Cancellation retains Bob's history. The final
 active list contains O003; O001 is collected and O002 is cancelled.
 
-Restart from the same folder. Expect three saved records, unchanged Customer IDs/statuses,
-and a default capacity of five. Verify with `view O001`, `view O002`, `history C001`, and `capacity`.
+Restart from the same folder. Expect three saved records, unchanged Customer IDs/statuses, and the previously configured capacity of 1. Verify with `view O001`, `view O002`, `history C001`, and `capacity`.
 After restarting, try these invalid inputs. Each must leave records unchanged and allow
 the next valid command to run:
 

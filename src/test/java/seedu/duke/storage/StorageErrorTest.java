@@ -20,10 +20,8 @@ import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 
 /**
- * Error-handling tests for {@link Storage}: corrupted data must never crash
- * the application or lose valid records. Bad lines are skipped, unreadable
- * files load as empty, and failed saves report {@code false} instead of
- * throwing.
+ * Tests storage failure handling. Corrupted records and unreadable files must
+ * abort loading, while failed saves return false without overwriting data.
  */
 public class StorageErrorTest {
     @TempDir
@@ -38,7 +36,7 @@ public class StorageErrorTest {
     }
 
     @Test
-    public void load_eachKindOfCorruptedLine_skipsOnlyThatLine() throws Exception {
+    public void load_corruptedRecord_abortsLoading() throws Exception {
         Files.createDirectories(dataFile().getParent());
         Files.write(dataFile(), List.of(
                 validLine(),

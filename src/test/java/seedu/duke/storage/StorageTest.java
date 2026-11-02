@@ -79,7 +79,7 @@ public class StorageTest {
     }
 
     @Test
-    public void load_corruptedLines_skipsThemAndKeepsValidRecords() throws Exception {
+    public void load_corruptedLines_abortsLoading() throws Exception {
         Storage storage = new Storage(dataFile());
         assertTrue(storage.save(sampleOrders()));
         Files.write(dataFile(),
