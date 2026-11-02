@@ -106,6 +106,19 @@ result and invokes the save callback after successful record changes.
 
 <!-- @@author Eethanzyj -->
 
+#### Contextual help
+
+`BakerCli` passes the optional topic in `help [COMMAND]` to `HelpCommand.execute(String)`.
+An empty topic returns the existing overview through `execute()`. A single topic is
+normalised with `Locale.ROOT` and looked up in the help map. Unknown topics or extra
+words produce `CakeQueueException`, handled by the normal CLI error handler.
+
+Each topic stores its syntax, essential rules and one concrete example. The shared text
+formatter puts formats and examples on separate lines so users can copy the command line.
+Help has no model or storage dependency and does not invoke the save callback.
+`HelpCommandTest` checks topic coverage and syntax against the overview; `HelpCliTest`
+executes the displayed examples and verifies that requesting help leaves saved data unchanged.
+
 #### Readable order results
 
 `ListCommand`, `FindCommand` and `HistoryCommand` use `ui.OrderFormatter` to display
