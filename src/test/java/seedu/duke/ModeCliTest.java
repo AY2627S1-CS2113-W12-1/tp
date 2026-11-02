@@ -24,7 +24,9 @@ public class ModeCliTest {
     private Path tempDir;
 
     @Test
+    //@@author Eethanzyj
     public void run_bakerCancel_hidesOrderFromActiveList() {
+        //@@author HammerHead-os
         String result = runSession(
                 "add n/Direct p/81111111 d/21-10-2028 s/6 f/Vanilla fi/Cream\n"
                         + "cancel O001\n"
@@ -41,8 +43,10 @@ public class ModeCliTest {
         String result = runSession("help\nbye\n");
 
         assertTrue(result.contains("Baker commands:"));
+        //@@author Eethanzyj
         assertTrue(result.contains("find KEYWORD"));
         assertTrue(result.contains("history CUSTOMER_ID"));
+        //@@author HammerHead-os
         assertTrue(result.contains("mark ORDER_ID preparing|ready|collected"));
     }
 
@@ -57,7 +61,10 @@ public class ModeCliTest {
         assertTrue(first.contains("Updated order O001"));
         assertTrue(first.contains("[PREPARING]"));
         assertTrue(second.contains("Loaded 1 saved record(s)."));
-        assertTrue(second.contains("1. O001: Alice Tan (91234567)"));
+        //@@author Eethanzyj
+        assertTrue(second.contains("1. O001 [PREPARING]" + System.lineSeparator()
+                + "   Customer: Alice Tan (91234567)"));
+        //@@author HammerHead-os
         assertTrue(second.contains("Status: PREPARING"));
         assertTrue(second.contains("Added order O002: Bob Lim"));
     }

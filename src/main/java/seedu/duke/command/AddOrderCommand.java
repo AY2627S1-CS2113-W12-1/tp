@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.CustomerList;
+import seedu.duke.model.CustomerProfile;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.parser.Parser;
@@ -56,10 +57,8 @@ public class AddOrderCommand {
         String added = "Added order " + order
                 + (warning.isEmpty() ? "" : System.lineSeparator() + warning);
         //@@author anannya-mk
-        //@@author WillChin484848
-        assert order.getCustomerId() != null : "Added order must have a customer ID";
-        return added + System.lineSeparator() + "Customer ID: " + order.getCustomerId()
-                //@@author anannya-mk
+        CustomerProfile customer = CustomerList.fromOrders(orders).findByPhone(phone).orElseThrow();
+        return added + System.lineSeparator() + "Customer ID: " + customer.getCustomerId()
                 + (isNewCustomer ? " (new customer)" : " (returning customer)");
         //@@author Eethanzyj
     }

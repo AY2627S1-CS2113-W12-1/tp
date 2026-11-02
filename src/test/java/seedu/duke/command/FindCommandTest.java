@@ -104,6 +104,9 @@ public class FindCommandTest {
         orders.add(new Order("O001", new Customer("Alice Tan"), LocalDate.of(2026, 10, 20)));
 
         assertTrue(new FindCommand("alice").execute(orders).contains("O001"));
+        //@@author Eethanzyj
+        assertTrue(new FindCommand("alice").execute(orders).contains("   Cake details: Not specified"));
+        //@@author Kaishhhh
         assertEquals("No orders found matching \"chocolate\".",
                 new FindCommand("chocolate").execute(orders));
     }

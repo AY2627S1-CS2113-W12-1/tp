@@ -1,0 +1,48 @@
+@startuml
+' Diagram author: Eethanzyj.
+' Depicted storage persistence implementation: WillChin484848 (PR #42).
+' Original capacity feature: Kaishhhh.
+title Capacity restoration
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide footbox
+
+participant ":Duke" as Duke
+participant "storage:Storage" as Storage
+participant "orders:OrderList" as Orders
+
+note over Duke, Orders
+  Successful startup with an existing, valid save file.
+end note
+activate Duke
+Duke -> Storage : load()
+activate Storage
+create Orders
+Storage -> Orders : new OrderList()
+activate Orders
+deactivate Orders
+note over Storage, Orders
+  The initial capacity is 5.
+  Storage reads and validates the saved lines.
+end note
+opt file contains # dailyCapacity=3
+  Storage -> Orders : setDailyCapacity(3)
+  activate Orders
+  deactivate Orders
+end
+opt invalid capacity setting
+  Storage -> Orders : setDailyCapacity(5)
+  activate Orders
+  deactivate Orders
+  Storage -> Storage : warn user; retain valid orders
+end
+ref over Storage, Orders : Restore records and their IDs.
+Storage --> Duke : orders
+deactivate Storage
+note over Duke, Storage
+  Corrupted orders or unreadable files throw IllegalStateException.
+  Invalid capacity alone warns and uses 5.
+  For those errors, Duke reports the failure and stops before the CLI runs.
+end note
+deactivate Duke
+@enduml

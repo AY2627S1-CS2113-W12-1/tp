@@ -11,7 +11,13 @@ customer details are records managed by the baker. There is no customer login or
 
 Successful changes are saved automatically to `data/cakequeue.txt`, relative to the folder you
 launch CakeQueue from. When you reopen CakeQueue from the same folder, saved records are loaded and
-new IDs continue after the existing ones.
+new IDs continue after the existing ones. Daily capacity is also saved between sessions.
+
+If a saved capacity setting is invalid, CakeQueue warns you and uses the default capacity of **5**
+while retaining valid orders. Older files without a capacity setting also use 5.
+If an order record is corrupted or the storage file cannot be read, CakeQueue stops startup before
+accepting commands and leaves the original file unchanged. Keep a backup and repair or restore the
+file before restarting.
 
 * [Quick Start](#quick-start)
 * [Command Format](#command-format)
@@ -36,21 +42,6 @@ new IDs continue after the existing ones.
 Alternatively, run from the project folder with `.\gradlew.bat run` on Windows or
 `./gradlew run` on macOS/Linux.
 
-### Startup Errors and Data Protection
-
-CakeQueue automatically loads saved orders from `data/cakequeue.txt` when it starts.
-
-If the saved file is unreadable or contains corrupted data, CakeQueue stops startup instead of allowing changes that could overwrite existing records. An error message explains that the data could not be loaded safely.
-
-**To recover:**
-
-1. Close CakeQueue.
-2. Make a backup copy of `data/cakequeue.txt`.
-3. Check the file for invalid or corrupted records, and restore a known-good backup if available.
-4. Restart CakeQueue only after the file has been repaired or restored.
-
-Do not delete or overwrite the original file before making a backup. If a normal save fails during an otherwise successful session, CakeQueue warns that the latest changes may only be available in memory.
-
 ## Command Format
 
 * Words in uppercase are values you supply, such as `NAME` and `DATE`.
@@ -58,6 +49,8 @@ Do not delete or overwrite the original file before making a backup. If a normal
 * Commands and IDs are case-insensitive: `view o001` also works.
 * Use lowercase field prefixes (`n/`, `p/`, `d/`, `s/`, `f/`, and `fi/`).
 * Fields may appear in any order, with whitespace between fields. Values may contain spaces.
+* In `add` and `edit`, quote the whole value when it contains field-prefix text:
+  `n/"John s/o Doe"`. Quoted and unquoted fields can be mixed.
 * `ORDER_ID` is an ID such as `O001`, and `CUSTOMER_ID` is an ID such as `C001`.
   CakeQueue assigns these IDs automatically.
 * When adding an order or editing its due date, enter a real date in `DD-MM-YYYY` format,
@@ -89,9 +82,23 @@ All six fields are required and must be non-empty. Duplicate and unknown prefixe
 <!-- @@author Eethanzyj -->
 
 Spaces at the start and end of each value are removed. Spaces inside values are preserved.
-Do not put field prefixes inside values: a separate word such as `n/` starts a new field.
-Any word followed by `/` after whitespace is treated as a prefix, including an unknown
-one. For a flavour such as `Dark Chocolate / Coffee`, leave spaces around the slash.
+To include text that looks like a field prefix, put the **entire value in straight double
+quotes**. Prefixes inside the quotes are treated as text, and the surrounding quotes are
+removed before storing the value. For example:
+
+```text
+add n/"John s/o Doe" p/91234567 d/30-10-2030 s/8 f/"Dark Chocolate/Vanilla" fi/Cream
+```
+
+This stores `John s/o Doe` as the name and `Dark Chocolate/Vanilla` as the flavour.
+An unquoted `s/o` inside a name would be interpreted as the size prefix `s/`, so quote
+names containing `s/o` or `d/o`. Unknown or duplicate prefixes outside quotes are still rejected.
+
+Inside a quoted value, use `\"` for a literal double quote and `\\` for a literal backslash.
+Other backslashes remain literal. Spaces at the edges of a quoted value are also trimmed.
+A quoted value must close on the same command line; do not add text after its closing
+quote except whitespace and the next field. Unfinished quotes or trailing text produce an error
+without changing orders or using an Order ID.
 
 CakeQueue assigns a unique Order ID, sets the order to `QUEUED`, and shows a confirmation
 with all its details. Invalid input does not add an order or use up an Order ID.
@@ -156,6 +163,28 @@ CakeQueue highlights orders with approaching or missed deadlines:
 
 <!-- @@author Eethanzyj -->
 
+Each order appears in a separate block, with its ID and status first:
+
+```text
+Here are your upcoming orders:
+------------------------------------------------------------
+1. O001 [QUEUED]
+   Customer: Alice Tan (91234567)
+   Due: 20-12-2030
+   Size: 8 inches
+   Flavour: Chocolate | Filling: Strawberry
+------------------------------------------------------------
+2. O002 [PREPARING]
+   Customer: Bob Lim (81234567)
+   Due: 21-12-2030
+   Size: 6 inches
+   Flavour: Vanilla | Filling: Cream
+------------------------------------------------------------
+```
+
+Deadline labels such as `[DUE SOON]` appear beside the status. Older records with no
+due date or cake details show `Not specified`. `find` and `history` use the same block layout.
+
 If no orders are available, CakeQueue shows `You have no upcoming orders.`
 
 <!-- @@author -->
@@ -171,8 +200,8 @@ Shows records whose customer name, cake flavour or cake filling contains the key
 * The keyword can be part of a word: `find choc` finds `Chocolate`.
 * A keyword with spaces is searched as one phrase: `find Alice Tan` finds `Alice Tan` but not
   `Tan Alice`.
-* All records are searched, including legacy enquiries and collected or cancelled orders. Each result
-  ends with its status.
+* All records are searched, including legacy enquiries and collected or cancelled orders.
+  Each result is a separate block headed by its ID and status.
 
 Examples:
 
@@ -233,14 +262,26 @@ If the customer does not exist, CakeQueue shows `Error: Customer not found: CUST
 Format: `history CUSTOMER_ID`
 
 Lists every order placed by that customer in the order it was added, including cancelled and
-collected orders. The history is not sorted by due date. Each line ends with the order's status. Legacy enquiries are not confirmed orders and are excluded.
+collected orders. The history is not sorted by due date. Each order is a separate block
+headed by its ID and status. Legacy enquiries are not confirmed orders and are excluded.
 
 Example: `history C001`
 
 ```text
 Order history for Alice Tan (C001):
-1. O001: Alice Tan (91234567) | Due: 22-12-2030 | Size: 8 inches | Flavour: Chocolate | Filling: Strawberry [QUEUED]
-2. O003: Alice Tan (91234567) | Due: 25-12-2030 | Size: 6 inches | Flavour: Vanilla | Filling: Cream [CANCELLED]
+------------------------------------------------------------
+1. O001 [QUEUED]
+   Customer: Alice Tan (91234567)
+   Due: 22-12-2030
+   Size: 8 inches
+   Flavour: Chocolate | Filling: Strawberry
+------------------------------------------------------------
+2. O003 [CANCELLED]
+   Customer: Alice Tan (91234567)
+   Due: 25-12-2030
+   Size: 6 inches
+   Flavour: Vanilla | Filling: Cream
+------------------------------------------------------------
 ```
 
 <!-- @@author Eethanzyj -->
@@ -266,7 +307,10 @@ Examples:
 ```text
 edit O001 s/10
 edit O001 d/22-12-2030 f/Vanilla
+edit O001 n/"Mary d/o Jane" f/"Dark Chocolate/Vanilla"
 ```
+
+The same whole-value quoting and escaping rules as `add` apply to edited fields.
 
 <!-- @@author -->
 
@@ -319,7 +363,8 @@ Sets the most orders you can take for one due date, from 1 to 50. The default is
 * When `add` or `edit` leaves a due date over the limit, CakeQueue still saves the change
   and shows a warning, for example:
   `Warning: 21-12-2030 now has 4 orders, over your daily capacity of 3.`
-* The daily capacity limit is saved automatically in `data/cakequeue.txt` and restored when CakeQueue restarts. If no capacity setting has been saved, the default is 5 orders per day.
+* The limit is saved automatically and restored on restart. Invalid saved capacity settings warn
+  and use 5; corrupted orders or unreadable files stop startup.
 
 Examples:
 
@@ -330,9 +375,34 @@ capacity 3
 
 ## Getting Help: `help`
 
-Format: `help`
+<!-- @@author Eethanzyj -->
 
-Lists every command with its format.
+Format: `help [COMMAND]`
+
+Use `help` for the overall command list. Add a command name for its format, essential
+rules and one example. Every command in the Command Summary has a help topic.
+Command names are case-insensitive, so `HELP ADD` also works.
+
+Examples:
+
+```text
+help
+help add
+help edit
+help mark
+```
+
+For example, `help add` explains all six fields, the phone and date rules, and allowed
+cake sizes. Copy the example command line and replace its values with your own, or copy
+the format and replace the uppercase placeholders such as `NAME`. Examples using IDs
+such as `O001` or `C001` require those records to exist.
+
+Help only displays instructions. It never executes an example or changes orders.
+For example, `help unknown` shows
+`Error: Unknown help topic: unknown. Type help to see available commands.`
+For more than one topic, such as `help add extra`, CakeQueue shows `Error: Use: help [COMMAND]`.
+
+<!-- @@author -->
 
 ## Exiting: `bye`
 
@@ -355,12 +425,11 @@ extra to save on exit. Check for save warnings before exiting.
 | Update progress | `mark ORDER_ID preparing\|ready\|collected` |
 | Cancel | `cancel ORDER_ID` |
 | Show or set daily capacity | `capacity [NUMBER]` |
-| Help | `help` |
+| Help | `help [COMMAND]` |
 | Exit | `bye` |
 
 ## Current Limitations
 
-* The daily capacity setting is shared across all due dates. CakeQueue does not support different capacity limits for individual dates.
 * A Customer ID is given out when an order is first added and never changes. If a phone number is
   edited, the order keeps its original Customer ID.
 * `find` searches name, flavour and filling, but not phone numbers or dates. To look up a customer's
@@ -377,18 +446,3 @@ but cannot be added or changed through the CLI. No new enquiries can be created 
 
 The command summary lists ten feature commands plus `help` and `bye`.
 Commands removed from earlier versions, including `update`, produce an unknown-command error.
-
-### Storage Reliability and ID Preservation
-
-CakeQueue preserves existing Order IDs and Customer IDs when loading and saving records.
-
-- Order IDs remain in their canonical uppercase format, even when commands use lowercase IDs such as `edit o001`.
-- Existing Customer IDs are retained when records are loaded. Older records without saved Customer IDs can reuse the appropriate ID of another record with the same phone number, even if that record appears later in the save file.
-- Invalid or duplicate record IDs are rejected to prevent ambiguous records.
-- Special characters in saved text fields are escaped so that customer details and existing notes can survive saving and reloading.
-
-### Daily Capacity Persistence
-
-CakeQueue saves the configured daily capacity with the order data. A capacity setting such as `capacity 3` is restored when CakeQueue is restarted.
-
-If no saved capacity setting exists, CakeQueue uses the default of 5 orders per day.

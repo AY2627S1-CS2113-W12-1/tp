@@ -34,8 +34,10 @@ import seedu.duke.storage.Storage;
  */
 public class AddOrderReliabilityTest {
     private static final String VALID_ADD =
+            //@@author Kaishhhh
             "add n/Alice Tan p/91234567 d/30-10-2030 s/8 f/Chocolate fi/Strawberry";
 
+    //@@author Eethanzyj
     @TempDir
     private Path tempDir;
 
@@ -100,21 +102,27 @@ public class AddOrderReliabilityTest {
     @Test
     public void run_invalidAdds_preservesSavedDataAndNextId() throws IOException {
         Path dataFile = tempDir.resolve("cakequeue.txt");
+        //@@author Kaishhhh
         runSession(dataFile, VALID_ADD + "\nbye\n");
+        //@@author Eethanzyj
         byte[] originalData = Files.readAllBytes(dataFile);
         List<String> invalidAdds = List.of(
                 VALID_ADD.replace("n/Alice Tan ", ""),
                 VALID_ADD.replace("n/Alice Tan", "n/   "),
                 VALID_ADD.replace("p/91234567", "p/   "),
+                //@@author Kaishhhh
                 VALID_ADD.replace("30-10-2030", "31-02-2030"),
+                //@@author Eethanzyj
                 VALID_ADD.replace("30-10-2030", "30-10-+10000"),
                 VALID_ADD.replace("s/8", "s/7"),
                 VALID_ADD + " n/Bob",
                 VALID_ADD + " x/Extra");
         String rejectedCommands = String.join("\n", invalidAdds) + "\n";
 
+        //@@author Kaishhhh
         String rejectedOutput = runSession(dataFile, rejectedCommands + "bye\n");
 
+        //@@author Eethanzyj
         assertEquals(invalidAdds.size(), rejectedOutput.lines()
                 .filter(line -> line.startsWith("Error:")).count());
         assertFalse(rejectedOutput.contains("Added order"));
@@ -123,7 +131,9 @@ public class AddOrderReliabilityTest {
 
         // A valid add after the errors in the same session must still receive O002.
         String recoveredOutput = runSession(dataFile,
+                //@@author Kaishhhh
                 rejectedCommands + VALID_ADD + "\nbye\n");
+        //@@author Eethanzyj
         assertTrue(recoveredOutput.contains("Added order O002:"));
         OrderList restored = new Storage(dataFile).load();
         assertEquals(2, restored.size());
@@ -137,14 +147,18 @@ public class AddOrderReliabilityTest {
         String input = VALID_ADD.replace("n/Alice Tan", "n/   Élodie O'Connor-Tan   ")
                 .replace("p/91234567", "p/   +65 9123-4567   ");
 
+        //@@author Kaishhhh
         runSession(dataFile, input + "\nbye\n");
         String restartedOutput = runSession(dataFile, "view O001\nbye\n");
+        //@@author Eethanzyj
         Order restored = new Storage(dataFile).load().getById("O001");
 
         assertTrue(restartedOutput.contains("Customer: Élodie O'Connor-Tan (+65 9123-4567)"));
         assertEquals("Élodie O'Connor-Tan", restored.getCustomer().getName());
         assertEquals("+65 9123-4567", restored.getCustomer().getPhone());
+        //@@author Kaishhhh
         assertEquals(LocalDate.of(2030, 10, 30), restored.getDueDate());
+        //@@author Eethanzyj
         assertEquals(8, restored.getCake().getSize());
         assertEquals("Chocolate", restored.getCake().getFlavour());
         assertEquals("Strawberry", restored.getCake().getFilling());
@@ -154,7 +168,9 @@ public class AddOrderReliabilityTest {
     @Test
     public void run_editOneCustomerName_leavesOtherOrderUnchanged() {
         Path dataFile = tempDir.resolve("cakequeue.txt");
+        //@@author Kaishhhh
         runSession(dataFile, VALID_ADD + "\n" + VALID_ADD
+                //@@author Eethanzyj
                 + "\nedit O001 n/Alicia Tan\nbye\n");
         OrderList restored = new Storage(dataFile).load();
         Order edited = restored.getById("O001");
@@ -178,8 +194,10 @@ public class AddOrderReliabilityTest {
         Files.writeString(blockedParent, "A file cannot be used as a directory.");
         Path dataFile = blockedParent.resolve("cakequeue.txt");
 
+        //@@author Kaishhhh
         String output = runSession(dataFile, VALID_ADD + "\nview O001\nbye\n");
 
+        //@@author Eethanzyj
         assertTrue(output.contains("Added order O001:"));
         assertTrue(output.contains("Warning: Could not save your data. "
                 + "Your changes are kept for this session only."));
@@ -204,7 +222,9 @@ public class AddOrderReliabilityTest {
         assertEquals(2, loaded.size());
         assertEquals("C001", loaded.getById("O001").getCustomerId());
         assertEquals("C002", loaded.getById("O002").getCustomerId());
+        //@@author Kaishhhh
         String restarted = runSession(dataFile, "capacity\ncustomer C002\nbye\n");
+        //@@author Eethanzyj
         //@@author WillChin484848
         assertTrue(restarted.contains("Daily capacity is 1 order per day."));
         //@@author Eethanzyj

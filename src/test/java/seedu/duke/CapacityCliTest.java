@@ -36,9 +36,13 @@ public class CapacityCliTest {
     }
 
     @Test
+    //@@author Eethanzyj
     public void run_editDate_warnsWhenDateOverLimit() {
+        //@@author Kaishhhh
         String result = runSession(
+                //@@author Eethanzyj
                 "capacity 1\n"
+                        //@@author Kaishhhh
                         + "add n/Alice p/91234567 d/21-10-2030 s/8 f/Chocolate fi/Strawberry\n"
                         + "add n/Bob p/81111111 d/22-10-2030 s/6 f/Vanilla fi/Cream\n"
                         + "edit O002 d/21-10-2030\n"

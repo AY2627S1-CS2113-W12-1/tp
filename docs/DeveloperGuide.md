@@ -33,9 +33,6 @@ source version when publishing these guides.
 
 * This project started from the CS2113 team project template, which is why the code keeps the
   `seedu.duke` package name.
-* Eethanzyj used OpenAI Codex to assist with the Add Order implementation and refactoring,
-  unused model cleanup, automated tests, and associated documentation and diagrams. Moved customer and capacity
-  logic retains its original author tags.
 * The structure and style of this guide follow the
   [AddressBook-Level3 Developer Guide](https://se-education.org/addressbook-level3/DeveloperGuide.html).
 * Diagrams are drawn with [PlantUML](https://plantuml.com). The `.puml` source of each diagram is in
@@ -98,11 +95,45 @@ syntax and field rules. Checks that need stored data, such as whether an order I
 are done by the commands. `parseUpdate` is the internal method name for parsing `edit`;
 the former `update` command word is rejected.
 
+`FieldTokenizer` supplies shared quoted-value handling for add and edit. Their field parsers
+retain their own required/optional-field rules and error wording.
+
 ### Commands
 
 Most commands are built with parsed values and expose `execute(OrderList)`, returning the text
 to print. `HelpCommand.execute()` needs no order list, and `bye` ends the loop directly. Command classes do not print or save; the loop prints their
 result and invokes the save callback after successful record changes.
+
+<!-- @@author Eethanzyj -->
+
+#### Contextual help
+
+`BakerCli` passes the optional topic in `help [COMMAND]` to `HelpCommand.execute(String)`.
+An empty topic returns the existing overview through `execute()`. A single topic is
+normalised with `Locale.ROOT` and looked up in the help map. Unknown topics or extra
+words produce `CakeQueueException`, handled by the normal CLI error handler.
+
+Each topic stores its syntax, essential rules and one concrete example. The shared text
+formatter puts formats and examples on separate lines so users can copy the command line.
+Help has no model or storage dependency and does not invoke the save callback.
+`HelpCommandTest` checks topic coverage and syntax against the overview; `HelpCliTest`
+executes the displayed examples and verifies that requesting help leaves saved data unchanged.
+
+#### Readable order results
+
+`ListCommand`, `FindCommand` and `HistoryCommand` use `ui.OrderFormatter` to display
+each numbered order as a separate block. A line of dashes separates records. The first
+line shows the Order ID and status, followed by customer, due date and cake details.
+Missing legacy dates or cake details use `Not specified`.
+
+The formatter receives the record, its display position and an optional deadline label.
+Filtering, matching and sorting stay in the commands; `ListCommand` still determines
+overdue and due-soon labels before formatting. The formatter only builds text and never
+changes an order or saves data. Sharing it keeps the three result layouts consistent.
+`Order.toString()` remains available for single-order confirmations, so this display
+change is limited to results containing numbered orders.
+
+<!-- @@author -->
 
 ### Model
 
@@ -134,9 +165,12 @@ keeps the file readable, easy to compare in Git, and fixable by hand. Three meas
 * A save writes a temporary file in the same folder, then replaces the real file. It attempts
   an atomic move and falls back to a normal replacement if atomic moves are unsupported. This
   avoids writing directly into the current data file; the fallback has weaker crash guarantees.
-* If a saved order record is corrupted, loading fails and the application stops startup rather than silently skipping the record. This prevents incomplete data from being loaded and subsequently saved over the original file. Unreadable storage files also prevent startup.
-
-* The daily capacity is persisted in the data file using a `# dailyCapacity=NUMBER` header. Older files without this header use the default capacity of 5. If the capacity header is invalid but the order records are valid, the application warns the user and continues with capacity 5.
+* Corrupted order records or an unreadable storage file stop startup before commands can run.
+  The failed `Storage` instance refuses further saves, protecting the original file from being overwritten
+  with incomplete data.
+* The daily capacity is saved using a `# dailyCapacity=NUMBER` header. Older files without this header
+  use the default capacity of 5. Invalid capacity settings produce a warning and use 5 while retaining
+  valid orders; corrupted orders still stop startup. See [Daily capacity feature](#daily-capacity-feature).
 
 ### Error handling
 
@@ -168,6 +202,7 @@ the customer/history section below explains customer grouping in more detail.
 | `AddOrderCommand` | Creates and adds the order, logs its ID, and returns the order/customer confirmation and optional warning. |
 | `Parser` | Keeps the `parseAdd` entry point and delegates to `AddOrderParser`. |
 | `AddOrderParser` | Checks the six required fields and returns a `Parser.AddOrderDetails` value object. |
+| `FieldTokenizer` | Finds prefixes outside whole quoted values and removes quotes and supported escapes. It is shared with edit parsing. |
 | `Customer` | Holds the name and phone recorded for this order. |
 | `Cake` | Holds the size, flavour, and filling. |
 | `Order` | Combines these details with an ID, due date, and status. |
@@ -199,11 +234,19 @@ it does not parse again. Parsing and validation therefore finish before customer
 ID generation or model changes. The parser identifies prefixes, collects their values,
 checks required fields and converts the date and size.
 
+`FieldTokenizer.prefixesIn` masks quoted spans with non-whitespace characters while
+preserving their original positions. The existing field-extraction loops therefore find
+only prefixes outside quoted values and still take values from the original input.
+`valueOf` removes whole-value quotes, decodes escaped quotes and backslashes, and trims
+the result before normal validation. Quotes start a quoted value only at the beginning
+of that field's value; embedded quotes in unquoted text retain their previous meaning.
+Unclosed quotes or text after a closing quote raise `CakeQueueException` before any model change.
+
 <!-- @@author -->
 
 
 * All six fields must be present and non-blank. Their order may vary.
-* Prefixes must be lowercase. Unknown or repeated prefixes are rejected.
+* Prefixes must be lowercase. Unknown or repeated prefixes outside quoted values are rejected.
 * Surrounding whitespace is removed from field values. Internal spaces,
   punctuation, and Unicode characters in customer names are preserved.
 * Phone numbers must have at least 8 digits, and may also contain spaces, `+`
@@ -222,6 +265,10 @@ For example, a blank name produces
 continues accepting commands. A failed parse neither consumes an ID nor changes
 the in-memory list or the saved file.
 
+For example, `n/"John s/o Doe"` keeps `s/o` inside the name while a separate `s/8`
+still supplies the cake size. Quoting changes field extraction, not the validation rules:
+quoted empty names, invalid phones, impossible dates and unsupported sizes are still rejected.
+
 Keeping these checks in `AddOrderParser` separates Add Order validation from other commands.
 The parser returns structured details rather than creating an order itself, so
 validation can be tested without generating IDs or writing files. The same phone
@@ -232,6 +279,7 @@ validation applies to `add` and `edit`: at least eight digits, with spaces, `+` 
 | Decision | Reason | Trade-off |
 | --- | --- | --- |
 | Keep `Parser.parseAdd` and delegate to `AddOrderParser`. | Existing callers keep the same API, while the six required fields have one focused parser. Shared phone, date and size rules still apply to both add and edit. | There is one extra delegation step, and `AddOrderDetails` remains nested in `Parser`. |
+| Share quote handling in package-private `FieldTokenizer`. | Add and edit interpret quoted text identically while retaining their existing validators and required/optional-field rules. | The field-extraction loops remain separate; users must quote values containing prefix-like text. |
 | Pass validated, immutable details to `AddOrderCommand`. | The command creates the order without parsing again. Parser tests need no model changes; command tests need no console or files. | Callers must use the parser before constructing the command. The command relies on that validation contract. |
 | Create a separate `Customer` object for each order. | Editing one order's recorded name does not alter another order. Customer IDs provide the shared grouping for history. | Customer details are repeated across records, and editing one record does not update all of a customer's orders. |
 | Keep saving in the callback supplied by `Duke`. | The command handles order creation and confirmation while `Storage` handles files. Existing customer and capacity components are reused. | Confirmation means the order is in memory. A failed save needs a separate warning; the add is not rolled back. |
@@ -252,7 +300,8 @@ record. The existing `Cake` constructor also checks size, flavour, and filling.
 The command logs the Order ID rather than the customer's name or phone.
 
 The command appends a capacity warning when active orders on the due date
-exceed the configured limit. It still adds the order. The default limit is 5, can be changed to 1–50 using 'capacity', and is saved between sessions. Enquiries and
+exceed the configured limit. It still adds the order. The default limit is 5,
+can be changed to 1–50 using `capacity`, and is saved between sessions. Enquiries and
 closed records do not count. The command then appends the Customer ID and whether
 the customer is new or returning; it does not generate another order.
 
@@ -290,6 +339,8 @@ confirmation before saving, and a separate warning on failure.
 | `OrderListTest` | Basic order storage and sequential IDs, including the transition from `O999` to `O1000`. |
 | `ParserTest` and `ParserErrorTest` | Existing command syntax, date/size validation, unknown prefixes, and duplicate fields. |
 | `ParserEditValidationTest` | Editing uses the shared date and phone rules, including rejection of extended years. |
+| `QuotedFieldParserTest` | Quoted names and cake details, escapes, unchanged unquoted text, malformed quotes, and validation of quoted values. |
+| `QuotedOrderCliTest` | Quoted names survive add/edit and restarting. Invalid quoted commands preserve saved records and the next Order ID. |
 
 CLI tests run against JUnit temporary folders. They restore standard input and
 output after each session and never use the baker's real data file. Persistence
@@ -325,6 +376,13 @@ because `ListCommand` excludes them.
 
 ![Mark-and-save sequence diagram](diagrams/rendered/MarkAndSaveSequenceDiagram.png)
 
+<!-- @@author Eethanzyj -->
+The diagram shows a successful `QUEUED` to `PREPARING` transition. Activation boxes
+show each method's execution, including constructors and nested calls. Invalid
+transitions return an error without changing the order or requesting a save.
+The final reference uses the shared saving flow below to avoid repeating file operations.
+<!-- @@author -->
+
 *Alternative considered:* a `done` command that jumps straight to `COLLECTED` is simpler, but the baker would lose
 the difference between "in the oven" and "waiting for pickup", which is the point of tracking status.
 
@@ -334,6 +392,13 @@ the difference between "in the oven" and "waiting for pickup", which is the poin
 `Duke` loads the file into the `OrderList`. After every successful command that changes records, `BakerCli` runs an
 `afterChange` callback supplied by `Duke`, which saves. Passing a callback instead of giving `BakerCli` a `Storage`
 keeps the command loop unaware of files, and keeps the "warn the user if saving failed" rule in one place.
+
+<!-- @@author Eethanzyj -->
+The [saving sequence](#creating-and-saving-an-order) above also applies after successful
+`edit`, `cancel` and `mark` commands. Its precondition is a successful in-memory
+change; only the confirmation text differs. A save failure leaves that change in
+memory and prints a warning. Each activation ends when its method completes.
+<!-- @@author -->
 
 *Alternative considered:* saving only on `bye` means less file writing, but any crash or closed terminal would lose
 the whole session.
@@ -446,7 +511,34 @@ collected orders, cancelled orders and rejected records do not count.
 understand and to set, with no need to estimate the time of each cake. Cons: a wedding cake and a cupcake
 count the same.
 
-**Capacity persistence.** The daily capacity is saved in the data file using a # dailyCapacity=NUMBER header and restored when CakeQueue starts. Older files without this header use the default capacity of 5. If the header is invalid, CakeQueue warns the user and uses capacity 5 while retaining valid orders. Corrupted order records still prevent startup to protect saved data.
+**Capacity persistence.** The capacity is saved with the orders using a `# dailyCapacity=NUMBER`
+header and restored on startup. Older files without the header use the default of 5.
+
+<!-- @@author Eethanzyj -->
+#### Capacity persistence
+
+The following diagrams show capacity restoration and saving in the integrated storage implementation.
+
+![Capacity restoration sequence](diagrams/CapacityRestoreSequence.png)
+
+`Storage.load()` creates an `OrderList` with the default capacity of 5. A valid
+`# dailyCapacity=NUMBER` line restores the saved value through `setDailyCapacity`.
+Older files without this header retain the default. An invalid capacity setting produces a warning
+and uses capacity 5 while retaining valid orders. Corrupted order records or unreadable data stop
+startup before commands can modify the records; a failed load also blocks later saves.
+
+![Capacity saving sequence](diagrams/CapacitySaveSequence.png)
+
+After a successful `capacity NUMBER`, `BakerCli` runs the same save callback used
+for record changes. `Storage.save()` writes the capacity header and records to a
+temporary file before replacing the save file. Bare `capacity` and invalid commands
+do not request saving. The callback reports a save failure and keeps the changed
+capacity for the current session only.
+
+Sources: [restoration](diagrams/CapacityRestoreSequence.puml) and
+[saving](diagrams/CapacitySaveSequence.puml). Keep these diagrams and the related
+documentation consistent with the storage implementation.
+<!-- @@author -->
 
 ### Customer and history features
 
@@ -497,7 +589,7 @@ regardless of due date or status. Grouping follows insertion order, not due-date
 | `customer` or `customer X1` | `Error: Use: customer CUSTOMER_ID` |
 | `history` or `history X1` | `Error: Use: history CUSTOMER_ID` |
 | `customer C999` (no such customer) | `Error: Customer not found: C999` |
-| A data file line with a malformed Customer ID | Startup fails with an error to prevent corrupted records from being silently discarded. |
+| A data file line with a malformed Customer ID | Startup stops, as for any corrupted order record, to protect the original data file. |
 
 All user errors are `CakeQueueException`s, which `BakerCli` catches and prints, so the program keeps running.
 
@@ -583,7 +675,8 @@ Priorities: High (must have), Medium (nice to have), Low (unlikely to have).
 1. **Platform.** CakeQueue should work on Windows, macOS and Linux when Java 25 is the only Java version installed.
 2. **Performance.** With up to 1,000 orders, each command should respond within 1 second on an ordinary laptop.
 3. **Data safety.** Successful record changes trigger an immediate save attempt. A save failure
-   produces a warning and leaves the change in memory. Corrupted order records and unreadable storage files must prevent startup to avoid accidental data loss. An invalid capacity setting alone must produce a warning and restore the default capacity of 5 without preventing valid orders from loading.
+   produces a warning and leaves the change in memory. Corrupted order records or unreadable files
+   stop startup and block saving. Invalid capacity settings warn and use 5 while retaining valid orders.
 4. **Readable data.** The data file should be plain text that a user can open, read and fix in a text editor.
 5. **Error messages.** Every invalid command should show a message that says what is wrong, and should not end the
    session or change any data.
@@ -633,7 +726,8 @@ two orders share C001, so `customer C001` reports two orders and a repeat custom
 Editing changes only the selected size. Cancellation retains Bob's history. The final
 active list contains O003; O001 is collected and O002 is cancelled.
 
-Restart from the same folder. Expect three saved records, unchanged Customer IDs/statuses, and the previously configured capacity of 1. Verify with `view O001`, `view O002`, `history C001`, and `capacity`.
+Restart from the same folder. Expect three saved records, unchanged Customer IDs/statuses,
+and the saved capacity of one. Verify with `view O001`, `view O002`, `history C001`, and `capacity`.
 After restarting, try these invalid inputs. Each must leave records unchanged and allow
 the next valid command to run:
 
@@ -654,3 +748,17 @@ Run `view O003` afterwards: its size remains 8 and status remains QUEUED.
 enquiry/rejected records and notes survive loading, editing, saving and restarting.
 Storage keeps the existing ten-field format; removing CLI features does not migrate away
 or erase legacy fields. `NotesAndCustomerIdStorageTest` retains format-compatibility checks.
+
+### Storage recovery checks
+
+Use a separate test folder and keep a backup of `data/cakequeue.txt` before editing it.
+
+1. Set `capacity 1`, add a valid order and exit. Restart: `capacity` must show 1 and the order must remain.
+2. Exit and replace the capacity header with `# dailyCapacity=abc` (also try `# dailyCapacity =abc`).
+   Restart: a warning must report the default capacity of 5, the CLI must run and the valid order must remain.
+3. Exit and append `corrupted order` to the saved file. Restart: CakeQueue must report that it will exit,
+   never open the CLI and leave the file unchanged. Repeat with both an invalid capacity header and a
+   corrupted record: order corruption must still stop startup.
+4. Restore the backup. Make the data path unreadable (for example, move the file aside and create a
+   directory named `cakequeue.txt`). Restart: CakeQueue must stop before the CLI runs. Restore the original
+   file afterwards.

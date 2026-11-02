@@ -18,14 +18,18 @@ import seedu.duke.exception.CakeQueueException;
  */
 public class AddOrderValidationTest {
     private static final String VALID_INPUT =
+            //@@author Kaishhhh
             "add n/Alice Tan p/91234567 d/30-10-2030 s/8 f/Chocolate fi/Cream";
 
+    //@@author Eethanzyj
     @Test
     public void parseAdd_missingFields_explainsWhatToProvide() {
         Map<String, String> missingFields = Map.of(
                 "n/Alice Tan ", "a customer name using n/NAME",
                 "p/91234567 ", "a phone number using p/PHONE",
+                //@@author Kaishhhh
                 "d/30-10-2030 ", "a due date using d/DD-MM-YYYY",
+                //@@author Eethanzyj
                 "s/8 ", "a cake size using s/6, s/8, or s/10",
                 "f/Chocolate ", "a cake flavour using f/FLAVOUR",
                 "fi/Cream", "a cake filling using fi/FILLING");

@@ -44,9 +44,12 @@ public class BakerCli {
                     requireNoArguments(input, "bye");
                     System.out.println("Bye. Hope to see you again soon!");
                     return;
+                //@@author HammerHead-os
                 case "help":
-                    requireNoArguments(input, "help");
-                    System.out.println(new HelpCommand().execute());
+                    //@@author Eethanzyj
+                    String[] helpInput = input.split("\\s+", 2);
+                    System.out.println(new HelpCommand().execute(helpInput.length == 2 ? helpInput[1] : ""));
+                    //@@author HammerHead-os
                     break;
                 //@@author Eethanzyj
                 case "list":
@@ -58,13 +61,7 @@ public class BakerCli {
                     System.out.println(new FindCommand(Parser.parseFind(input)).execute(orders));
                     break;
                 case "capacity":
-                    //@@author WillChin484848
-                    Integer newCapacity = Parser.parseCapacity(input);
-                    System.out.println(new CapacityCommand(newCapacity).execute(orders));
-                    if (newCapacity != null) {
-                        afterChange.run();
-                    }
-                    //@@author Kaishhhh
+                    System.out.println(new CapacityCommand(Parser.parseCapacity(input)).execute(orders));
                     break;
                 //@@author HammerHead-os
                 case "view":
@@ -84,8 +81,10 @@ public class BakerCli {
                             details.getFlavour(),
                             details.getFilling()
                     );
+                    //@@author Kaishhhh
                     System.out.println(command.execute(orders)
                             + capacityWarning(orders, orders.getById(details.getOrderId()).getDueDate()));
+                    //@@author HammerHead-os
                     afterChange.run();
                     break;
                 //@@author Eethanzyj
@@ -134,7 +133,6 @@ public class BakerCli {
         String warning = CapacityCommand.warningFor(orders, dueDate);
         return warning.isEmpty() ? "" : System.lineSeparator() + warning;
     }
-    //@@author HammerHead-os
 
     //@@author Eethanzyj
     private void requireNoArguments(String input, String commandWord) {

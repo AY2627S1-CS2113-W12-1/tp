@@ -3,6 +3,7 @@ package seedu.duke.storage;
 //@@author Kaishhhh
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -82,16 +83,26 @@ public class NotesAndCustomerIdStorageTest {
         assertEquals("Extra | candles", reloaded.getById("E001").getNotes());
     }
 
+    //@@author WillChin484848
     @Test
-    public void load_nineFieldLineWithIdLikeValue_isStillTreatedAsCustomerId() throws IOException {
+    public void load_nineFieldLineWithInvalidId_abortsInsteadOfTreatingIdAsNotes() throws IOException {
         Path file = tempDir.resolve("cakequeue.txt");
-        Files.write(file, List.of(
-                "O001 | QUEUED | Alice | 91234567 | 2030-12-01 | 8 | Chocolate | Cream | C007",
-                "O002 | QUEUED | Bob | 81234567 | 2030-12-01 | 8 | Chocolate | Cream | X1"));
+        String valid = "O001 | QUEUED | Alice | 91234567 | 2030-12-01 | 8 | Chocolate | Cream | C007\n";
+        Files.writeString(file, valid);
+        OrderList loaded = new Storage(file).load();
+        assertEquals("C007", loaded.getById("O001").getCustomerId());
+        assertEquals("", loaded.getById("O001").getNotes());
 
-        // Invalid customer IDs must stop startup instead of silently dropping orders.
-        assertThrows(IllegalStateException.class, () -> new Storage(file).load());
+        // An ID-like value is validated as an ID, never silently recovered as notes.
+        String corrupted = valid
+                + "O002 | QUEUED | Bob | 81234567 | 2030-12-01 | 8 | Chocolate | Cream | X1\n";
+        Files.writeString(file, corrupted);
+        Storage storage = new Storage(file);
+        assertThrows(IllegalStateException.class, storage::load);
+        assertFalse(storage.save(loaded));
+        assertEquals(corrupted, Files.readString(file));
     }
+    //@@author Kaishhhh
 
     @Test
     public void save_writesNotesAfterCustomerId() throws IOException {
@@ -103,11 +114,11 @@ public class NotesAndCustomerIdStorageTest {
 
         new Storage(file).save(orders);
         //@@author WillChin484848
-        String line = Files.readAllLines(file).stream()
-                .filter(savedLine -> !savedLine.startsWith("# dailyCapacity="))
-                .findFirst().orElseThrow();
+        List<String> lines = Files.readAllLines(file);
+        assertEquals(2, lines.size());
+        assertEquals("# dailyCapacity=5", lines.get(0));
+        String line = lines.get(1);
         //@@author Kaishhhh
-
         assertTrue(line.endsWith("| C001 | -"), line);
     }
 }
