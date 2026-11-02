@@ -540,6 +540,34 @@ Sources: [restoration](diagrams/CapacityRestoreSequence.puml) and
 documentation consistent with the storage implementation.
 <!-- @@author -->
 
+<!-- @@author Eethanzyj -->
+#### Capacity persistence: pending storage integration
+
+The following diagrams describe [PR #42](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/42),
+which is pending integration. They do not describe the current master implementation.
+After that PR is merged, the current limitation and proposal above must be replaced
+with the implemented behavior below.
+
+![Capacity restoration sequence](diagrams/CapacityRestoreSequence.png)
+
+`Storage.load()` creates an `OrderList` with the default capacity of 5. A valid
+`# dailyCapacity=NUMBER` line restores the saved value through `setDailyCapacity`.
+Older files without this header retain the default. Invalid records, invalid capacity
+settings or unreadable data stop startup before commands can modify the records.
+
+![Capacity saving sequence](diagrams/CapacitySaveSequence.png)
+
+After a successful `capacity NUMBER`, `BakerCli` runs the same save callback used
+for record changes. `Storage.save()` writes the capacity header and records to a
+temporary file before replacing the save file. Bare `capacity` and invalid commands
+do not request saving. The callback reports a save failure and keeps the changed
+capacity for the current session only.
+
+Sources: [restoration](diagrams/CapacityRestoreSequence.puml) and
+[saving](diagrams/CapacitySaveSequence.puml). Update these diagrams and the related
+documentation together when the storage implementation is integrated.
+<!-- @@author -->
+
 ### Customer and history features
 
 #### What they do

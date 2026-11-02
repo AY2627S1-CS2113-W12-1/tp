@@ -16,6 +16,8 @@ class Parser {
 class AddOrderParser {
   {static} + parse(input: String): Parser.AddOrderDetails
 }
+class FieldTokenizer {
+}
 class OrderList {
   + generateOrderId(): String
   + add(order: Order): void
@@ -42,6 +44,8 @@ class Cake {
 
 BakerCli ..> Parser : parses
 Parser ..> AddOrderParser : delegates
+Parser ..> FieldTokenizer : edit fields
+AddOrderParser ..> FieldTokenizer : quoted values
 BakerCli ..> AddOrderCommand : creates and runs
 AddOrderCommand ..> OrderList : adds order
 AddOrderCommand ..> Order : creates

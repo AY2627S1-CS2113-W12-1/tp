@@ -14,7 +14,9 @@ import seedu.duke.storage.Storage;
  * Runs the CakeQueue command-line application.
  */
 public class Duke {
+    //@@author Eethanzyj
     private static final Logger LOGGER = Logger.getLogger(Duke.class.getName());
+    //@@author HammerHead-os
     private static final Path DEFAULT_DATA_FILE = Path.of("data", "cakequeue.txt");
 
     private final Path dataFile;
@@ -41,8 +43,10 @@ public class Duke {
      * Every successful change is saved immediately, so closing the app (or a
      * crash) after a change does not lose it.
      */
+    //@@author Eethanzyj
     public void run() {
         Scanner scanner = new Scanner(System.in);
+        //@@author HammerHead-os
         Storage storage = new Storage(dataFile);
         //@@author WillChin484848
         OrderList orders;
@@ -66,14 +70,18 @@ public class Duke {
                 LOGGER.log(Level.WARNING, "Save failed for {0}; continuing in-memory.", dataFile);
             }
         };
+        //@@author Eethanzyj
         System.out.println("Hello! I'm CakeQueue.");
+        //@@author HammerHead-os
         new BakerCli().run(scanner, orders, saveChanges);
     }
 
     /**
      * Launches CakeQueue.
      */
+    //@@author Eethanzyj
     public static void main(String[] args) {
         new Duke().run();
+        //@@author HammerHead-os
     }
 }
