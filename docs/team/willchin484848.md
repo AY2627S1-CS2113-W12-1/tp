@@ -8,7 +8,7 @@ CakeQueue is a command-line application that helps bakers manage cake orders, cu
 
 #### Code contributed
 
-[RepoSense link](https://nus-cs2113-ay2627s1.github.io/tp-dashboard/?search=WillChin484848&breakdown=true)
+[RepoSense link](https://nus-cs2113-ay2627-s1.github.io/tp-dashboard/?search=WillChin484848&breakdown=true)
 
 #### Enhancements implemented
 
@@ -34,16 +34,20 @@ CakeQueue is a command-line application that helps bakers manage cake orders, cu
 
 * Updated documentation for cake validation and due-date warning behaviour.
 
+* Clarified capacity persistence, fallback to 5 for invalid capacity settings, and startup failure for corrupted or unreadable storage files.
+
 #### Contributions to the Developer Guide
 
 * Documented the implementation of the `edit` command and its validation logic.
 * Updated storage-related explanations to reflect improved data protection and persistence behaviour.
 * Updated storage documentation to distinguish recoverable capacity errors from fatal order corruption and explain capacity persistence.
+* Updated the existing capacity restoration and saving diagrams to reflect the integrated storage behaviour.
 
 #### Contributions to team-based tasks
 
 * Improved the reliability of shared CakeQueue components while preserving existing command functionality.
 * Tested changes against the project's existing JUnit test suite.
+* Resolved integration conflicts between storage improvements and teammates' merged changes.
 
 #### Review/mentoring contributions
 
