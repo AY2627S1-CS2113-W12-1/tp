@@ -1,5 +1,6 @@
 package seedu.duke.storage;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -12,6 +13,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import seedu.duke.Duke;
@@ -32,6 +34,54 @@ public class StorageSafetyTest {
         orders.setDailyCapacity(12);
         assertTrue(storage.save(orders));
         assertEquals(12, storage.load().getDailyCapacity());
+    }
+
+    @Test
+    public void capacityOnly_firstRun_persistsWithoutAnyOrderChanges() {
+        Path file = tempDir.resolve("first-capacity.txt");
+
+        runSession(file, "capacity 3\nbye\n");
+
+        OrderList loaded = new Storage(file).load();
+        assertEquals(3, loaded.getDailyCapacity());
+        assertEquals(0, loaded.size());
+        assertTrue(runSession(file, "capacity\nbye\n").contains("Daily capacity is 3 orders per day."));
+    }
+
+    @Test
+    public void capacityOnly_existingOrders_persistsAndPreservesRecords() throws Exception {
+        Path file = tempDir.resolve("existing-capacity.txt");
+        OrderList original = new OrderList();
+        original.setDailyCapacity(1);
+        original.add(new Order("O001", new Customer("Alice", "91234567"), null));
+        assertTrue(new Storage(file).save(original));
+        List<String> before = Files.readAllLines(file);
+
+        runSession(file, "capacity 3\nbye\n");
+
+        List<String> after = Files.readAllLines(file);
+        assertEquals("# dailyCapacity=3", after.get(0));
+        assertEquals(before.subList(1, before.size()), after.subList(1, after.size()));
+        OrderList loaded = new Storage(file).load();
+        assertEquals(3, loaded.getDailyCapacity());
+        assertEquals(1, loaded.size());
+        assertEquals("C001", loaded.getById("O001").getCustomerId());
+        assertTrue(runSession(file, "capacity\nbye\n").contains("Daily capacity is 3 orders per day."));
+    }
+
+    @Test
+    public void capacityQueryAndInvalidCommands_doNotSave() throws Exception {
+        Path file = tempDir.resolve("read-only-capacity.txt");
+        OrderList orders = new OrderList();
+        orders.setDailyCapacity(3);
+        assertTrue(new Storage(file).save(orders));
+        // A valid legacy file without a header would gain one if a save were wrongly requested.
+        Files.writeString(file, Files.readString(file).replace("# dailyCapacity=3", ""));
+        byte[] original = Files.readAllBytes(file);
+
+        runSession(file, "capacity\ncapacity 0\ncapacity 51\ncapacity nope\ncapacity 3 extra\nbye\n");
+
+        assertArrayEquals(original, Files.readAllBytes(file));
     }
 
     @Test
@@ -227,6 +277,22 @@ public class StorageSafetyTest {
     public void setStatus_null_isRejected() {
         Order order = new Order("O001", new Customer("Alice", "91234567"), null);
         assertThrows(IllegalArgumentException.class, () -> order.setStatus(null));
+    }
+
+    /** Runs one CLI session and restores the process input and output after it ends. */
+    private String runSession(Path file, String commands) {
+        InputStream previousInput = System.in;
+        PrintStream previousOutput = System.out;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        try (PrintStream output = new PrintStream(captured, true, StandardCharsets.UTF_8)) {
+            System.setIn(new ByteArrayInputStream(commands.getBytes(StandardCharsets.UTF_8)));
+            System.setOut(output);
+            new Duke(file).run();
+        } finally {
+            System.setIn(previousInput);
+            System.setOut(previousOutput);
+        }
+        return captured.toString(StandardCharsets.UTF_8);
     }
 
 }

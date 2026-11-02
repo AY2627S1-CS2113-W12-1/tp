@@ -35,14 +35,16 @@ opt invalid capacity setting
   activate Orders
   deactivate Orders
   Storage -> Storage : warn user; retain valid orders
+  activate Storage
+  deactivate Storage
 end
 ref over Storage, Orders : Restore records and their IDs.
 Storage --> Duke : orders
 deactivate Storage
 note over Duke, Storage
   Corrupted orders or unreadable files throw IllegalStateException.
+  Duke then reports the failure and stops before the CLI runs.
   Invalid capacity alone warns and uses 5.
-  For those errors, Duke reports the failure and stops before the CLI runs.
 end note
 deactivate Duke
 @enduml
