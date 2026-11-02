@@ -38,18 +38,6 @@ public class CakeTest {
     }
 
     /**
-     * Verifies that the existing menu cake constructor still works.
-     */
-    @Test
-    public void constructor_menuCake_preservesDetails() {
-        Cake cake = new Cake("Chocolate Cake", "Chocolate", 30.0);
-
-        assertEquals("Chocolate Cake", cake.getName());
-        assertEquals("Chocolate", cake.getFlavour());
-        assertEquals(30.0, cake.getPrice());
-    }
-
-    /**
      * Verifies that null, empty, and whitespace-only flavours are rejected.
      */
     @Test

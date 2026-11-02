@@ -52,18 +52,6 @@ public class FindCliTest {
     }
 
     @Test
-    public void run_findEnquiry_showsEnquiryWithStatus() {
-        String result = runSession(
-                "enquire n/Cara Lee p/92222222 d/21-10-2030 s/8 f/Mocha fi/Cream\n"
-                        + "find mocha\n"
-                        + "bye\n");
-
-        assertTrue(result.contains("Orders matching \"mocha\":"));
-        assertTrue(result.contains("1. E001: Cara Lee"));
-        assertTrue(result.contains("[ENQUIRY]"));
-    }
-
-    @Test
     public void run_findIsListedInBakerHelp() {
         String result = runSession("help\nbye\n");
 

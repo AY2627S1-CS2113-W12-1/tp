@@ -21,6 +21,18 @@ public class OrderListTest {
     }
 
     @Test
+    public void generateOrderId_crossesThreeDigits_continuesWithoutTruncating() {
+        OrderList orders = new OrderList();
+        // Restore the counter near the boundary without creating 998 unrelated orders.
+        orders.add(new Order("O998", new Customer("Alice Tan"),
+                LocalDate.of(2030, 10, 30)));
+
+        assertEquals("O999", orders.generateOrderId());
+        assertEquals("O1000", orders.generateOrderId());
+        assertEquals("O1001", orders.generateOrderId());
+    }
+
+    @Test
     public void add_basicOrder_storesOrder() {
         OrderList orders = new OrderList();
         Order order = new Order("O001", new Customer("Alice Tan"),

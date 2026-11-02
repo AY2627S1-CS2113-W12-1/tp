@@ -14,7 +14,6 @@ public class Order {
     //@@author
     private final Customer customer;
     private final Cake cake;
-    private final int quantity;
     //@@author Eethanzyj
     private final LocalDate dueDate;
     //@@author
@@ -24,15 +23,6 @@ public class Order {
     //@@author
     /** Free-text notes for allergens, special decorations, etc. Empty string means no notes. */
     private String notes = "";
-
-    public Order(Customer customer, Cake cake, int quantity) {
-        this.orderId = null;
-        this.customer = customer;
-        this.cake = cake;
-        this.quantity = quantity;
-        this.dueDate = null;
-        this.status = OrderStatus.QUEUED;
-    }
 
     /**
      * Creates a basic order with a customer and due date.
@@ -55,7 +45,6 @@ public class Order {
         this.orderId = orderId;
         this.customer = customer;
         this.cake = cake;
-        this.quantity = 1;
         this.dueDate = dueDate;
         this.status = status;
         this.notes = "";
@@ -73,10 +62,6 @@ public class Order {
 
     public Cake getCake() {
         return cake;
-    }
-
-    public int getQuantity() {
-        return quantity;
     }
 
     //@@author Eethanzyj
@@ -188,7 +173,9 @@ public class Order {
             return orderId + ": " + customer.getName() + " (due "
                     + dueDateText + ") [" + status + "]";
         }
-        // Preserve the existing display format for orders without an ID.
-        return customer.getName() + ": " + quantity + " x " + cake.getName() + " [" + status + "]";
+        //@@author Eethanzyj
+        // Keep diagnostic output safe for in-memory records without an assigned ID.
+        return customer + " [" + status + "]";
+        //@@author
     }
 }

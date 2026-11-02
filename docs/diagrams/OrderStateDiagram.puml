@@ -2,12 +2,7 @@
 skinparam shadowing false
 skinparam defaultFontSize 14
 
-[*] --> ENQUIRY : enquire
-[*] --> QUEUED : add
-
-ENQUIRY --> QUEUED : accept\n(new O-prefixed ID)
-ENQUIRY --> REJECTED : reject
-ENQUIRY --> CANCELLED : cancel
+[*] --> QUEUED : / create order
 
 QUEUED --> PREPARING : mark preparing
 PREPARING --> READY : mark ready
@@ -16,13 +11,15 @@ QUEUED --> CANCELLED : cancel
 PREPARING --> CANCELLED : cancel
 READY --> CANCELLED : cancel
 
-COLLECTED --> [*] : delete
-CANCELLED --> [*] : delete
-REJECTED --> [*] : delete
-
 note right of QUEUED
   mark moves one step at a time.
   Skipping (QUEUED to READY) or
   going backwards is rejected.
+end note
+
+note bottom of CANCELLED
+  Closed records remain stored for history.
+  Legacy ENQUIRY and REJECTED statuses
+  are retained only for older saved data.
 end note
 @enduml

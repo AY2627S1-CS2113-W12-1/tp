@@ -129,7 +129,7 @@ public class ParserTest {
     @Test
     public void parseUpdate_multipleFields_returnsCorrectDetails() {
         Parser.UpdateOrderDetails details =
-                Parser.parseUpdate("update O001 n/Bob Tan s/10 f/Vanilla");
+                Parser.parseUpdate("edit O001 n/Bob Tan s/10 f/Vanilla");
 
         assertEquals("O001", details.getOrderId());
         assertEquals("Bob Tan", details.getName());
@@ -143,7 +143,7 @@ public class ParserTest {
     @Test
     public void parseUpdate_singleField_returnsCorrectDetails() {
         Parser.UpdateOrderDetails details =
-                Parser.parseUpdate("update O002 d/25-10-2028");
+                Parser.parseUpdate("edit O002 d/25-10-2028");
 
         assertEquals("O002", details.getOrderId());
         assertEquals(LocalDate.of(2028, 10, 25), details.getDueDate());
@@ -154,53 +154,53 @@ public class ParserTest {
     @Test
     public void parseUpdate_invalidDate_throwsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 d/31-02-2028"));
+                () -> Parser.parseUpdate("edit O001 d/31-02-2028"));
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 d/2028-10-25"));
+                () -> Parser.parseUpdate("edit O001 d/2028-10-25"));
     }
 
     @Test
     public void parseUpdate_invalidSize_throwsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 s/7"));
+                () -> Parser.parseUpdate("edit O001 s/7"));
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 s/large"));
+                () -> Parser.parseUpdate("edit O001 s/large"));
     }
 
     @Test
     public void parseUpdate_missingFields_throwsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001"));
+                () -> Parser.parseUpdate("edit O001"));
     }
 
     @Test
     public void parseUpdate_emptyField_throwsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 n/"));
+                () -> Parser.parseUpdate("edit O001 n/"));
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 s/"));
+                () -> Parser.parseUpdate("edit O001 s/"));
     }
 
     @Test
     public void parseUpdate_duplicateField_throwsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 n/Bob n/Alice"));
+                () -> Parser.parseUpdate("edit O001 n/Bob n/Alice"));
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 s/8 s/10"));
+                () -> Parser.parseUpdate("edit O001 s/8 s/10"));
     }
 
     @Test
     public void parseUpdate_unknownField_throwsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O001 x/Extra"));
+                () -> Parser.parseUpdate("edit O001 x/Extra"));
     }
 
     @Test
     public void parseUpdate_invalidOrderId_throwsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update 001 n/Bob"));
+                () -> Parser.parseUpdate("edit 001 n/Bob"));
         assertThrows(IllegalArgumentException.class,
-                () -> Parser.parseUpdate("update O1 n/Bob"));
+                () -> Parser.parseUpdate("edit O1 n/Bob"));
     }
 
     //@@author Eethanzyj
@@ -234,7 +234,7 @@ public class ParserTest {
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                     () -> Parser.parseView(input));
             //@@author HammerHead-os
-            assertEquals("Use: view ORDER_ID|ENQUIRY_ID", exception.getMessage());
+            assertEquals("Use: view ORDER_ID", exception.getMessage());
             //@@author Eethanzyj
         }
         assertThrows(IllegalArgumentException.class, () -> Parser.parseView(null));

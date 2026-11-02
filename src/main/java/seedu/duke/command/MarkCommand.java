@@ -11,8 +11,7 @@ import seedu.duke.model.OrderStatus;
  * Moves a confirmed order one step forward in the production workflow:
  * {@code QUEUED -> PREPARING -> READY -> COLLECTED}.
  *
- * <p>Only single forward steps are allowed. Enquiries must first be accepted
- * (they become {@code QUEUED} orders), and closed records
+ * <p>Only single forward steps are allowed. Legacy enquiries cannot be marked, and closed records
  * ({@code COLLECTED}, {@code CANCELLED}, {@code REJECTED}) cannot move.</p>
  */
 public class MarkCommand {
@@ -56,8 +55,7 @@ public class MarkCommand {
 
     private String describeProblem(OrderStatus current) {
         if (current == OrderStatus.ENQUIRY) {
-            return "Enquiry " + orderId + " is not a confirmed order yet. "
-                    + "Accept it before marking its status.";
+            return "Legacy enquiry " + orderId + " is not a confirmed order and cannot be marked.";
         }
         if (current == OrderStatus.COLLECTED || current == OrderStatus.CANCELLED
                 || current == OrderStatus.REJECTED) {

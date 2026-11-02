@@ -5,7 +5,9 @@ package seedu.duke.command;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+//@@author Eethanzyj
 import java.util.Comparator;
+//@@author Kaishhhh
 
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
@@ -50,8 +52,10 @@ public class ListCommand {
         for (int i = 0; i < all.size(); i++) {
             Order order = all.get(i);
 
+            //@@author Eethanzyj
             listing.append(i + 1)
                     .append(". ")
+                    //@@author Kaishhhh
                     .append(order);
 
             //@@author WillChin484848

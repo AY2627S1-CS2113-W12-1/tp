@@ -38,7 +38,7 @@ public class V1CliTest {
     public void run_addListViewAndEdit_workTogether() {
         String result = runSession("list\n" + ADD_ALICE + ADD_BOB
                 + "list\nview o001\nEDIT\to001\td/19-10-2028 s/10\nview O001\n"
-                + "update o002 p/81230000\nview o002\nlist\nbye\n");
+                + "edit o002 p/81230000\nview o002\nlist\nbye\n");
 
         assertFalse(result.contains("Error:"));
         assertTrue(result.contains("You have no upcoming orders."));
@@ -64,7 +64,7 @@ public class V1CliTest {
         assertTrue(result.contains("Error: Please enter a command."));
         assertTrue(result.contains("Error: Use: list"));
         //@@author HammerHead-os
-        assertTrue(result.contains("Error: Use: view ORDER_ID|ENQUIRY_ID"));
+        assertTrue(result.contains("Error: Use: view ORDER_ID"));
         //@@author Eethanzyj
         assertTrue(result.contains("Error: Order not found: O999"));
         //@@author HammerHead-os

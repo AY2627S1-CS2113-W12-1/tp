@@ -36,20 +36,16 @@ public class CapacityCliTest {
     }
 
     @Test
-    public void run_editDateOrAcceptEnquiry_warnsWhenDateOverLimit() {
+    public void run_editDate_warnsWhenDateOverLimit() {
         String result = runSession(
-                "enquire n/Cara p/92222222 d/21-10-2030 s/8 f/Mocha fi/Cream\n"
-                        + "capacity 1\n"
+                "capacity 1\n"
                         + "add n/Alice p/91234567 d/21-10-2030 s/8 f/Chocolate fi/Strawberry\n"
                         + "add n/Bob p/81111111 d/22-10-2030 s/6 f/Vanilla fi/Cream\n"
                         + "edit O002 d/21-10-2030\n"
-                        + "accept E001\n"
                         + "bye\n");
 
         assertTrue(result.contains("Updated order O002"));
         assertTrue(result.contains("now has 2 orders, over your daily capacity of 1."));
-        assertTrue(result.contains("Accepted enquiry E001"));
-        assertTrue(result.contains("now has 3 orders, over your daily capacity of 1."));
     }
 
     @Test

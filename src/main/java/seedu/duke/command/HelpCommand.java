@@ -12,23 +12,22 @@ public class HelpCommand {
         return String.join(System.lineSeparator(),
                 "Baker commands:",
                 "  add n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING",
-                "  enquire n/NAME p/PHONE d/DATE s/SIZE f/FLAVOUR fi/FILLING",
                 "  list",
-                "  enquiries",
-                "  stats",
                 "  find KEYWORD",
                 "  capacity [NUMBER]",
-                "  view ORDER_ID|ENQUIRY_ID",
+                "  view ORDER_ID",
                 "  edit ORDER_ID [n/NAME] [p/PHONE] [d/DATE] [s/SIZE] [f/FLAVOUR] [fi/FILLING]",
-                "  note ORDER_ID TEXT  (or  note ORDER_ID -clear)",
-                "  accept ENQUIRY_ID",
                 "  mark ORDER_ID preparing|ready|collected",
-                "  reject ENQUIRY_ID",
-                "  cancel ORDER_ID|ENQUIRY_ID",
-                "  delete ORDER_ID|ENQUIRY_ID",
+                "  cancel ORDER_ID",
                 "  customer CUSTOMER_ID",
                 "  history CUSTOMER_ID",
                 "  help",
-                "  bye");
+                "  bye",
+                //@@author Eethanzyj
+                "",
+                "Add Order example:",
+                "  add n/Alice Tan p/91234567 d/30-10-2030 s/8 f/Chocolate fi/Strawberry",
+                "Use today or a future due date in DD-MM-YYYY format.");
+        //@@author
     }
 }

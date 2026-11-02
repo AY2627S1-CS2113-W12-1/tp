@@ -21,7 +21,7 @@ BakerCli ..> Parser
 BakerCli ..> Command
 Command ..> OrderList : reads/changes
 Storage ..> OrderList : fills/reads
-OrderList o-- "*" Order
+OrderList "1" --> "*" Order : stores
 
 Parser ..> CakeQueueException : throws
 Command ..> CakeQueueException : throws

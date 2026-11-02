@@ -4,10 +4,8 @@ title CakeQueue architecture (simplified)
 package "Entry" {
   [Duke] as Duke
 }
-package "UI (mode-specific CLIs)" {
+package "UI" {
   [BakerCli] as Baker
-  [CustomerCli] as Customer
-  [UserMode] as Mode
 }
 package "Parsing" {
   [Parser] as Parser
@@ -24,27 +22,22 @@ package "Storage (v2.0)" {
 }
 database "data/cakequeue.txt" as File
 
-Duke --> Baker : runs when mode = BAKER
-Duke --> Customer : runs when mode = CUSTOMER
-Duke ..> Mode : mode chosen via
+Duke --> Baker : runs
 Baker --> Parser : parse baker input
-Customer --> Parser : parse customer input
 Baker --> Cmd : create + execute
-Customer --> Cmd : create + execute
 Cmd --> List : read / update
-List "1" *-- "0..*" Order : contains
+List "1" --> "0..*" Order : stores
 Duke --> Storage : load at start,\nsave after each change
 Storage --> File : read / write
 note right of Cmd
   Placeholder for the concrete
   command classes, e.g.
-  EnquireCommand, MarkCommand.
+  FindCommand, MarkCommand.
   Each returns a String message;
   the CLI prints it.
 end note
 note bottom of Duke
-  One shared OrderList is passed to
-  both CLIs, so switching modes
-  never loses records.
+  The shared OrderList is loaded
+  once and passed to BakerCli.
 end note
 @enduml

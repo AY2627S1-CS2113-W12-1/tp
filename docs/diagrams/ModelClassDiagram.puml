@@ -6,21 +6,20 @@ hide empty members
 
 class OrderList {
   - dailyCapacity: int
-  + add(order)
-  + getById(id): Order
-  + removeById(id): Order
-  + getAll(): List<Order>
-  + countOrdersDueOn(date): int
-  + countOrdersByDueDate(): Map
+  + add(order: Order): void
+  + getById(id: String): Order
+  + update(order: Order): void
+  + getAll(): ArrayList<Order>
+  + countOrdersDueOn(date: LocalDate): int
+  + countOrdersByDueDate(): TreeMap<LocalDate, Integer>
   + getDailyCapacity(): int
-  + setDailyCapacity(n)
+  + setDailyCapacity(n: int): void
 }
 
 class Order {
   - orderId: String
   - customerId: String
   - dueDate: LocalDate
-  - status: OrderStatus
   - notes: String
 }
 
@@ -46,19 +45,29 @@ enum OrderStatus {
 }
 
 class CustomerList {
-  + fromOrders(orders): CustomerList
-  + getById(id): CustomerProfile
+  {static} + fromOrders(orders: OrderList): CustomerList
+  + getById(id: String): CustomerProfile
 }
 
 class CustomerProfile {
   - customerId: String
 }
 
-OrderList *-- "*" Order
-Order *-- "1" Customer
-Order *-- "0..1" Cake
-Order --> "1" OrderStatus
+OrderList "1" --> "*" Order : stores
+Order "*" --> "1" Customer
+Order "*" --> "0..1" Cake
+Order --> "1" OrderStatus : status
 CustomerList *-- "*" CustomerProfile
-CustomerProfile o-- "*" Order
+CustomerProfile --> "1..*" Order : references
 CustomerList ..> OrderList : built from
+
+note right of OrderStatus
+  ENQUIRY and REJECTED are retained
+  for legacy saved records only.
+end note
+
+note bottom of Order
+  Notes are retained for compatibility.
+  No CLI command changes them.
+end note
 @enduml

@@ -10,56 +10,28 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import seedu.duke.command.AcceptEnquiryCommand;
-import seedu.duke.model.Cake;
-import seedu.duke.model.Customer;
-import seedu.duke.model.Order;
-import seedu.duke.model.OrderList;
-import seedu.duke.model.OrderStatus;
 
 /**
- * Integration tests for the baker CLI and the enquiry/order workflow.
+ * Integration tests for the baker CLI and the order workflow.
  * All due dates use 2028 to remain in the future.
  */
 public class ModeCliTest {
     @TempDir
     private Path tempDir;
 
-    /**
-     * Seeds an enquiry directly into an OrderList (bypassing the parser, so date can be in
-     * the past), then verifies AcceptEnquiryCommand promotes it to a confirmed order.
-     */
     @Test
-    public void acceptEnquiry_directOrderListSeed_createsOrder() {
-        OrderList orders = new OrderList();
-        orders.add(new Order(orders.generateEnquiryId(),
-                new Customer("Alice", "91234567"),
-                new Cake(8, "Chocolate", "Strawberry"),
-                LocalDate.of(2028, 10, 20),
-                OrderStatus.ENQUIRY));
-
-        String accepted = new AcceptEnquiryCommand("E001").execute(orders);
-
-        assertTrue(accepted.contains("Accepted enquiry E001 as order O001"));
-        assertTrue(orders.getById("O001").getStatus() == OrderStatus.QUEUED);
-    }
-
-    @Test
-    public void run_bakerCancelAndEnquiries_work() {
+    public void run_bakerCancel_hidesOrderFromActiveList() {
         String result = runSession(
                 "add n/Direct p/81111111 d/21-10-2028 s/6 f/Vanilla fi/Cream\n"
-                        + "enquiries\n"
                         + "cancel O001\n"
                         + "list\n"
                         + "bye\n");
 
         assertTrue(result.contains("Baker mode."));
-        assertTrue(result.contains("You have no pending enquiries."));
         assertTrue(result.contains("Cancelled O001"));
         assertTrue(result.contains("You have no upcoming orders."));
     }
@@ -69,8 +41,8 @@ public class ModeCliTest {
         String result = runSession("help\nbye\n");
 
         assertTrue(result.contains("Baker commands:"));
-        assertTrue(result.contains("reject ENQUIRY_ID"));
-        assertTrue(result.contains("accept ENQUIRY_ID"));
+        assertTrue(result.contains("find KEYWORD"));
+        assertTrue(result.contains("history CUSTOMER_ID"));
         assertTrue(result.contains("mark ORDER_ID preparing|ready|collected"));
     }
 

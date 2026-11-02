@@ -1,9 +1,10 @@
 # CakeQueue
 
 CakeQueue is a Java command-line app for recording and managing cake orders.
-V1 supports adding, listing, viewing, and editing orders.
+It supports adding, listing, viewing, editing and cancelling orders, finding records,
+customer details and history, daily capacity warnings and production progress.
 
-Orders are kept in memory and are cleared when the app closes. 
+Successful changes are saved to `data/cakequeue.txt` and loaded when the app starts again.
 
 ## Setup
 
@@ -28,7 +29,7 @@ Java assertions are enabled for the Gradle `run` task; use `-ea` when running th
 ## Try It
 
 ```text
-add n/Alice Tan p/91234567 d/20-10-2026 s/8 f/Chocolate fi/Strawberry
+add n/Alice Tan p/91234567 d/20-12-2030 s/8 f/Chocolate fi/Strawberry
 list
 view O001
 edit O001 s/10
@@ -36,7 +37,7 @@ view O001
 bye
 ```
 
-`update` is accepted as an alias for `edit`.
+Use `help` to see all available commands.
 See the [User Guide](docs/UserGuide.md) for command formats, validation rules, and limitations.
 
 ## Project Structure
