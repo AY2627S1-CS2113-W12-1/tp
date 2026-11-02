@@ -71,9 +71,9 @@ public class StorageErrorTest {
     }
 
     @Test
-    public void load_pathIsDirectory_returnsEmptyListInsteadOfCrashing() {
-        // readAllLines on a directory throws IOException, which load() must absorb.
-        assertEquals(0, new Storage(tempDir).load().size());
+    public void load_pathIsDirectory_abortsToProtectData() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> new Storage(tempDir).load());
     }
 
     @Test
@@ -110,14 +110,14 @@ public class StorageErrorTest {
     }
 
     @Test
-    public void save_recordWithoutId_isSkippedNotSaved() {
+    public void save_recordWithoutId_isRejectedWithoutOverwriting() {
         OrderList orders = new OrderList();
         // Records without an ID cannot be reloaded and must not be persisted.
         orders.add(new Order(null, new Customer("Alice Tan", "91234567"),
                 new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20)));
         Storage storage = new Storage(dataFile());
 
-        assertTrue(storage.save(orders));
-        assertEquals(0, storage.load().size());
+        assertFalse(storage.save(orders));
+        assertFalse(Files.exists(dataFile()));
     }
 }

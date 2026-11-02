@@ -75,6 +75,9 @@ public class Order {
     }
 
     public void setStatus(OrderStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Order status cannot be null.");
+        }
         this.status = status;
     }
 

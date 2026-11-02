@@ -38,6 +38,9 @@ public class OrderList {
      * Returns the next order ID in the format O001.
      */
     public String generateOrderId() {
+        if (nextOrderNumber <= 0) {
+            throw new CakeQueueException("Order ID limit reached.");
+        }
         return String.format(Locale.ROOT, "O%03d", nextOrderNumber++);
     }
     //@@author
@@ -47,6 +50,9 @@ public class OrderList {
      */
     public String generateEnquiryId() {
         //@@author Eethanzyj
+        if (nextEnquiryNumber <= 0) {
+            throw new CakeQueueException("Enquiry ID limit reached.");
+        }
         return String.format(Locale.ROOT, "E%03d", nextEnquiryNumber++);
         //@@author
     }
@@ -61,9 +67,21 @@ public class OrderList {
         //@@author Eethanzyj
         assert order != null : "Order must not be null";
         //@@author
+        if (order == null) {
+            throw new CakeQueueException("Cannot add a null record.");
+        }
+        String recordId = order.getOrderId();
+        if (recordId != null) {
+            for (Order existing : orders) {
+                if (recordId.equalsIgnoreCase(existing.getOrderId())) {
+                    throw new CakeQueueException("Duplicate record ID: " + recordId);
+                }
+            }
+            validateRecordNumber(recordId);
+        }
         assignCustomerId(order);
         orders.add(order);
-        advanceCountersPast(order.getOrderId());
+        advanceCountersPast(recordId);
     }
 
     //@@author anannya-mk
@@ -81,7 +99,7 @@ public class OrderList {
         String existingId = order.getCustomerId();
         if (existingId != null) {
             if (existingId.matches("C[0-9]+")) {
-                nextCustomerNumber = Math.max(nextCustomerNumber, Integer.parseInt(existingId.substring(1)) + 1);
+                nextCustomerNumber = Math.max(nextCustomerNumber, safeNextNumber(existingId.substring(1)));
             }
             return;
         }
@@ -95,6 +113,9 @@ public class OrderList {
         }
         //@@author Eethanzyj
         // IDs must keep ASCII digits so commands and saved files can recognise them in every locale.
+        if (nextCustomerNumber <= 0) {
+            throw new CakeQueueException("Customer ID limit reached.");
+        }
         order.setCustomerId(String.format(Locale.ROOT, "C%03d", nextCustomerNumber++));
         //@@author anannya-mk
     }
@@ -104,11 +125,37 @@ public class OrderList {
         if (recordId == null || !recordId.matches("[OE][0-9]+")) {
             return;
         }
-        int number = Integer.parseInt(recordId.substring(1));
+        int nextNumber = safeNextNumber(recordId.substring(1));
         if (recordId.startsWith("O")) {
-            nextOrderNumber = Math.max(nextOrderNumber, number + 1);
+            nextOrderNumber = Math.max(nextOrderNumber, nextNumber);
         } else {
-            nextEnquiryNumber = Math.max(nextEnquiryNumber, number + 1);
+            nextEnquiryNumber = Math.max(nextEnquiryNumber, nextNumber);
+        }
+    }
+
+    /** Reserves existing customer IDs before assigning IDs to legacy records. */
+    public void reserveCustomerId(String customerId) {
+        if (customerId != null && customerId.matches("C[0-9]+")) {
+            nextCustomerNumber = Math.max(nextCustomerNumber, safeNextNumber(customerId.substring(1)));
+        }
+    }
+
+    private void validateRecordNumber(String recordId) {
+        if (!recordId.matches("[OE][0-9]{3,}")) {
+            throw new CakeQueueException("Invalid record ID: " + recordId);
+        }
+        safeNextNumber(recordId.substring(1));
+    }
+
+    private int safeNextNumber(String digits) {
+        try {
+            int number = Integer.parseInt(digits);
+            if (number < 0 || number == Integer.MAX_VALUE) {
+                throw new CakeQueueException("Record ID limit reached.");
+            }
+            return number + 1;
+        } catch (NumberFormatException exception) {
+            throw new CakeQueueException("Record ID is too large.");
         }
     }
 
@@ -164,8 +211,11 @@ public class OrderList {
      * @throws CakeQueueException If the order ID does not exist.
      */
     public void update(Order updatedOrder) {
+        if (updatedOrder == null || updatedOrder.getOrderId() == null) {
+            throw new CakeQueueException("Cannot update a record without an ID.");
+        }
         for (int i = 0; i < orders.size(); i++) {
-            if (updatedOrder.getOrderId().equals(orders.get(i).getOrderId())) {
+            if (updatedOrder.getOrderId().equalsIgnoreCase(orders.get(i).getOrderId())) {
                 orders.set(i, updatedOrder);
                 return;
             }
@@ -255,6 +305,9 @@ public class OrderList {
      * Enquiries and collected, cancelled or rejected records are not counted.
      */
     public int countOrdersDueOn(LocalDate date) {
+        if (date == null) {
+            return 0;
+        }
         int count = 0;
         for (Order order : orders) {
             if (isActive(order) && date.equals(order.getDueDate())) {

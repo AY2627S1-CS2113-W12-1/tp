@@ -104,7 +104,9 @@ public class NotesAndCustomerIdStorageTest {
         orders.add(order);
 
         new Storage(file).save(orders);
-        String line = Files.readAllLines(file).get(0);
+        String line = Files.readAllLines(file).stream()
+                .filter(savedLine -> !savedLine.startsWith("# dailyCapacity="))
+                .findFirst().orElseThrow();
 
         assertTrue(line.endsWith("| C001 | -"), line);
     }
