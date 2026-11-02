@@ -1,67 +1,83 @@
 # Kai Sheng - Project Portfolio Page
 
+GitHub: [Kaishhhh](https://github.com/Kaishhhh)
+
 ## Overview
 
-CakeQueue is a command-line application that helps bakers manage cake orders and customer details.
+CakeQueue helps home bakers manage custom cake orders from the command line. It records customer and cake
+details, tracks due dates and production progress, keeps each customer's order history, and warns the baker
+before a day has more orders than they can make.
 
 ### Summary of Contributions
 
 #### Code contributed
 
-[RepoSense link](https://nus-cs2113-ay2627s1.github.io/tp-dashboard/?search=Kaishhhh&breakdown=true)
+[RepoSense link](https://nus-cs2113-ay2627-s1.github.io/tp-dashboard/?search=Kaishhhh&breakdown=true)
 
 #### Enhancements implemented
 
 * **List upcoming orders (`list`).** Added `ListCommand`, which shows uncollected orders with the earliest due
   date first, and `OrderList#getAll`, which returns a copy so that sorting for display never changes the stored
   order. [PR #10](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/10)
-* **Find orders (`find KEYWORD`).** Lets the baker search all orders and enquiries by customer name, cake flavour
-  or filling. The match ignores case, can be part of a word, and treats a keyword with spaces as one phrase.
-  Records without cake details are matched on the name only, and the search works the same on any system language
-  setting. [PR #18](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/18)
+* **Find orders (`find KEYWORD`).** Lets the baker search all records by customer name, cake flavour or filling.
+  The match ignores case, can be part of a word, and treats a keyword with spaces as one phrase. Records without
+  cake details are matched on the name only, and the search works the same on any system language setting.
+  [PR #18](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/18)
 * **Daily capacity (`capacity [NUMBER]`).** Lets the baker set how many orders they can take for one due date
-  (1 to 50, default 5) and see which dates are already over it. `add`, `accept` and `edit` now warn when a date
-  goes over the limit. Only active orders (`QUEUED`, `PREPARING`, `READY`) count.
+  (1 to 50, default 5) and see which dates are already over it. `add` and `edit` warn when a date goes over the
+  limit. Only active orders (`QUEUED`, `PREPARING`, `READY`) count.
   [PR #22](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/22)
     * Design choice: the app warns but still saves the order, so the baker can still take a big order on a busy day.
       The capacity is kept in `OrderList`, which every command already receives, so no command signatures had to
       change.
-* **Tests.** Wrote 36 JUnit tests for `find` and `capacity`, covering the command classes, the parser and complete
-  command-line sessions. The tests check edge cases such as phrase matching, records with no cake details,
-  out-of-range and non-numeric capacities, the at-limit and over-limit warnings, and inactive statuses not being
-  counted. [PR #29](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/29)
+* **Restoring master before the v2.0 release.** A merge had removed several features and left master unable to
+  compile. I redid that merge so that the team's features (Customer IDs, `find`, `capacity`, `customer`,
+  `history`) and the new baker-only changes both worked again. [PR #33](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/33)
+    * Combined Customer IDs and notes in one data format, so that every older format still loads, including
+      lines that held notes where a Customer ID was expected.
+    * Made `edit` apply the same past-date and phone checks as `add`, and accepted formatted phone numbers
+      such as `+65 9123-4567`.
+* **Tests.** Wrote JUnit tests for `find` and `capacity`, covering the command classes, the parser and complete
+  command-line sessions, including edge cases such as phrase matching, records with no cake details,
+  out-of-range and non-numeric capacities, and the at-limit and over-limit warnings.
+  [PR #29](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/29).
+  Added regression tests for the data format and `edit` validation.
+  [PR #33](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/33)
 
 #### Contributions to the User Guide
 
 * Wrote the sections for `find` and `capacity`, including the capacity warning behaviour and its limitation
   (the limit is not saved between sessions).
-* Added the sections that were missing for v2.0: choosing a mode and how an enquiry becomes an order, `enquiries`,
-  `accept`, `reject`, `mark`, `cancel` and the customer-mode commands (`enquire`, `mine`, `track`, `edit`,
-  `cancel`).
-* Extended the Command Summary to cover both baker and customer modes, and added items to Current Limitations.
+* Wrote the v2.0 User Guide for the baker-only version, covering every command, the command format and the
+  command summary. [PR #29](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/29),
+  [PR #33](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/33)
 
 #### Contributions to the Developer Guide
 
+* Wrote most of the Design section: Architecture, Parser, Model, Storage and Error handling.
 * Wrote the implementation sections for the **Find** and **Daily capacity** features, including the design
-  alternatives considered and a proposed implementation for saving the capacity between sessions.
-* Wrote Appendices A to E: product scope, user stories, non-functional requirements, glossary and instructions
-  for manual testing.
-* Drew five UML diagrams in PlantUML, covering three diagram types:
+  alternatives considered and a proposed way to save the capacity between sessions.
+* Wrote Appendices A to D: product scope, user stories, non-functional requirements and glossary, and the first
+  version of the instructions for manual testing (Appendix E).
+* Drew the first versions of these UML diagrams in PlantUML, covering four diagram types:
     * Class: architecture overview and model class diagram.
-    * Sequence: `find` and `capacity`.
+    * Sequence: `find`, `capacity` and `customer`.
     * Activity: the capacity warning check.
+    * State: the lifecycle of an order.
 
 #### Contributions to team-based tasks
 
-* Kept the Developer Guide and User Guide consistent when teammates' branches were merged. I resolved conflicts
-  in both guides, keeping every teammate's sections.
+* Fixed master before the v2.0 deadline after a merge broke the build, and published the v2.0 release (JAR, User
+  Guide and Developer Guide). [PR #33](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/33)
+* Re-enabled GitHub Actions on the team repository, which had been disabled, so that continuous integration and
+  the GitHub Pages site build again.
+* Kept the Developer Guide and User Guide consistent when teammates' branches were merged, resolving conflicts
+  in both guides while keeping every teammate's sections.
   [PR #30](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/30)
-* Checked the guides against the v2.0 requirements: commands missing from the User Guide, required DG sections,
-  `.puml` sources in `docs/diagrams`, and the `//@@author` tags around my code.
 
 #### Review/mentoring contributions
 
-* Reviewed teammates' pull requests
+* Reviewed teammates' pull requests.
 
 #### Contributions beyond the project team
 
