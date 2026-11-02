@@ -45,7 +45,10 @@ public class ErrorRecoveryCliTest {
         assertTrue(result.contains("Error: Cake size must be 6, 8, or 10 inches."));
         assertTrue(result.contains("Error: Order not found: O999"));
         assertTrue(result.contains("Added order O001: Alice Tan"));
-        assertTrue(result.contains("1. O001: Alice Tan (91234567)"));
+        //@@author Eethanzyj
+        assertTrue(result.contains("1. O001 [QUEUED]" + System.lineSeparator()
+                + "   Customer: Alice Tan (91234567)"));
+        //@@author
         assertTrue(!result.contains("O002"));
         assertTrue(result.contains("Bye. Hope to see you again soon!"));
     }

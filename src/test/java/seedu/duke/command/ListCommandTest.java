@@ -42,7 +42,17 @@ class ListCommandTest {
         orders.add(new Order("O002", new Customer("Bella", "98765432"), cake, null));
 
         String result = new ListCommand().execute(orders);
-        assertTrue(result.contains("1. O002: Bella"));
+        //@@author Eethanzyj
+        assertEquals(String.join(System.lineSeparator(),
+                "Here are your upcoming orders:",
+                "------------------------------------------------------------",
+                "1. O002 [QUEUED]",
+                "   Customer: Bella (98765432)",
+                "   Due: Not specified",
+                "   Size: 8 inches",
+                "   Flavour: Chocolate | Filling: Cream",
+                "------------------------------------------------------------"), result);
+        //@@author
         assertFalse(result.contains("Alex"));
     }
 
@@ -88,7 +98,8 @@ class ListCommandTest {
         String result = new ListCommand().execute(orders);
 
         assertTrue(result.contains("1. O001"));
-        assertTrue(result.contains("2. O002: Alex"));
+        assertTrue(result.contains("2. O002 [QUEUED]" + System.lineSeparator()
+                + "   Customer: Alex (91234567)"));
     }
     //@@author
 
@@ -108,7 +119,9 @@ class ListCommandTest {
 
         String result = new ListCommand().execute(orders);
 
-        assertTrue(result.contains("[OVERDUE]"));
+        //@@author Eethanzyj
+        assertTrue(result.contains("1. O001 [QUEUED] [OVERDUE]"));
+        //@@author WillChin484848
         assertFalse(result.contains("[DUE SOON]"));
     }
 

@@ -57,7 +57,10 @@ public class ModeCliTest {
         assertTrue(first.contains("Updated order O001"));
         assertTrue(first.contains("[PREPARING]"));
         assertTrue(second.contains("Loaded 1 saved record(s)."));
-        assertTrue(second.contains("1. O001: Alice Tan (91234567)"));
+        //@@author Eethanzyj
+        assertTrue(second.contains("1. O001 [PREPARING]" + System.lineSeparator()
+                + "   Customer: Alice Tan (91234567)"));
+        //@@author HammerHead-os
         assertTrue(second.contains("Status: PREPARING"));
         assertTrue(second.contains("Added order O002: Bob Lim"));
     }

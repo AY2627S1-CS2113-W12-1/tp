@@ -12,6 +12,9 @@ import java.util.Comparator;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
+//@@author Eethanzyj
+import seedu.duke.ui.OrderFormatter;
+//@@author Kaishhhh
 
 /**
  * Represents a command that lists all upcoming confirmed orders.
@@ -53,10 +56,7 @@ public class ListCommand {
             Order order = all.get(i);
 
             //@@author Eethanzyj
-            listing.append(i + 1)
-                    .append(". ")
-                    //@@author Kaishhhh
-                    .append(order);
+            StringBuilder warning = new StringBuilder();
 
             //@@author WillChin484848
             // Highlight overdue and approaching deadlines.
@@ -64,14 +64,21 @@ public class ListCommand {
                 long daysUntilDue = ChronoUnit.DAYS.between(today, order.getDueDate());
 
                 if (daysUntilDue < 0) {
-                    listing.append(" [OVERDUE]");
+                    //@@author Eethanzyj
+                    warning.append(" [OVERDUE]");
+                    //@@author WillChin484848
                 } else if (daysUntilDue <= DUE_SOON_DAYS) {
-                    listing.append(" [DUE SOON]");
+                    //@@author Eethanzyj
+                    warning.append(" [DUE SOON]");
+                    //@@author WillChin484848
                 }
             }
             //@@author Kaishhhh
 
-            listing.append(System.lineSeparator());
+            //@@author Eethanzyj
+            listing.append(OrderFormatter.format(order, i + 1, warning.toString()))
+                    .append(System.lineSeparator());
+            //@@author Kaishhhh
         }
 
         if (listing.length() == 0) {
@@ -79,6 +86,8 @@ public class ListCommand {
         }
 
         return "Here are your upcoming orders:"
-                + System.lineSeparator() + listing;
+                //@@author Eethanzyj
+                + System.lineSeparator() + listing + OrderFormatter.SEPARATOR;
+        //@@author Kaishhhh
     }
 }

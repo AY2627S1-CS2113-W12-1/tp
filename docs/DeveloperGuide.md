@@ -104,6 +104,24 @@ Most commands are built with parsed values and expose `execute(OrderList)`, retu
 to print. `HelpCommand.execute()` needs no order list, and `bye` ends the loop directly. Command classes do not print or save; the loop prints their
 result and invokes the save callback after successful record changes.
 
+<!-- @@author Eethanzyj -->
+
+#### Readable order results
+
+`ListCommand`, `FindCommand` and `HistoryCommand` use `ui.OrderFormatter` to display
+each numbered order as a separate block. A line of dashes separates records. The first
+line shows the Order ID and status, followed by customer, due date and cake details.
+Missing legacy dates or cake details use `Not specified`.
+
+The formatter receives the record, its display position and an optional deadline label.
+Filtering, matching and sorting stay in the commands; `ListCommand` still determines
+overdue and due-soon labels before formatting. The formatter only builds text and never
+changes an order or saves data. Sharing it keeps the three result layouts consistent.
+`Order.toString()` remains available for single-order confirmations, so this display
+change is limited to results containing numbered orders.
+
+<!-- @@author -->
+
 ### Model
 
 ![Model class diagram](diagrams/ModelClassDiagram.png)

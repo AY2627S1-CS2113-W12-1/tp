@@ -38,6 +38,13 @@ public class HistoryCommandTest {
         assertTrue(result.contains("Order history for Alice (C001):"));
         assertTrue(result.contains("1. O001"));
         assertTrue(result.contains("2. O003"));
+        //@@author Eethanzyj
+        String nl = System.lineSeparator();
+        assertTrue(result.contains("1. O001 [COLLECTED]" + nl + "   Customer: Alice (91111111)"));
+        assertTrue(result.contains(nl + "------------------------------------------------------------"
+                + nl + "2. O003 [CANCELLED]"));
+        assertTrue(result.endsWith("------------------------------------------------------------"));
+        //@@author anannya-mk
         assertTrue(result.contains("[CANCELLED]"));
         assertFalse(result.contains("O002"));
         assertFalse(result.contains("E001"));

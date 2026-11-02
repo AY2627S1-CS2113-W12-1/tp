@@ -141,6 +141,28 @@ CakeQueue highlights orders with approaching or missed deadlines:
 
 <!-- @@author Eethanzyj -->
 
+Each order appears in a separate block, with its ID and status first:
+
+```text
+Here are your upcoming orders:
+------------------------------------------------------------
+1. O001 [QUEUED]
+   Customer: Alice Tan (91234567)
+   Due: 20-12-2030
+   Size: 8 inches
+   Flavour: Chocolate | Filling: Strawberry
+------------------------------------------------------------
+2. O002 [PREPARING]
+   Customer: Bob Lim (81234567)
+   Due: 21-12-2030
+   Size: 6 inches
+   Flavour: Vanilla | Filling: Cream
+------------------------------------------------------------
+```
+
+Deadline labels such as `[DUE SOON]` appear beside the status. Older records with no
+due date or cake details show `Not specified`. `find` and `history` use the same block layout.
+
 If no orders are available, CakeQueue shows `You have no upcoming orders.`
 
 <!-- @@author -->
@@ -156,8 +178,8 @@ Shows records whose customer name, cake flavour or cake filling contains the key
 * The keyword can be part of a word: `find choc` finds `Chocolate`.
 * A keyword with spaces is searched as one phrase: `find Alice Tan` finds `Alice Tan` but not
   `Tan Alice`.
-* All records are searched, including legacy enquiries and collected or cancelled orders. Each result
-  ends with its status.
+* All records are searched, including legacy enquiries and collected or cancelled orders.
+  Each result is a separate block headed by its ID and status.
 
 Examples:
 
@@ -218,14 +240,26 @@ If the customer does not exist, CakeQueue shows `Error: Customer not found: CUST
 Format: `history CUSTOMER_ID`
 
 Lists every order placed by that customer in the order it was added, including cancelled and
-collected orders. The history is not sorted by due date. Each line ends with the order's status. Legacy enquiries are not confirmed orders and are excluded.
+collected orders. The history is not sorted by due date. Each order is a separate block
+headed by its ID and status. Legacy enquiries are not confirmed orders and are excluded.
 
 Example: `history C001`
 
 ```text
 Order history for Alice Tan (C001):
-1. O001: Alice Tan (91234567) | Due: 22-12-2030 | Size: 8 inches | Flavour: Chocolate | Filling: Strawberry [QUEUED]
-2. O003: Alice Tan (91234567) | Due: 25-12-2030 | Size: 6 inches | Flavour: Vanilla | Filling: Cream [CANCELLED]
+------------------------------------------------------------
+1. O001 [QUEUED]
+   Customer: Alice Tan (91234567)
+   Due: 22-12-2030
+   Size: 8 inches
+   Flavour: Chocolate | Filling: Strawberry
+------------------------------------------------------------
+2. O003 [CANCELLED]
+   Customer: Alice Tan (91234567)
+   Due: 25-12-2030
+   Size: 6 inches
+   Flavour: Vanilla | Filling: Cream
+------------------------------------------------------------
 ```
 
 <!-- @@author Eethanzyj -->
