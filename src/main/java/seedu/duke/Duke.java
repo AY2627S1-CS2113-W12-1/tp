@@ -49,7 +49,9 @@ public class Duke {
         try {
             orders = storage.load();
         } catch (IllegalStateException exception) {
-            System.out.println("Error: Could not read saved data. No changes were made.");
+            System.out.println("Error: Saved data could not be loaded safely. CakeQueue will exit "
+                    + "without changing the file. Back up data/cakequeue.txt, repair the "
+                    + "invalid records or restore a valid backup, then restart.");
             LOGGER.log(Level.SEVERE, "Startup aborted to protect saved data", exception);
             return;
         }

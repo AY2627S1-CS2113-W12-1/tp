@@ -13,6 +13,8 @@ import java.time.LocalDate;
 import java.time.DateTimeException;
 //@@author HammerHead-os
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,14 +70,17 @@ public class Storage {
      * Loads all records from the data file.
      *
      * <p>Defensive choices: a missing file is not an error (first run of the
-     * app), and a corrupted line is skipped with a warning instead of crashing
-     * the whole application, so one bad line cannot destroy every order.</p>
+     * app). Corrupted data aborts loading to prevent a later save from
+     * overwriting valid records in a partially readable file.</p>
      *
      * @return The loaded records, or an empty list if the file does not exist.
      */
     public OrderList load() {
         //@@author WillChin484848
-        unsafeToSave = false;
+        // A previous failed load must not be silently cleared by retrying.
+        if (unsafeToSave) {
+            throw new IllegalStateException("Storage is unsafe after an earlier failed load: " + dataFile);
+        }
         //@@author HammerHead-os
         OrderList orders = new OrderList();
         if (!Files.exists(dataFile)) {
@@ -123,6 +128,13 @@ public class Storage {
                 //@@author WillChin484848
             }
         }
+        // Match legacy orders to explicit customer IDs even if the explicit record appears later.
+        Map<String, String> customerIdsByPhone = new HashMap<>();
+        for (Order order : parsedOrders) {
+            if (order.getOrderId().startsWith("O") && order.getCustomerId() != null) {
+                customerIdsByPhone.putIfAbsent(order.getCustomer().getPhone(), order.getCustomerId());
+            }
+        }
         // Reserve all restored IDs before allocating IDs for legacy records.
         for (Order order : parsedOrders) {
             try {
@@ -134,12 +146,22 @@ public class Storage {
         }
         for (Order order : parsedOrders) {
             try {
+                if (order.getOrderId().startsWith("O") && order.getCustomerId() == null) {
+                    String savedId = customerIdsByPhone.get(order.getCustomer().getPhone());
+                    if (savedId != null) {
+                        order.setCustomerId(savedId);
+                    }
+                }
                 orders.add(order);
             } catch (IllegalArgumentException exception) {
                 unsafeToSave = true;
                 LOGGER.log(Level.WARNING, "Skipping invalid or duplicate record", exception);
                 //@@author HammerHead-os
             }
+        }
+        // Do not expose partially loaded data for editing when it cannot be saved safely.
+        if (unsafeToSave) {
+            throw new IllegalStateException("Saved data contains invalid records: " + dataFile);
         }
         return orders;
     }
@@ -302,7 +324,7 @@ public class Storage {
             }
         }
         if (isEscaped) {
-            current.append('\\');
+            throw new CakeQueueException("Incomplete escape sequence in saved record.");
         }
         fields.add(current.toString().trim());
         return fields;

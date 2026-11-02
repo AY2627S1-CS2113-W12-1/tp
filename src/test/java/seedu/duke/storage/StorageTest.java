@@ -87,8 +87,6 @@ public class StorageTest {
                 java.nio.charset.StandardCharsets.UTF_8,
                 java.nio.file.StandardOpenOption.APPEND);
 
-        OrderList loaded = storage.load();
-
-        assertEquals(2, loaded.size());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, storage::load);
     }
 }

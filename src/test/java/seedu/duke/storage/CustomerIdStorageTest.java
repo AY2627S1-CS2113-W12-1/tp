@@ -4,7 +4,7 @@ package seedu.duke.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,11 +66,25 @@ public class CustomerIdStorageTest {
     }
 
     @Test
+    //@@author WillChin484848
+    public void load_legacyBeforeExplicitId_reusesLaterMatchingPhone() throws IOException {
+        Path file = tempDir.resolve("cakequeue.txt");
+        Files.write(file, List.of(
+                "O001 | QUEUED | Alice | 91111111 | 2026-12-01 | 8 | Chocolate | Cream",
+                "O002 | QUEUED | Alice | 91111111 | 2026-12-02 | 8 | Chocolate | Cream | C009",
+                "O003 | QUEUED | Bob | 92222222 | 2026-12-02 | 8 | Chocolate | Cream"));
+        OrderList loaded = new Storage(file).load();
+        assertEquals("C009", loaded.getById("O001").getCustomerId());
+        assertEquals("C009", loaded.getById("O002").getCustomerId());
+        assertEquals("C010", loaded.getById("O003").getCustomerId());
+    }
+
+    @Test
     public void load_badCustomerId_skipsLine() throws IOException {
         Path file = tempDir.resolve("cakequeue.txt");
         Files.write(file, List.of(
                 "O001 | QUEUED | Alice | 91111111 | 2026-12-01 | 8 | Chocolate | Cream | X1"));
 
-        assertTrue(new Storage(file).load().getAll().isEmpty());
+        assertThrows(IllegalStateException.class, () -> new Storage(file).load());
     }
 }

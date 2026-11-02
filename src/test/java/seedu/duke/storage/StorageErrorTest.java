@@ -2,6 +2,7 @@ package seedu.duke.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -12,11 +13,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.duke.exception.CakeQueueException;
 import seedu.duke.model.Cake;
 import seedu.duke.model.Customer;
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
-import seedu.duke.model.OrderStatus;
 
 /**
  * Error-handling tests for {@link Storage}: corrupted data must never crash
@@ -49,11 +50,7 @@ public class StorageErrorTest {
                 "",                                                              // blank line
                 "E002 | ENQUIRY | Bob Lim | 81111111 | 2026-10-21 | 6 | Vanilla | Cream"));
 
-        OrderList loaded = new Storage(dataFile()).load();
-
-        assertEquals(2, loaded.size());
-        assertEquals("Alice Tan", loaded.getById("O001").getCustomer().getName());
-        assertEquals(OrderStatus.ENQUIRY, loaded.getById("E002").getStatus());
+        assertThrows(IllegalStateException.class, () -> new Storage(dataFile()).load());
     }
 
     @Test
@@ -112,15 +109,15 @@ public class StorageErrorTest {
 
     @Test
     //@@author WillChin484848
-    public void save_recordWithoutId_isRejectedWithoutOverwriting() {
+    public void add_recordWithoutId_isRejectedBeforeSaving() {
         OrderList orders = new OrderList();
-        // Records without an ID cannot be reloaded and must not be persisted.
-        orders.add(new Order(null, new Customer("Alice Tan", "91234567"),
-                new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20)));
+        // Reject an invalid record before it can enter the list or reach disk.
+        assertThrows(CakeQueueException.class, () -> orders.add(
+                new Order(null, new Customer("Alice Tan", "91234567"),
+                        new Cake(8, "Chocolate", "Strawberry"), LocalDate.of(2026, 10, 20))));
         Storage storage = new Storage(dataFile());
 
-        //@@author WillChin484848
-        assertFalse(storage.save(orders));
-        assertFalse(Files.exists(dataFile()));
+        assertTrue(storage.save(orders));
+        assertEquals(0, storage.load().size());
     }
 }

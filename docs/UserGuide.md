@@ -36,6 +36,21 @@ new IDs continue after the existing ones.
 Alternatively, run from the project folder with `.\gradlew.bat run` on Windows or
 `./gradlew run` on macOS/Linux.
 
+### Startup Errors and Data Protection
+
+CakeQueue automatically loads saved orders from `data/cakequeue.txt` when it starts.
+
+If the saved file is unreadable or contains corrupted data, CakeQueue stops startup instead of allowing changes that could overwrite existing records. An error message explains that the data could not be loaded safely.
+
+**To recover:**
+
+1. Close CakeQueue.
+2. Make a backup copy of `data/cakequeue.txt`.
+3. Check the file for invalid or corrupted records, and restore a known-good backup if available.
+4. Restart CakeQueue only after the file has been repaired or restored.
+
+Do not delete or overwrite the original file before making a backup. If a normal save fails during an otherwise successful session, CakeQueue warns that the latest changes may only be available in memory.
+
 ## Command Format
 
 * Words in uppercase are values you supply, such as `NAME` and `DATE`.
@@ -304,7 +319,7 @@ Sets the most orders you can take for one due date, from 1 to 50. The default is
 * When `add` or `edit` leaves a due date over the limit, CakeQueue still saves the change
   and shows a warning, for example:
   `Warning: 21-12-2030 now has 4 orders, over your daily capacity of 3.`
-* The limit is not saved when you exit. It returns to 5 the next time you start CakeQueue.
+* The daily capacity limit is saved automatically in `data/cakequeue.txt` and restored when CakeQueue restarts. If no capacity setting has been saved, the default is 5 orders per day.
 
 Examples:
 
@@ -345,7 +360,7 @@ extra to save on exit. Check for save warnings before exiting.
 
 ## Current Limitations
 
-* The daily capacity limit is not saved between sessions. It returns to 5 each time CakeQueue starts.
+* The daily capacity setting is shared across all due dates. CakeQueue does not support different capacity limits for individual dates.
 * A Customer ID is given out when an order is first added and never changes. If a phone number is
   edited, the order keeps its original Customer ID.
 * `find` searches name, flavour and filling, but not phone numbers or dates. To look up a customer's
@@ -362,3 +377,18 @@ but cannot be added or changed through the CLI. No new enquiries can be created 
 
 The command summary lists ten feature commands plus `help` and `bye`.
 Commands removed from earlier versions, including `update`, produce an unknown-command error.
+
+### Storage Reliability and ID Preservation
+
+CakeQueue preserves existing Order IDs and Customer IDs when loading and saving records.
+
+- Order IDs remain in their canonical uppercase format, even when commands use lowercase IDs such as `edit o001`.
+- Existing Customer IDs are retained when records are loaded. Older records without saved Customer IDs can reuse the appropriate ID of another record with the same phone number, even if that record appears later in the save file.
+- Invalid or duplicate record IDs are rejected to prevent ambiguous records.
+- Special characters in saved text fields are escaped so that customer details and existing notes can survive saving and reloading.
+
+### Daily Capacity Persistence
+
+CakeQueue saves the configured daily capacity with the order data. A capacity setting such as `capacity 3` is restored when CakeQueue is restarted.
+
+If no saved capacity setting exists, CakeQueue uses the default of 5 orders per day.

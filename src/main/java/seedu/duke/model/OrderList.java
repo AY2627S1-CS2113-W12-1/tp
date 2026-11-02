@@ -68,21 +68,20 @@ public class OrderList {
      * collide with a restored record.
      */
     public void add(Order order) {
-        //@@author Eethanzyj
-        assert order != null : "Order must not be null";
-        //@@author
         //@@author WillChin484848
+        // Reject invalid records before assigning a customer ID or modifying the list.
         if (order == null) {
             throw new CakeQueueException("Cannot add a null record.");
         }
         String recordId = order.getOrderId();
-        if (recordId != null) {
-            for (Order existing : orders) {
-                if (recordId.equalsIgnoreCase(existing.getOrderId())) {
-                    throw new CakeQueueException("Duplicate record ID: " + recordId);
-                }
+        if (recordId == null) {
+            throw new CakeQueueException("Cannot add a record without an ID.");
+        }
+        validateRecordNumber(recordId);
+        for (Order existing : orders) {
+            if (recordId.equalsIgnoreCase(existing.getOrderId())) {
+                throw new CakeQueueException("Duplicate record ID: " + recordId);
             }
-            validateRecordNumber(recordId);
         }
         //@@author
         assignCustomerId(order);
@@ -237,8 +236,17 @@ public class OrderList {
         for (int i = 0; i < orders.size(); i++) {
             //@@author WillChin484848
             if (updatedOrder.getOrderId().equalsIgnoreCase(orders.get(i).getOrderId())) {
+                // Preserve the canonical stored ID even if a caller supplies different casing.
+                Order original = orders.get(i);
+                Order replacement = updatedOrder;
+                if (!updatedOrder.getOrderId().equals(original.getOrderId())) {
+                    replacement = new Order(original.getOrderId(), updatedOrder.getCustomer(),
+                            updatedOrder.getCake(), updatedOrder.getDueDate(), updatedOrder.getStatus());
+                    replacement.setCustomerId(updatedOrder.getCustomerId());
+                    replacement.setNotes(updatedOrder.getNotes());
+                }
                 //@@author
-                orders.set(i, updatedOrder);
+                orders.set(i, replacement);
                 return;
             }
         }

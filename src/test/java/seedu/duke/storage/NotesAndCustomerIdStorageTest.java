@@ -3,6 +3,7 @@ package seedu.duke.storage;
 //@@author Kaishhhh
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -88,11 +89,8 @@ public class NotesAndCustomerIdStorageTest {
                 "O001 | QUEUED | Alice | 91234567 | 2030-12-01 | 8 | Chocolate | Cream | C007",
                 "O002 | QUEUED | Bob | 81234567 | 2030-12-01 | 8 | Chocolate | Cream | X1"));
 
-        OrderList loaded = new Storage(file).load();
-
-        assertEquals(1, loaded.size());
-        assertEquals("C007", loaded.getById("O001").getCustomerId());
-        assertEquals("", loaded.getById("O001").getNotes());
+        // Invalid customer IDs must stop startup instead of silently dropping orders.
+        assertThrows(IllegalStateException.class, () -> new Storage(file).load());
     }
 
     @Test
