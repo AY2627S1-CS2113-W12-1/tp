@@ -46,8 +46,8 @@ before a day has more orders than they can make.
 
 #### Contributions to the User Guide
 
-* Wrote the sections for `find` and `capacity`, including the capacity warning behaviour and its limitation
-  (the limit is not saved between sessions).
+* Wrote the sections for `find` and `capacity`, including the capacity warning behaviour. In v2.0, the
+  capacity was not saved between sessions, so I documented that as a limitation; it is saved from v2.1.
 * Wrote the v2.0 User Guide for the baker-only version, covering every command, the command format and the
   command summary. [PR #29](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/29),
   [PR #33](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/33)
@@ -56,7 +56,7 @@ before a day has more orders than they can make.
 
 * Wrote most of the Design section: Architecture, Parser, Model, Storage and Error handling.
 * Wrote the implementation sections for the **Find** and **Daily capacity** features, including the design
-  alternatives considered and a proposed way to save the capacity between sessions.
+  alternatives considered and, before v2.1, a proposed way to save the capacity between sessions.
 * Wrote Appendices A to D: product scope, user stories, non-functional requirements and glossary, and the first
   version of the instructions for manual testing (Appendix E).
 * Drew the first versions of these UML diagrams in PlantUML, covering four diagram types:
@@ -74,10 +74,6 @@ before a day has more orders than they can make.
 * Kept the Developer Guide and User Guide consistent when teammates' branches were merged, resolving conflicts
   in both guides while keeping every teammate's sections.
   [PR #30](https://github.com/AY2627S1-CS2113-W12-1/tp/pull/30)
-
-#### Review/mentoring contributions
-
-* Reviewed teammates' pull requests.
 
 #### Contributions beyond the project team
 
