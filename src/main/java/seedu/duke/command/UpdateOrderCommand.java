@@ -58,7 +58,9 @@ public class UpdateOrderCommand {
         Cake updatedCake = oldCake;
         if (size != null || flavour != null || filling != null) {
             if (oldCake == null) {
+                //@@author HammerHead-os
                 throw new CakeQueueException("This order has no cake details.");
+                //@@author WillChin484848
             }
             try {
                 // Preserve existing cake details when a field is not updated.

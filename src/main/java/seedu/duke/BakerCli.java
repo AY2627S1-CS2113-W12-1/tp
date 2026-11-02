@@ -44,9 +44,12 @@ public class BakerCli {
                     requireNoArguments(input, "bye");
                     System.out.println("Bye. Hope to see you again soon!");
                     return;
+                //@@author HammerHead-os
                 case "help":
+                    //@@author Eethanzyj
                     String[] helpInput = input.split("\\s+", 2);
                     System.out.println(new HelpCommand().execute(helpInput.length == 2 ? helpInput[1] : ""));
+                    //@@author HammerHead-os
                     break;
                 //@@author Eethanzyj
                 case "list":
@@ -78,8 +81,10 @@ public class BakerCli {
                             details.getFlavour(),
                             details.getFilling()
                     );
+                    //@@author Kaishhhh
                     System.out.println(command.execute(orders)
                             + capacityWarning(orders, orders.getById(details.getOrderId()).getDueDate()));
+                    //@@author HammerHead-os
                     afterChange.run();
                     break;
                 //@@author Eethanzyj
@@ -128,7 +133,6 @@ public class BakerCli {
         String warning = CapacityCommand.warningFor(orders, dueDate);
         return warning.isEmpty() ? "" : System.lineSeparator() + warning;
     }
-    //@@author HammerHead-os
 
     //@@author Eethanzyj
     private void requireNoArguments(String input, String commandWord) {

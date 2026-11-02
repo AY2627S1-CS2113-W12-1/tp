@@ -146,7 +146,9 @@ public class ParserTest {
                 Parser.parseUpdate("edit O002 d/25-10-2028");
 
         assertEquals("O002", details.getOrderId());
+        //@@author HammerHead-os
         assertEquals(LocalDate.of(2028, 10, 25), details.getDueDate());
+        //@@author WillChin484848
         assertNull(details.getName());
         assertNull(details.getSize());
     }
@@ -206,18 +208,24 @@ public class ParserTest {
     //@@author Eethanzyj
     @Test
     public void parseUpdate_editAliasAndLowercaseId_returnsCanonicalId() {
+        //@@author HammerHead-os
         Parser.UpdateOrderDetails details = Parser.parseUpdate("EDIT\to001\ts/10 d/22-10-2028");
 
+        //@@author Eethanzyj
         assertEquals("O001", details.getOrderId());
         assertEquals(10, details.getSize());
+        //@@author HammerHead-os
         assertEquals(LocalDate.of(2028, 10, 22), details.getDueDate());
+        //@@author Eethanzyj
         assertNull(details.getName());
     }
 
     @Test
     public void parseUpdate_invalidEdit_preservesValidation() {
         for (String input : new String[] {"edit O001", "edit O001 s/7", "edit O001 n/",
+            //@@author HammerHead-os
             "edit O001 d/31-02-2028", "edit O001 n/Bob n/Alice", "edit O001 x/Extra"}) {
+            //@@author Eethanzyj
             assertThrows(IllegalArgumentException.class, () -> Parser.parseUpdate(input));
         }
     }
@@ -233,9 +241,7 @@ public class ParserTest {
                                           "view O001 extra", "viewpoint O001"}) {
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                     () -> Parser.parseView(input));
-            //@@author HammerHead-os
             assertEquals("Use: view ORDER_ID", exception.getMessage());
-            //@@author Eethanzyj
         }
         assertThrows(IllegalArgumentException.class, () -> Parser.parseView(null));
     }

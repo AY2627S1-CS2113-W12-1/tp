@@ -146,16 +146,20 @@ public class Storage {
                 escape(size),
                 escape(flavour),
                 escape(filling),
+                //@@author anannya-mk
                 escape(order.getCustomerId() == null ? NO_VALUE : order.getCustomerId()),
+                //@@author HammerHead-os
                 escape(notes));
     }
 
     private Order parseLine(String line) {
         List<String> fields = splitEscaped(line);
+        //@@author Kaishhhh
         if (fields.size() < FIELD_COUNT || fields.size() > FIELD_COUNT_WITH_NOTES) {
             throw new CakeQueueException("Expected " + FIELD_COUNT + " to " + FIELD_COUNT_WITH_NOTES
                     + " fields but found " + fields.size());
         }
+        //@@author HammerHead-os
         String orderId = fields.get(0);
         if (!orderId.matches("[OE][0-9]{3,}")) {
             throw new CakeQueueException("Invalid record ID: " + orderId);
@@ -200,8 +204,8 @@ public class Storage {
     private boolean isLegacyNotes(String value) {
         return !value.equals(NO_VALUE) && !value.matches("[A-Za-z][0-9]+");
     }
-    //@@author HammerHead-os
 
+    //@@author HammerHead-os
     private String escape(String value) {
         return value.replace("\\", "\\\\").replace("|", "\\|");
     }

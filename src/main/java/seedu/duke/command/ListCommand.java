@@ -7,15 +7,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 //@@author Eethanzyj
 import java.util.Comparator;
-//@@author Kaishhhh
 
+//@@author Kaishhhh
 import seedu.duke.model.Order;
 import seedu.duke.model.OrderList;
 import seedu.duke.model.OrderStatus;
 //@@author Eethanzyj
 import seedu.duke.ui.OrderFormatter;
-//@@author Kaishhhh
 
+//@@author Kaishhhh
 /**
  * Represents a command that lists all upcoming confirmed orders.
  */
@@ -23,8 +23,8 @@ public class ListCommand {
 
     //@@author WillChin484848
     private static final int DUE_SOON_DAYS = 3;
-    //@@author Kaishhhh
 
+    //@@author Kaishhhh
     /**
      * Returns uncollected confirmed orders with the earliest due dates first.
      * Enquiries and closed records are omitted. Orders without a due date
@@ -42,8 +42,9 @@ public class ListCommand {
                 || order.getStatus() == OrderStatus.ENQUIRY
                 || order.getStatus() == OrderStatus.CANCELLED
                 || order.getStatus() == OrderStatus.REJECTED);
-        //@@author Eethanzyj
+        //@@author WillChin484848
         // Sort by due date, placing orders without a due date last.
+        //@@author Eethanzyj
         all.sort(Comparator.comparing(Order::getDueDate,
                 Comparator.nullsLast(Comparator.naturalOrder())));
 
@@ -73,7 +74,6 @@ public class ListCommand {
                     //@@author WillChin484848
                 }
             }
-            //@@author Kaishhhh
 
             //@@author Eethanzyj
             listing.append(OrderFormatter.format(order, i + 1, warning.toString()))

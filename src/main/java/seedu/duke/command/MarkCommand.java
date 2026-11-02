@@ -55,7 +55,9 @@ public class MarkCommand {
 
     private String describeProblem(OrderStatus current) {
         if (current == OrderStatus.ENQUIRY) {
+            //@@author Eethanzyj
             return "Legacy enquiry " + orderId + " is not a confirmed order and cannot be marked.";
+            //@@author HammerHead-os
         }
         if (current == OrderStatus.COLLECTED || current == OrderStatus.CANCELLED
                 || current == OrderStatus.REJECTED) {

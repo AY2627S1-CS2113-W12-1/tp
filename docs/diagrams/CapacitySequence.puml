@@ -1,4 +1,6 @@
 @startuml
+' Original diagram and capacity implementation: Kaishhhh.
+' AddOrderCommand integration and activation revisions: Eethanzyj.
 skinparam shadowing false
 skinparam defaultFontSize 14
 hide footbox
@@ -17,6 +19,8 @@ Parser --> Cli : details
 deactivate Parser
 create Add
 Cli -> Add : new AddOrderCommand(details)
+activate Add
+deactivate Add
 Cli -> Add : execute(orders)
 activate Add
 ref over Add, Orders : Create and add the order,\nassigning its Customer ID
@@ -36,6 +40,8 @@ Add --> Cli : order confirmation, optional warning, customer line
 deactivate Add
 
 Cli -> Cli : print the complete command result
+activate Cli
+deactivate Cli
 [<-- Cli
 deactivate Cli
 

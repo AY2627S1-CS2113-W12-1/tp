@@ -1,0 +1,43 @@
+@startuml
+' Diagram author: Eethanzyj.
+' Depicted storage persistence implementation: WillChin484848 (PR #42).
+' Original capacity feature: Kaishhhh.
+title Capacity saving: pending storage integration (PR #42)
+skinparam shadowing false
+skinparam defaultFontSize 14
+hide footbox
+
+participant ":BakerCli" as Cli
+participant "<<class>>\nParser" as Parser
+participant ":CapacityCommand" as Cmd
+participant "orders:OrderList" as Orders
+
+[-> Cli : capacity 3
+activate Cli
+Cli -> Parser : parseCapacity(input)
+activate Parser
+Parser --> Cli : 3
+deactivate Parser
+create Cmd
+Cli -> Cmd : new CapacityCommand(3)
+activate Cmd
+deactivate Cmd
+Cli -> Cmd : execute(orders)
+activate Cmd
+Cmd -> Orders : setDailyCapacity(3)
+activate Orders
+deactivate Orders
+ref over Cmd, Orders : Read workload counts and build the result.
+Cmd --> Cli : message: String
+deactivate Cmd
+Cli -> Cli : print message
+activate Cli
+deactivate Cli
+ref over Cli, Orders : Run saveChanges callback;\nsee "Saving after every change".
+note over Cli, Orders
+  PR #42 saves # dailyCapacity=3 with the records.
+  Bare capacity and invalid input do not request saving.
+end note
+[<-- Cli
+deactivate Cli
+@enduml
