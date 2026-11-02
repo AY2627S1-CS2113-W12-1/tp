@@ -45,8 +45,8 @@ public class BakerCli {
                     System.out.println("Bye. Hope to see you again soon!");
                     return;
                 case "help":
-                    requireNoArguments(input, "help");
-                    System.out.println(new HelpCommand().execute());
+                    String[] helpInput = input.split("\\s+", 2);
+                    System.out.println(new HelpCommand().execute(helpInput.length == 2 ? helpInput[1] : ""));
                     break;
                 //@@author Eethanzyj
                 case "list":

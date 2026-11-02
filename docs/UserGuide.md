@@ -349,9 +349,34 @@ capacity 3
 
 ## Getting Help: `help`
 
-Format: `help`
+<!-- @@author Eethanzyj -->
 
-Lists every command with its format.
+Format: `help [COMMAND]`
+
+Use `help` for the overall command list. Add a command name for its format, essential
+rules and one example. Every command in the Command Summary has a help topic.
+Command names are case-insensitive, so `HELP ADD` also works.
+
+Examples:
+
+```text
+help
+help add
+help edit
+help mark
+```
+
+For example, `help add` explains all six fields, the phone and date rules, and allowed
+cake sizes. Copy the example command line and replace its values with your own, or copy
+the format and replace the uppercase placeholders such as `NAME`. Examples using IDs
+such as `O001` or `C001` require those records to exist.
+
+Help only displays instructions. It never executes an example or changes orders.
+For example, `help unknown` shows
+`Error: Unknown help topic: unknown. Type help to see available commands.`
+For more than one topic, such as `help add extra`, CakeQueue shows `Error: Use: help [COMMAND]`.
+
+<!-- @@author -->
 
 ## Exiting: `bye`
 
@@ -374,7 +399,7 @@ extra to save on exit. Check for save warnings before exiting.
 | Update progress | `mark ORDER_ID preparing\|ready\|collected` |
 | Cancel | `cancel ORDER_ID` |
 | Show or set daily capacity | `capacity [NUMBER]` |
-| Help | `help` |
+| Help | `help [COMMAND]` |
 | Exit | `bye` |
 
 ## Current Limitations
