@@ -1,4 +1,4 @@
-# Anannya - Project Portfolio Page
+# Anannya Madhu Kumar - Project Portfolio Page
 
 GitHub: [anannya-mk](https://github.com/anannya-mk)
 
